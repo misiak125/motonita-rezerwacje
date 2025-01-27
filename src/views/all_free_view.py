@@ -1,6 +1,6 @@
 from tkinter import ttk, messagebox, Toplevel, Label
 import tkinter as tk
-from ..controllers import get_free_products, add_product, get_all_customers, get_full_reservations, get_full_old_reservations, get_all_products, get_all_old_products
+from ..controllers import get_free_products, add_product, get_all_customers, get_full_reservations, get_full_old_reservations, get_all_products, get_all_old_products, get_product
 from ..utils.funcs import animate_gif
 from PIL import ImageTk, Image
 
@@ -50,8 +50,9 @@ class main_window:
         self.gif_label = Label(top)
         self.gif_label.pack()
 
-        self.text_label = Label(top, text="Pogłaskałeś klienta!", font=("Helvetica", 17, "bold"), bg="black", fg="white")
-        self.text_label.place(anchor="w", x=10, y=20)
+        text_label = Label(top, text="Pogłaskałeś klienta!", 
+            font=("Helvetica", 17, "bold"), bg="black", fg="white")
+        text_label.place(anchor="w", x=10, y=20)
 
         animate_gif(self.gif_label, self.frames, self.frame_counter)
 
@@ -106,7 +107,7 @@ class main_window:
         customers = get_all_customers()
         for customer in customers:
             self.customers_tree.insert("", "end", values=(customer.name, customer.phone, 
-            customer.email, customer.added_on.strftime("%d-%m-%Y %H:%M:%S")))
+            customer.email, customer.added_on.strftime("%d-%m-%Y %H:%M")))
         
     
         for item in self.reservations_tree.get_children():
@@ -119,7 +120,7 @@ class main_window:
         
         for res in reservations:
             self.reservations_tree.insert("", "end", values=(res.Customer.name, res.Customer.phone, 
-            res.Customer.email, res.Reservation.date.strftime("%d-%m-%Y %H:%M:%S"), res.Reservation.advance, res.Product.brand, res.Product.model, res.Product.colour))
+            res.Customer.email, res.Reservation.date.strftime("%d-%m-%Y %H:%M"), res.Reservation.advance, res.Product.brand, res.Product.model, res.Product.colour))
 
         for item in self.all_products_tree.get_children():
             self.all_products_tree.delete(item)
@@ -130,9 +131,30 @@ class main_window:
             products = get_all_old_products()
         
         for product in products:
-            self.all_products_tree.insert("", "end", values=(product.brand, product.model, 
-            product.year, product.colour, product.price, product.state, product.added_on.strftime("%d-%m-%Y %H:%M:%S"), product.order_id))
+            if product.Reservation is None:
+                czy_rezerwowany = "NIE"
+            else:
+                czy_rezerwowany = "TAK"
+            self.all_products_tree.insert("", "end", values=(product.Product.id, product.Product.brand, product.Product.model, 
+            product.Product.year, product.Product.colour, product.Product.price, product.Product.state, product.Product.added_on.strftime("%d-%m-%Y %H:%M:%S"), czy_rezerwowany, product.Product.order_id))
 
+    def create_reservation(self, event):
+        to_reservation_id = self.all_products_tree.item(self.all_products_tree.focus(), "values")[0]
+        #print(to_reservation)
+        to_reservation = get_product(to_reservation_id)
+        to_reservation = to_reservation[0]
+        top = Toplevel()
+        top.title("Utwórz rezerwację")
+        tytul_rezerwacji = Label(top, text=f"Zarezerwuj {to_reservation.brand} {to_reservation.model} {to_reservation.year} {to_reservation.colour}", font=("Helvetica", 17))
+        tytul_rezerwacji.pack(pady=10)
+
+        self.res_customers_tree = ttk.Treeview(top, columns=("name", "phone", "email", "added_on"), show="headings")
+        self.res_customers_tree.heading("name", text="Imię i Nazwisko")
+        self.res_customers_tree.heading("phone", text="Nr.Tel.")
+        self.res_customers_tree.heading("email", text="Email")
+        self.res_customers_tree.heading("added_on", text="Dodany")
+        self.res_customers_tree.bind("<Double-1>", self.on_customer_click)
+        self.res_customers_tree.pack(fill="both", expand=True, padx=10, pady=10)
         
     
     def create_free_products_tab(self, tab):
@@ -157,8 +179,13 @@ class main_window:
 
         Button1.pack()
 
-        self.all_products_tree = ttk.Treeview(tab, columns=("brand", "model", "year", 
-        "colour", "price", "state", "added_on", "order_id"), show="headings")
+        self.all_products_tree = ttk.Treeview(tab, columns=("id", "brand", "model", "year", 
+        "colour", "price", "state", "added_on", "reservation", "order_id"), show="headings")
+
+        self.all_products_tree["displaycolumns"]=("brand", "model", "year", 
+        "colour", "price", "state", "added_on", "reservation", "order_id")
+
+
 
         self.all_products_tree.heading("brand", text="Marka")
         self.all_products_tree.heading("model", text="Model")
@@ -167,17 +194,21 @@ class main_window:
         self.all_products_tree.heading("price", text="Cena")
         self.all_products_tree.heading("state", text="Stan")
         self.all_products_tree.heading("added_on", text="Dodany")
+        self.all_products_tree.heading("reservation", text="Zarezerwowany")
         self.all_products_tree.heading("order_id", text="Nr Zamówienia")
     
         self.all_products_tree.column("brand", width="100")
         self.all_products_tree.column("model", width="150")
-        self.all_products_tree.column("year", width="100")
-        self.all_products_tree.column("colour", width="150")
-        self.all_products_tree.column("price", width="150")
+        self.all_products_tree.column("year", width="70")
+        self.all_products_tree.column("colour", width="120")
+        self.all_products_tree.column("price", width="100")
         self.all_products_tree.column("state", width="150")
+        self.all_products_tree.column("reservation", width="100")
         self.all_products_tree.column("added_on", width="150")
-        self.all_products_tree.column("order_id", width="150")
 
+        self.all_products_tree.bind("<Double-1>", self.create_reservation)
+
+        self.all_products_tree.column("order_id", width="150")
         self.all_products_tree.pack(fill="both", expand=True, padx=10, pady=10)
 
 

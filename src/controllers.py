@@ -24,10 +24,10 @@ def make_reservation(customer_id, product_id, advance):
     session.commit()
 
 def get_all_products():
-    return session.query(Product).where(Product.state != "wydany").all()
+    return session.query(Product, Reservation).outerjoin(Reservation).where(Product.state != "wydany").all()
 
 def get_all_old_products():
-    return session.query(Product).all()
+    return session.query(Product, Reservation).outerjoin(Reservation).all()
 
 def get_all_customers():
     return session.query(Customer).all()
@@ -62,3 +62,6 @@ def get_full_old_reservations():
         .order_by(Reservation.date.desc())
     )
     return result
+
+def get_product(id_given):
+    return session.query(Product).where(Product.id == id_given)
