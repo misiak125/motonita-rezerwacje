@@ -62,10 +62,10 @@ class main_window:
         product_model = self.product_model_entry.get().lower().strip()
         product_colour = self.product_colour_entry.get().lower().strip()
         product_price = self.product_price_entry.get().strip()
-        print(type(product_price))
-        print(product_price)
+        #print(type(product_price))
+        #print(product_price)
         product_price = product_price.replace(',', '.', 1)
-        print(product_price)
+        #print(product_price)
         product_year = self.product_year_entry.get()
         product_order_id = self.product_order_id_entry.get().strip()
         if not product_price:
