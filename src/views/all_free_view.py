@@ -7,7 +7,7 @@ from PIL import ImageTk, Image
 class main_window:    
     def __init__(self, root):
         self.root = root
-        self.root.title("Zamowienia Motorland")
+        self.root.title("Zamówienia Motorland")
         self.root.geometry("1400x1000")
         notebook = ttk.Notebook(self.root)
 
