@@ -72,7 +72,7 @@ class main_window:
             product_price = 0.0
 
         if not product_brand or not product_model or not product_colour:
-            messagebox.showerror("Error", "Wypełnij pole Marka, Model oraz Kolor")
+            messagebox.showerror("Error", "Wypełnij pole Marka, Model, Rocznik oraz Kolor")
             return
 
         try:
@@ -137,6 +137,8 @@ class main_window:
                 czy_rezerwowany = "TAK"
             self.all_products_tree.insert("", "end", values=(product.Product.id, product.Product.brand, product.Product.model, 
             product.Product.year, product.Product.colour, product.Product.price, product.Product.state, product.Product.added_on.strftime("%d-%m-%Y %H:%M:%S"), czy_rezerwowany, product.Product.order_id))
+        
+    
 
     def create_reservation(self, event):
         to_reservation_id = self.all_products_tree.item(self.all_products_tree.focus(), "values")[0]
@@ -148,13 +150,20 @@ class main_window:
         tytul_rezerwacji = Label(top, text=f"Zarezerwuj {to_reservation.brand} {to_reservation.model} {to_reservation.year} {to_reservation.colour}", font=("Helvetica", 17))
         tytul_rezerwacji.pack(pady=10)
 
-        self.res_customers_tree = ttk.Treeview(top, columns=("name", "phone", "email", "added_on"), show="headings")
-        self.res_customers_tree.heading("name", text="Imię i Nazwisko")
-        self.res_customers_tree.heading("phone", text="Nr.Tel.")
-        self.res_customers_tree.heading("email", text="Email")
-        self.res_customers_tree.heading("added_on", text="Dodany")
-        self.res_customers_tree.bind("<Double-1>", self.on_customer_click)
-        self.res_customers_tree.pack(fill="both", expand=True, padx=10, pady=10)
+        res_customers_tree = ttk.Treeview(top, columns=("name", "phone", "email"), show="headings")
+        res_customers_tree.heading("name", text="Imię i Nazwisko")
+        res_customers_tree.heading("phone", text="Nr.Tel.")
+        res_customers_tree.heading("email", text="Email")
+        res_customers_tree.bind("<Double-1>")
+        res_customers_tree.pack(fill="both", expand=True, padx=10, pady=10)
+
+        for item in res_customers_tree.get_children():
+            res_customers_tree.delete(item)
+
+        customers = get_all_customers()
+        for customer in customers:
+            res_customers_tree.insert("", "end", values=(customer.name, customer.phone, 
+            customer.email))
         
     
     def create_free_products_tab(self, tab):
