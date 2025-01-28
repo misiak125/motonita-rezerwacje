@@ -64,4 +64,7 @@ def get_full_old_reservations():
     return result
 
 def get_product(id_given):
-    return session.query(Product).where(Product.id == id_given)
+    return session.query(Product).where(Product.id == id_given).first()
+
+def get_customer(id_given):
+    return session.query(Customer).where(Customer.id == id_given).first()

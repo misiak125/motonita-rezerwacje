@@ -1,6 +1,7 @@
 from tkinter import ttk, messagebox, Toplevel, Label
 import tkinter as tk
-from ..controllers import get_free_products, add_product, get_all_customers, get_full_reservations, get_full_old_reservations, get_all_products, get_all_old_products, get_product
+from ..controllers import get_free_products, add_product, get_all_customers, get_full_reservations, get_full_old_reservations, \
+get_all_products, get_all_old_products, get_product, get_customer
 from ..utils.funcs import animate_gif
 from PIL import ImageTk, Image
 
@@ -142,29 +143,48 @@ class main_window:
 
     def create_reservation(self, event):
         to_reservation_id = self.all_products_tree.item(self.all_products_tree.focus(), "values")[0]
-        #print(to_reservation)
         to_reservation = get_product(to_reservation_id)
-        to_reservation = to_reservation[0]
+
         top = Toplevel()
         top.title("Utwórz rezerwację")
-        tytul_rezerwacji = Label(top, text=f"Zarezerwuj {to_reservation.brand} {to_reservation.model} {to_reservation.year} {to_reservation.colour}", font=("Helvetica", 17))
+        tytul_rezerwacji = Label(top, text=f"Zarezerwuj {to_reservation.brand} {to_reservation.model} "\
+            f"{to_reservation.year} {to_reservation.colour}", font=("Helvetica", 17))
         tytul_rezerwacji.pack(pady=10)
 
-        res_customers_tree = ttk.Treeview(top, columns=("name", "phone", "email"), show="headings")
-        res_customers_tree.heading("name", text="Imię i Nazwisko")
-        res_customers_tree.heading("phone", text="Nr.Tel.")
-        res_customers_tree.heading("email", text="Email")
-        res_customers_tree.bind("<Double-1>")
-        res_customers_tree.pack(fill="both", expand=True, padx=10, pady=10)
+        self.res_customers_tree = ttk.Treeview(top, columns=("id", "name", "phone", "email"), show="headings")
+        self.res_customers_tree["displaycolumns"]=("name", "phone", "email")
+        self.res_customers_tree.heading("id")
+        self.res_customers_tree.heading("name", text="Imię i Nazwisko")
+        self.res_customers_tree.heading("phone", text="Nr.Tel.")
+        self.res_customers_tree.heading("email", text="Email")
+        self.res_customers_tree.pack(fill="both", expand=True, padx=10, pady=10)
 
-        for item in res_customers_tree.get_children():
-            res_customers_tree.delete(item)
+        for item in self.res_customers_tree.get_children():
+            self.res_customers_tree.delete(item)
 
         customers = get_all_customers()
+
         for customer in customers:
-            res_customers_tree.insert("", "end", values=(customer.name, customer.phone, 
+            self.res_customers_tree.insert("", "end", values=(customer.id, customer.name, customer.phone, 
             customer.email))
+
+        make_button = tk.Button(top, text="Zarezerwuj", command=lambda: self.confirm_reservation(to_reservation))
+        make_button.pack(side="right", padx=10, pady=10)
+    
+    def confirm_reservation(self, to_reservation):
+        top=Toplevel()
+        top.title("Potwierdź rezerwację")
+        reservation_advance = 1000
+        reservation_customer_id = self.res_customers_tree.item(self.res_customers_tree.focus(), "values")[0]
+        reservation_customer = get_customer(reservation_customer_id)
+
+        final_res = Label(top, text=f"Zarezerwuj {to_reservation.brand} {to_reservation.model} {to_reservation.year} "\
+            f"{to_reservation.colour} dla {reservation_customer.name}. Nr.tel: {reservation_customer.phone}, "\
+                f"Zaliczka: {reservation_advance}", font=("Helvetica", 17))
         
+        final_res.pack(padx=10, pady=10)
+    
+    
     
     def create_free_products_tab(self, tab):
     
