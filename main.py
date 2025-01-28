@@ -1,5 +1,5 @@
 from src import root, initialize_database, OrdersApp
-from src.views.all_free_view import main_window
+from src.views.main_view import main_window
 
 if __name__ == "__main__":
     initialize_database()

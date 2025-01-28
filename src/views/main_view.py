@@ -1,11 +1,9 @@
-from tkinter import ttk, messagebox, Toplevel, Label
+from tkinter import ttk, messagebox, Toplevel, Label, Button, IntVar, Checkbutton
 import tkinter as tk
-import src.controllers as cont
-from ..controllers import get_free_products, add_product, get_all_customers, get_full_reservations, \
-get_full_old_reservations, get_all_products, get_all_old_products, get_product, get_customer
+import src.controllers as con
 import src.utils.funcs as fun
-from ..utils.funcs import animate_gif
-from PIL import ImageTk, Image
+import src.utils.buttons as but
+import time
 
 class main_window:    
     def __init__(self, root):
@@ -33,155 +31,48 @@ class main_window:
         self.create_add_product_tab(tab4)
 
 
-        self.refresh_table()
-        
-        self.cat_gif = None
-        self.frames = []
-        self.frame_counter = [0]
-
+        fun.refresh_table(self.free_products_tree, self.customers_tree, self.reservations_tree, self.show_finalized, self.all_products_tree, self.show_sold)
+      
         notebook.pack(padx=10, pady=10, fill="both", expand=True)
-
-    def on_customer_click(self, event):
-        top = Toplevel()
-        top.title("GRATULACJE!")
-        self.cat_gif = Image.open(r"src/static/cat1.gif")
-        self.frames = []
-        for i in range(self.cat_gif.n_frames):
-            self.cat_gif.seek(i)  
-            frame = ImageTk.PhotoImage(self.cat_gif.copy())  
-            self.frames.append(frame)
-        self.gif_label = Label(top)
-        self.gif_label.pack()
-
-        text_label = Label(top, text="Pogłaskałeś klienta!", 
-            font=("Helvetica", 17, "bold"), bg="black", fg="white")
-        text_label.place(anchor="w", x=10, y=20)
-
-        animate_gif(self.gif_label, self.frames, self.frame_counter)
-
-    
-    def add_product(self):
-        product_brand = self.product_brand_entry.get().lower().strip()
-        product_model = self.product_model_entry.get().lower().strip()
-        product_colour = self.product_colour_entry.get().lower().strip()
-        product_price = self.product_price_entry.get().strip()
-        #print(type(product_price))
-        #print(product_price)
-        product_price = product_price.replace(',', '.', 1)
-        #print(product_price)
-        product_year = self.product_year_entry.get()
-        product_order_id = self.product_order_id_entry.get().strip()
-        if not product_price:
-            product_price = 0.0
-
-        if not product_brand or not product_model or not product_colour:
-            messagebox.showerror("Error", "Wypełnij pole Marka, Model, Rocznik oraz Kolor")
-            return
-
-        try:
-            product_price = float(product_price)
-            product_model = str(product_model)
-            product_colour = str(product_colour)
-            product_brand = str(product_brand)
-            product_order_id = str(product_order_id)
-            product_year = int(product_year)
-            if product_year < 100:
-                product_year+=2000
-            add_product(product_brand, product_model, product_colour, product_year, product_price, product_order_id)
-            self.refresh_table()
-            messagebox.showinfo("Success", "Dodano produkt")
-        except ValueError:
-            messagebox.showerror("Error", "Niewłaściwie podane dane")
-
-
-    def refresh_table(self):
-        for item in self.free_products_tree.get_children():
-            self.free_products_tree.delete(item)
-
-        free = get_free_products()
-        for product in free:
-            self.free_products_tree.insert("", "end", values=(product.Product.brand, product.Product.model,
-            product.Product.year, product.Product.colour, product.count, product.max))
-
         
-        for item in self.customers_tree.get_children():
-            self.customers_tree.delete(item)
-
-        customers = get_all_customers()
-        for customer in customers:
-            self.customers_tree.insert("", "end", values=(customer.name, customer.phone, 
-            customer.email, customer.added_on.strftime("%d-%m-%Y %H:%M")))
-        
-    
-        for item in self.reservations_tree.get_children():
-            self.reservations_tree.delete(item)
-
-        if not self.show_finalized.get():
-            reservations = get_full_reservations()
-        else:
-            reservations = get_full_old_reservations()
-        
-        for res in reservations:
-            self.reservations_tree.insert("", "end", values=(res.Customer.name, res.Customer.phone, 
-            res.Customer.email, res.Reservation.date.strftime("%d-%m-%Y %H:%M"), res.Reservation.advance, res.Product.brand, res.Product.model, res.Product.colour))
-
-        for item in self.all_products_tree.get_children():
-            self.all_products_tree.delete(item)
-
-        if not self.show_sold.get():
-            products = get_all_products()
-        else:
-            products = get_all_old_products()
-        
-        for product in products:
-            if product.Reservation is None:
-                czy_rezerwowany = "NIE"
-            else:
-                czy_rezerwowany = "TAK"
-            self.all_products_tree.insert("", "end", values=(product.Product.id, product.Product.brand, product.Product.model, 
-            product.Product.year, product.Product.colour, product.Product.price, product.Product.state, product.Product.added_on.strftime("%d-%m-%Y %H:%M:%S"), czy_rezerwowany, product.Product.order_id))
-        
-    
 
     def create_reservation(self, event):
-        to_reservation_id = self.all_products_tree.item(self.all_products_tree.focus(), "values")[0]
-        to_reservation = get_product(to_reservation_id)
+        if self.all_products_tree.item(self.all_products_tree.focus(), "values")[8] == "TAK":
+            messagebox.showerror("Error", "Ten pojazd jest już zarezerwowany")
+        else:
+            to_reservation_id = fun.get_selected_element_id(self.all_products_tree)
+            to_reservation = con.get_product(to_reservation_id)
 
-        top = Toplevel()
-        top.title("Utwórz rezerwację")
-        tytul_rezerwacji = Label(top, text=f"Zarezerwuj {to_reservation.brand} {to_reservation.model} "\
-            f"{to_reservation.year} {to_reservation.colour}", font=("Helvetica", 17))
-        tytul_rezerwacji.pack(pady=10)
+            
 
-        res_customers_tree = ttk.Treeview(top, columns=("id", "name", "phone", "email"), show="headings")
-        res_customers_tree["displaycolumns"]=("name", "phone", "email")
-        res_customers_tree.heading("id")
-        res_customers_tree.heading("name", text="Imię i Nazwisko")
-        res_customers_tree.heading("phone", text="Nr.Tel.")
-        res_customers_tree.heading("email", text="Email")
-        res_customers_tree.pack(fill="both", expand=True, padx=10, pady=10)
+            top = Toplevel()
+            top.title("Utwórz rezerwację")
+            tytul_rezerwacji = Label(top, text=f"Zarezerwuj {to_reservation.brand} {to_reservation.model} "\
+                f"{to_reservation.year} {to_reservation.colour}", font=("Helvetica", 17))
+            tytul_rezerwacji.pack(pady=10)
 
-        for item in res_customers_tree.get_children():
-            res_customers_tree.delete(item)
+            res_customers_tree = ttk.Treeview(top, columns=("id", "name", "phone", "email"), show="headings")
+            res_customers_tree["displaycolumns"]=("name", "phone", "email")
+            res_customers_tree.heading("id")
+            res_customers_tree.heading("name", text="Imię i Nazwisko")
+            res_customers_tree.heading("phone", text="Nr.Tel.")
+            res_customers_tree.heading("email", text="Email")
+            res_customers_tree.pack(fill="both", expand=True, padx=10, pady=10)
 
-        customers = get_all_customers()
+            for item in res_customers_tree.get_children():
+                res_customers_tree.delete(item)
 
-        for customer in customers:
-            res_customers_tree.insert("", "end", values=(customer.id, customer.name, customer.phone, 
-            customer.email))
+            customers = con.get_all_customers()
 
+            for customer in customers:
+                res_customers_tree.insert("", "end", values=(customer.id, customer.name, customer.phone, 
+                customer.email))
 
-        all_products_tree.bind("<Double-1>", self.create_reservation)
+            reservation_advance = 1000 #!!!!!
 
-        reservation_advance = 1000 #!!!!!
-        reservation_customer_id = res_customers_tree.item(res_customers_tree.focus(), "values")[0]
-        print(reservation_customer_id)
-        reservation_customer = get_customer(reservation_customer_id)
-
-        make_button = tk.Button(top, text="Zarezerwuj", command=lambda: self.confirm_reservation(to_reservation, reservation_customer, reservation_advance))
-        make_button.pack(side="right", padx=10, pady=10)
-    
-    
+            make_button = Button(top, text="Zarezerwuj", command=lambda: fun.confirm_reservation(to_reservation, fun.get_selected_element_id(res_customers_tree), reservation_advance))
+            make_button.pack(side="right", padx=10, pady=10)
+        
     
     def create_free_products_tab(self, tab):
     
@@ -198,10 +89,10 @@ class main_window:
 
     def create_all_products_tab(self, tab):
 
-        self.show_sold = tk.IntVar()
-        Button1 = tk.Checkbutton(tab, text = "Pokaż wydane pojazdy", 
+        self.show_sold = IntVar()
+        Button1 = Checkbutton(tab, text = "Pokaż wydane pojazdy", 
                     variable = self.show_sold, onvalue = 1, offvalue = 0,
-                    command=self.refresh_table)
+                    command=lambda: fun.refresh_table(self.free_products_tree, self.customers_tree, self.reservations_tree, self.show_finalized, self.all_products_tree, self.show_sold))
 
         Button1.pack()
 
@@ -238,23 +129,22 @@ class main_window:
         self.all_products_tree.pack(fill="both", expand=True, padx=10, pady=10)
 
 
-        
-
     def create_customers_tab(self, tab):
         self.customers_tree = ttk.Treeview(tab, columns=("name", "phone", "email", "added_on"), show="headings")
         self.customers_tree.heading("name", text="Imię i Nazwisko")
         self.customers_tree.heading("phone", text="Nr.Tel.")
         self.customers_tree.heading("email", text="Email")
         self.customers_tree.heading("added_on", text="Dodany")
-        self.customers_tree.bind("<Double-1>", self.on_customer_click)
+        self.customers_tree.bind("<Double-1>", but.on_customer_click)
         self.customers_tree.pack(fill="both", expand=True, padx=10, pady=10)
+
 
     def create_reservations_tab(self, tab):
         
-        self.show_finalized = tk.IntVar()
-        Button1 = tk.Checkbutton(tab, text = "Pokaż ukończone tranzakcje", 
+        self.show_finalized = IntVar()
+        Button1 = Checkbutton(tab, text = "Pokaż ukończone tranzakcje", 
                     variable = self.show_finalized, onvalue = 1, offvalue = 0,
-                    command=self.refresh_table)
+                    command=lambda: fun.refresh_table(self.free_products_tree, self.customers_tree, self.reservations_tree, self.show_finalized, self.all_products_tree, self.show_sold))
 
         Button1.pack()
         
@@ -283,7 +173,6 @@ class main_window:
         self.reservations_tree.pack(fill="both", expand=True, padx=10, pady=10)
 
 
-    
     def create_add_product_tab(self, tab):
         form_frame1 = ttk.Frame(tab)
         form_frame1.pack(padx=10, pady=10, anchor="w") 
@@ -336,5 +225,5 @@ class main_window:
         form_frame3 = ttk.Frame(tab)
         form_frame3.pack(padx=10, pady=10, anchor="w") 
 
-        add_button = tk.Button(form_frame3, text="Dodaj", command=self.add_product)
+        add_button = Button(form_frame3, text="Dodaj", command=lambda: fun.add_product())
         add_button.pack(side="left", padx=5, pady=5)
