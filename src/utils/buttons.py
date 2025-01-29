@@ -22,8 +22,7 @@ def on_customer_click(event):
 
     animate_gif(gif_label, frames, frame_counter)
 
-def sum_up_product(product_brand, product_model, product_colour, product_price,\
-    product_year, product_order_id):
+def sum_up_product(product_brand, product_model, product_colour, product_price, product_year, product_order_id):
 
         if not product_price:
             product_price = 0.0
@@ -48,7 +47,10 @@ def sum_up_product(product_brand, product_model, product_colour, product_price,\
             if product_year < 1000:
                 product_year+=2000
             add_product(product_brand, product_model, product_colour, product_year, product_price, product_order_id)
-            
             messagebox.showinfo("Success", "Dodano produkt")
         except ValueError:
             messagebox.showerror("Error", "Niewłaściwie podane dane")
+
+
+def sum_up_customer(new_customer_name, new_customer_phone, new_customer_email):
+    

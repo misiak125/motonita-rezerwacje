@@ -35,53 +35,6 @@ class main_window:
         notebook.pack(padx=10, pady=10, fill="both", expand=True)
         
 
-    def create_reservation(self, event):
-        if self.all_products_tree.item(self.all_products_tree.focus(), "values")[8] == "TAK":
-            messagebox.showerror("Error", "Ten pojazd jest już zarezerwowany")
-        else:
-            to_reservation_id = fun.get_selected_element_id(self.all_products_tree)
-            to_reservation = con.get_product(to_reservation_id)
-
-            
-
-            top = Toplevel()
-            top.title("Utwórz rezerwację")
-            tytul_rezerwacji = Label(top, text=f"Zarezerwuj {to_reservation.brand} {to_reservation.model} "\
-                f"{to_reservation.year} {to_reservation.colour}", font=("Default", 14))
-            tytul_rezerwacji.pack(pady=10)
-
-            res_customers_tree = ttk.Treeview(top, columns=("id", "name", "phone", "email"), show="headings")
-            res_customers_tree["displaycolumns"]=("name", "phone", "email")
-            res_customers_tree.heading("id")
-            res_customers_tree.heading("name", text="Imię i Nazwisko")
-            res_customers_tree.heading("phone", text="Nr.Tel.")
-            res_customers_tree.heading("email", text="Email")
-            res_customers_tree.pack(fill="both", expand=True, padx=10, pady=10)
-
-            for item in res_customers_tree.get_children():
-                res_customers_tree.delete(item)
-
-            customers = con.get_all_customers()
-
-            for customer in customers:
-                res_customers_tree.insert("", "end", values=(customer.id, customer.name, customer.phone, 
-                customer.email))
-            
-            frame1 = ttk.Frame(top)
-            frame1.pack(pady=10, padx=10, anchor="w")
-
-            reservation_advance_label = Label(frame1, text = "Wartość zaliczki:")
-            reservation_advance_entry = ttk.Entry(frame1)
-
-            reservation_advance_label.pack(padx=10, side="left")
-            reservation_advance_entry.pack(padx=10, side="left")
-            
-
-            make_button = Button(top, text="Zarezerwuj", command=lambda: [fun.confirm_reservation(to_reservation, fun.get_selected_element_id(res_customers_tree), 
-                reservation_advance_entry.get()), top.destroy()])
-            make_button.pack(side="right", padx=10, pady=10)
-        
-    
     def create_free_products_tab(self, tab):
     
         self.free_products_tree = ttk.Treeview(tab, columns=("brand", "model", "year", "colour", 
@@ -146,6 +99,36 @@ class main_window:
         self.customers_tree.bind("<Double-1>", but.on_customer_click)
         self.customers_tree.pack(fill="both", expand=True, padx=10, pady=10)
 
+        create_new_customer_button = Button(tab, text="Dodaj nowego", command=self.create_new_customer)
+        create_new_customer_button.pack(anchor="e", padx=10, pady=10)
+
+
+    def create_new_customer(self):
+        top = Toplevel()
+        top.title("Dodaj nowego klienta")
+        
+        name_label = Label(top, text="Imię i Nazwisko:")
+        name_label.grid(row=0, column=0, padx=10, pady=10, sticky="w")  # Align to the west (left)
+
+        name_entry = ttk.Entry(top)
+        name_entry.grid(row=0, column=1, padx=10, pady=10, sticky="ew")  # Expand horizontally
+
+        # Phone label and entry
+        phone_label = Label(top, text="Numer telefonu:")
+        phone_label.grid(row=1, column=0, padx=10, pady=10, sticky="w")
+
+        phone_entry = ttk.Entry(top)
+        phone_entry.grid(row=1, column=1, padx=10, pady=10, sticky="ew")
+
+        # Email label and entry
+        email_label = Label(top, text="Email:")
+        email_label.grid(row=2, column=0, padx=10, pady=10, sticky="w")
+
+        email_entry = ttk.Entry(top)
+        email_entry.grid(row=2, column=1, padx=10, pady=10, sticky="ew")
+
+        add_button = Button(top, text="Dodaj", action=but.sum_up_customer)
+    
 
     def create_reservations_tab(self, tab):
         
@@ -181,6 +164,54 @@ class main_window:
         self.reservations_tree.pack(fill="both", expand=True, padx=10, pady=10)
 
 
+    def create_reservation(self, event):
+        if self.all_products_tree.item(self.all_products_tree.focus(), "values")[8] == "TAK":
+            messagebox.showerror("Error", "Ten pojazd jest już zarezerwowany")
+        else:
+            to_reservation_id = fun.get_selected_element_id(self.all_products_tree)
+            to_reservation = con.get_product(to_reservation_id)
+
+            
+
+            top = Toplevel()
+            top.title("Utwórz rezerwację")
+            tytul_rezerwacji = Label(top, text=f"Zarezerwuj {to_reservation.brand} {to_reservation.model} "\
+                f"{to_reservation.year} {to_reservation.colour}", font=("Default", 14))
+            tytul_rezerwacji.pack(pady=10)
+
+            res_customers_tree = ttk.Treeview(top, columns=("id", "name", "phone", "email"), show="headings")
+            res_customers_tree["displaycolumns"]=("name", "phone", "email")
+            res_customers_tree.heading("id")
+            res_customers_tree.heading("name", text="Imię i Nazwisko")
+            res_customers_tree.heading("phone", text="Nr.Tel.")
+            res_customers_tree.heading("email", text="Email")
+            res_customers_tree.pack(fill="both", expand=True, padx=10, pady=10)
+
+            for item in res_customers_tree.get_children():
+                res_customers_tree.delete(item)
+
+            customers = con.get_all_customers()
+
+            for customer in customers:
+                res_customers_tree.insert("", "end", values=(customer.id, customer.name, customer.phone, 
+                customer.email))
+            
+            frame1 = ttk.Frame(top)
+            frame1.pack(pady=10, padx=10, anchor="w")
+
+            reservation_advance_label = Label(frame1, text = "Wartość zaliczki:")
+            reservation_advance_entry = ttk.Entry(frame1)
+
+            reservation_advance_label.pack(padx=10, side="left")
+            reservation_advance_entry.pack(padx=10, side="left")
+            
+
+            make_button = Button(top, text="Zarezerwuj", command=lambda: [fun.confirm_reservation(to_reservation, fun.get_selected_element_id(res_customers_tree), 
+                reservation_advance_entry.get(), self.free_products_tree, self.customers_tree, self.reservations_tree, self.show_finalized, 
+                self.all_products_tree, self.show_sold), top.destroy()])
+            make_button.pack(side="right", padx=10, pady=10)
+        
+    
     def create_add_product_tab(self, tab):
         form_frame1 = ttk.Frame(tab)
         form_frame1.pack(padx=10, pady=10, anchor="w") 

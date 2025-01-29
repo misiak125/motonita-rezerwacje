@@ -7,13 +7,25 @@ def animate_gif(label, frames, frame_counter):
     label.after(100, animate_gif, label, frames, frame_counter)
 
 
-def confirm_reservation(to_reservation, reservation_customer_id, reservation_advance):
+def confirm_reservation(to_reservation, reservation_customer_id, reservation_advance, free_products_tree, 
+    customers_tree, reservations_tree, show_finalized, all_products_tree, show_sold):
 
     if reservation_customer_id == -1:
         messagebox.showerror("Error", "Wybierz klienta")
-        #sprawdz czy zaliczka jest dobrze wprowadzona 
     else:
-        #obrób zaliczkę do spoko formatu
+        if not reservation_advance:
+            reservation_advance = 0.0
+
+        try:
+            reservation_advance = reservation.replace(',', '.', 1)
+        except:
+            pass
+
+        try:
+            reservation_advance = float(reservation_advance)
+        except:
+
+            
         top=Toplevel()
         top.title("Potwierdź rezerwację")
 
@@ -31,7 +43,8 @@ def confirm_reservation(to_reservation, reservation_customer_id, reservation_adv
         cancel_button = Button(frame1, text="Anuluj", command=top.destroy)
         cancel_button.pack(side="left", padx=10) 
 
-        confirm_button = Button(frame1, text="Potwierdź", command = lambda: [con.make_reservation(reservation_customer_id, to_reservation.id, reservation_advance) ,top.destroy()]) #dodaj happy informacje ze sie udalo, zamknij tez poprzednie okno
+        confirm_button = Button(frame1, text="Potwierdź", command = lambda: [con.make_reservation(reservation_customer_id, 
+            to_reservation.id, reservation_advance) ,top.destroy(), refresh_table(free_products_tree, customers_tree, reservations_tree, show_finalized, all_products_tree, show_sold)]) #dodaj happy informacje ze sie udalo, zamknij tez poprzednie okno
         confirm_button.pack(side="right", padx=10)
 
 
