@@ -1,5 +1,4 @@
 from tkinter import ttk, messagebox, Toplevel, Label, Button, IntVar, Checkbutton
-import tkinter as tk
 import src.controllers as con
 import src.utils.funcs as fun
 import src.utils.buttons as but
@@ -48,7 +47,7 @@ class main_window:
             top = Toplevel()
             top.title("Utwórz rezerwację")
             tytul_rezerwacji = Label(top, text=f"Zarezerwuj {to_reservation.brand} {to_reservation.model} "\
-                f"{to_reservation.year} {to_reservation.colour}", font=("Helvetica", 17))
+                f"{to_reservation.year} {to_reservation.colour}", font=("Default", 14))
             tytul_rezerwacji.pack(pady=10)
 
             res_customers_tree = ttk.Treeview(top, columns=("id", "name", "phone", "email"), show="headings")
@@ -67,10 +66,19 @@ class main_window:
             for customer in customers:
                 res_customers_tree.insert("", "end", values=(customer.id, customer.name, customer.phone, 
                 customer.email))
+            
+            frame1 = ttk.Frame(top)
+            frame1.pack(pady=10, padx=10, anchor="w")
 
-            reservation_advance = 1000 #!!!!!
+            reservation_advance_label = Label(frame1, text = "Wartość zaliczki:")
+            reservation_advance_entry = ttk.Entry(frame1)
 
-            make_button = Button(top, text="Zarezerwuj", command=lambda: fun.confirm_reservation(to_reservation, fun.get_selected_element_id(res_customers_tree), reservation_advance))
+            reservation_advance_label.pack(padx=10, side="left")
+            reservation_advance_entry.pack(padx=10, side="left")
+            
+
+            make_button = Button(top, text="Zarezerwuj", command=lambda: [fun.confirm_reservation(to_reservation, fun.get_selected_element_id(res_customers_tree), 
+                reservation_advance_entry.get()), top.destroy()])
             make_button.pack(side="right", padx=10, pady=10)
         
     
@@ -225,5 +233,7 @@ class main_window:
         form_frame3 = ttk.Frame(tab)
         form_frame3.pack(padx=10, pady=10, anchor="w") 
 
-        add_button = Button(form_frame3, text="Dodaj", command=lambda: fun.add_product())
+        add_button = Button(form_frame3, text="Dodaj", command=lambda: [but.sum_up_product(self.product_brand_entry.get().lower().strip(), self.product_model_entry.get().lower().strip(),
+            self.product_colour_entry.get().lower().strip(), self.product_price_entry.get().lower().strip(), self.product_year_entry.get().lower().strip(), self.product_order_id_entry.get().lower().strip()), 
+            fun.refresh_table(self.free_products_tree, self.customers_tree, self.reservations_tree, self.show_finalized, self.all_products_tree, self.show_sold)])
         add_button.pack(side="left", padx=5, pady=5)

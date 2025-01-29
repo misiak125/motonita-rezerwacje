@@ -1,6 +1,5 @@
 import src.controllers as con
-from tkinter import Toplevel, Label, messagebox
-
+from tkinter import Toplevel, Label, messagebox, Button, ttk
 
 def animate_gif(label, frames, frame_counter):
     label.config(image=frames[frame_counter])
@@ -12,7 +11,9 @@ def confirm_reservation(to_reservation, reservation_customer_id, reservation_adv
 
     if reservation_customer_id == -1:
         messagebox.showerror("Error", "Wybierz klienta")
+        #sprawdz czy zaliczka jest dobrze wprowadzona 
     else:
+        #obrób zaliczkę do spoko formatu
         top=Toplevel()
         top.title("Potwierdź rezerwację")
 
@@ -20,9 +21,19 @@ def confirm_reservation(to_reservation, reservation_customer_id, reservation_adv
 
         final_res = Label(top, text=f"Zarezerwuj {to_reservation.brand} {to_reservation.model} {to_reservation.year} "\
             f"{to_reservation.colour} dla {reservation_customer.name}. Nr.tel: {reservation_customer.phone}, "\
-                f"Zaliczka: {reservation_advance}", font=("Helvetica", 17))
+                f"Zaliczka: {reservation_advance}", font=("Default", 14))
         
-        final_res.pack(padx=10, pady=10)
+        final_res.pack(pady=20, padx=10)
+
+        frame1 = ttk.Frame(top)
+        frame1.pack(fill="x", pady=10, padx=10)
+
+        cancel_button = Button(frame1, text="Anuluj", command=top.destroy)
+        cancel_button.pack(side="left", padx=10) 
+
+        confirm_button = Button(frame1, text="Potwierdź", command = lambda: [con.make_reservation(reservation_customer_id, to_reservation.id, reservation_advance) ,top.destroy()]) #dodaj happy informacje ze sie udalo, zamknij tez poprzednie okno
+        confirm_button.pack(side="right", padx=10)
+
 
 
 def refresh_table(free_products_tree, customers_tree, reservations_tree, show_finalized, all_products_tree, show_sold):
@@ -80,35 +91,3 @@ def get_selected_element_id(tree):
         except:
             ret = -1
         return ret
-
-
-def add_product(product_brand_entry, product_model_entry,product_colour_entry, product_price_entry,\
-    product_year_entry, product_order_id_entry):
-        product_brand = product_brand_entry.get().lower().strip()
-        product_model = product_model_entry.get().lower().strip()
-        product_colour = product_colour_entry.get().lower().strip()
-        product_price = product_price_entry.get().strip()
-        product_price = product_price.replace(',', '.', 1)
-        product_year = product_year_entry.get()
-        product_order_id = product_order_id_entry.get().strip()
-        if not product_price:
-            product_price = 0.0
-
-        if not product_brand or not product_model or not product_colour:
-            messagebox.showerror("Error", "Wypełnij pole Marka, Model, Rocznik oraz Kolor")
-            return
-
-        try:
-            product_price = float(product_price)
-            product_model = str(product_model)
-            product_colour = str(product_colour)
-            product_brand = str(product_brand)
-            product_order_id = str(product_order_id)
-            product_year = int(product_year)
-            if product_year < 100:
-                product_year+=2000
-            con.add_product(product_brand, product_model, product_colour, product_year, product_price, product_order_id)
-            fun.refresh_table(self.free_products_tree, self.customers_tree, self.reservations_tree, self.show_finalized, self.all_products_tree, self.show_sold)
-            messagebox.showinfo("Success", "Dodano produkt")
-        except ValueError:
-            messagebox.showerror("Error", "Niewłaściwie podane dane")
