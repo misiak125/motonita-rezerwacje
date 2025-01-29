@@ -99,7 +99,7 @@ class main_window:
         self.customers_tree.bind("<Double-1>", but.on_customer_click)
         self.customers_tree.pack(fill="both", expand=True, padx=10, pady=10)
 
-        create_new_customer_button = Button(tab, text="Dodaj nowego", command=self.create_new_customer)
+        create_new_customer_button = Button(tab, text="Dodaj klienta", command=self.create_new_customer)
         create_new_customer_button.pack(anchor="e", padx=10, pady=10)
 
 
@@ -127,8 +127,10 @@ class main_window:
         email_entry = ttk.Entry(top)
         email_entry.grid(row=2, column=1, padx=10, pady=10, sticky="ew")
 
-        add_button = Button(top, text="Dodaj", action=but.sum_up_customer)
-    
+        add_button = Button(top, text="Dodaj", command=lambda:[but.sum_up_customer(name_entry.get().strip(), 
+            phone_entry.get().strip(), email_entry.get().strip(), top,
+            self.free_products_tree, self.customers_tree, self.reservations_tree, self.show_finalized, self.all_products_tree, self.show_sold)])
+        add_button.grid(row=3, column=1, padx=10, pady=10, sticky="e")
 
     def create_reservations_tab(self, tab):
         
@@ -204,11 +206,17 @@ class main_window:
 
             reservation_advance_label.pack(padx=10, side="left")
             reservation_advance_entry.pack(padx=10, side="left")
+
+            adnotation_label = Label(frame1, text = "Uwagi:")
+            adnotation_entry = ttk.Entry(frame1)
+
+            adnotation_label.pack(fill="both", padx=10, side="left")
+            adnotation_entry.pack(fill = "both", padx=10, side="left")
             
 
             make_button = Button(top, text="Zarezerwuj", command=lambda: [fun.confirm_reservation(to_reservation, fun.get_selected_element_id(res_customers_tree), 
                 reservation_advance_entry.get(), self.free_products_tree, self.customers_tree, self.reservations_tree, self.show_finalized, 
-                self.all_products_tree, self.show_sold), top.destroy()])
+                self.all_products_tree, self.show_sold, top)])
             make_button.pack(side="right", padx=10, pady=10)
         
     

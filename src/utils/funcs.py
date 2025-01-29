@@ -8,13 +8,14 @@ def animate_gif(label, frames, frame_counter):
 
 
 def confirm_reservation(to_reservation, reservation_customer_id, reservation_advance, free_products_tree, 
-    customers_tree, reservations_tree, show_finalized, all_products_tree, show_sold):
+    customers_tree, reservations_tree, show_finalized, all_products_tree, show_sold, lasttop):
 
     if reservation_customer_id == -1:
-        messagebox.showerror("Error", "Wybierz klienta")
+        messagebox.showerror("Error", "Wybierz klienta", parent=lasttop)
     else:
         if not reservation_advance:
-            reservation_advance = 0.0
+            messagebox.showerror("Error", "Podaj wartość zaliczki", parent=lasttop)
+            return
 
         try:
             reservation_advance = reservation.replace(',', '.', 1)
@@ -23,9 +24,12 @@ def confirm_reservation(to_reservation, reservation_customer_id, reservation_adv
 
         try:
             reservation_advance = float(reservation_advance)
+            reservation_advance = round(reservation_advance, 2)
         except:
+            messagebox.showerror("Error", "Błędnie podane dane", parent=lasttop)
+            return
 
-            
+        lasttop.destroy()
         top=Toplevel()
         top.title("Potwierdź rezerwację")
 
