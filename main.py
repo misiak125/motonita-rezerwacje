@@ -1,4 +1,4 @@
-from src import root, initialize_database, OrdersApp
+from src import root, initialize_database
 from src.views.main_view import main_window
 
 if __name__ == "__main__":

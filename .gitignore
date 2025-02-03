@@ -178,3 +178,4 @@ src/utils/__pycache__/
 src/test.py
 /src/orders.db
 todo
+/src/alter_table.py

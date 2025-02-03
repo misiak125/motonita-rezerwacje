@@ -1,4 +1,4 @@
-from tkinter import ttk, messagebox, Toplevel, Label, Button, IntVar, Checkbutton
+from tkinter import ttk, messagebox, Toplevel, Label, Button, IntVar, Checkbutton, Text, WORD
 import src.controllers as con
 import src.utils.funcs as fun
 import src.utils.buttons as but
@@ -47,6 +47,14 @@ class main_window:
         self.free_products_tree.heading("price", text="Najwyższa Cena")
         self.free_products_tree.pack(fill="both", expand=True, padx=10, pady=10)
 
+        self.free_products_tree.bind("<Double-1>", lambda x: self.create_reservation( 
+        fun.get_product_specs_id(self.free_products_tree), "NIE"))
+
+
+        create_reservation_button = Button(tab, text="Zarezerwuj", command=lambda: self.create_reservation( 
+        fun.get_product_specs_id(self.free_products_tree), "NIE"))
+        create_reservation_button.pack(padx=10, pady=10, side="right")
+
 
     def create_all_products_tab(self, tab):
 
@@ -84,14 +92,33 @@ class main_window:
         self.all_products_tree.column("reservation", width="100")
         self.all_products_tree.column("added_on", width="150")
 
-        self.all_products_tree.bind("<Double-1>", self.create_reservation)
+        self.all_products_tree.bind("<Double-1>", lambda x:[self.create_reservation( 
+        fun.get_selected_element_id(self.all_products_tree), fun.get_is_reserved(self.all_products_tree))])
 
         self.all_products_tree.column("order_id", width="150")
         self.all_products_tree.pack(fill="both", expand=True, padx=10, pady=10)
 
+        delete_button = Button(tab, text="Usuń", 
+        command=lambda: [but.delete_product(fun.get_selected_element_id(self.all_products_tree), 
+        fun.get_is_reserved(self.all_products_tree)), 
+        fun.refresh_table(self.free_products_tree, self.customers_tree, self.reservations_tree, 
+        self.show_finalized, self.all_products_tree, self.show_sold)])
+        delete_button.pack(pady=10, padx=10, side="left")
+
+        change_state_button = Button(tab, text="Zmień stan", command=lambda: [but.change_state(fun.get_selected_element_id(self.all_products_tree), 
+        self.root), fun.refresh_table(self.free_products_tree, self.customers_tree, self.reservations_tree, 
+        self.show_finalized, self.all_products_tree, self.show_sold)])
+        change_state_button.pack(padx=10, pady=10, side="right")
+        
+        create_reservation_button = Button(tab, text="Zarezerwuj", command=lambda: self.create_reservation( 
+        fun.get_selected_element_id(self.all_products_tree), fun.get_is_reserved(self.all_products_tree)))
+        create_reservation_button.pack(padx=10, pady=10, side="right")
+
 
     def create_customers_tab(self, tab):
-        self.customers_tree = ttk.Treeview(tab, columns=("name", "phone", "email", "added_on"), show="headings")
+        self.customers_tree = ttk.Treeview(tab, columns=("id", "name", "phone", "email", "added_on"), show="headings")
+        self.customers_tree["displaycolumns"]=("name", "phone", "email", "added_on")
+        self.customers_tree.heading("id", text="ID")
         self.customers_tree.heading("name", text="Imię i Nazwisko")
         self.customers_tree.heading("phone", text="Nr.Tel.")
         self.customers_tree.heading("email", text="Email")
@@ -100,10 +127,16 @@ class main_window:
         self.customers_tree.pack(fill="both", expand=True, padx=10, pady=10)
 
         create_new_customer_button = Button(tab, text="Dodaj klienta", command=self.create_new_customer)
-        create_new_customer_button.pack(anchor="e", padx=10, pady=10)
+        create_new_customer_button.pack(side="right", padx=10, pady=10)
+
+        delete_button = Button(tab, text="Usuń", 
+        command=lambda: [but.delete_customer(fun.get_selected_element_id(self.customers_tree)), 
+        fun.refresh_table(self.free_products_tree, self.customers_tree, self.reservations_tree, 
+        self.show_finalized, self.all_products_tree, self.show_sold)])
+        delete_button.pack(pady=10, padx=10, side="left")
 
 
-    def create_new_customer(self):
+    def create_new_customer(self, callback=None):
         top = Toplevel()
         top.title("Dodaj nowego klienta")
         
@@ -128,9 +161,14 @@ class main_window:
         email_entry.grid(row=2, column=1, padx=10, pady=10, sticky="ew")
 
         add_button = Button(top, text="Dodaj", command=lambda:[but.sum_up_customer(name_entry.get().strip(), 
-            phone_entry.get().strip(), email_entry.get().strip(), top,
-            self.free_products_tree, self.customers_tree, self.reservations_tree, self.show_finalized, self.all_products_tree, self.show_sold)])
+            phone_entry.get().strip(), email_entry.get().strip(), top), 
+            fun.refresh_table(self.free_products_tree, self.customers_tree, self.reservations_tree, self.show_finalized, self.all_products_tree, self.show_sold)])
         add_button.grid(row=3, column=1, padx=10, pady=10, sticky="e")
+
+        top.wait_window()
+    
+        if callback:
+            callback()
 
 
     def create_reservations_tab(self, tab):
@@ -142,9 +180,13 @@ class main_window:
 
         Button1.pack()
         
-        self.reservations_tree = ttk.Treeview(tab, columns=("name", "phone", "email", 
+        self.reservations_tree = ttk.Treeview(tab, columns=("id", "name", "phone", "email", 
         "date", "advance", "brand", "model", "colour"), show="headings")
+        
+        self.reservations_tree["displaycolumns"]=("name", "phone", "email", 
+        "date", "advance", "brand", "model", "colour")
 
+        self.reservations_tree.heading("id", text="ID")
         self.reservations_tree.heading("name", text="Imię i Nazwisko")
         self.reservations_tree.heading("phone", text="Nr.Tel.")
         self.reservations_tree.heading("email", text="Email")
@@ -166,24 +208,40 @@ class main_window:
 
         self.reservations_tree.pack(fill="both", expand=True, padx=10, pady=10)
 
+        delete_button = Button(tab, text="Usuń", 
+        command=lambda: [but.delete_reservation(fun.get_selected_element_id(self.reservations_tree)), 
+        fun.refresh_table(self.free_products_tree, self.customers_tree, self.reservations_tree, 
+        self.show_finalized, self.all_products_tree, self.show_sold)])
+        delete_button.pack(pady=10, padx=10, anchor="sw")
 
-    def create_reservation(self, event):
-        if self.all_products_tree.item(self.all_products_tree.focus(), "values")[8] == "TAK":
+
+    def create_reservation(self, to_reservation_id, is_reserved):
+        if is_reserved == "TAK":
             messagebox.showerror("Error", "Ten pojazd jest już zarezerwowany")
         else:
-            to_reservation_id = fun.get_selected_element_id(self.all_products_tree)
-            to_reservation = con.get_product(to_reservation_id)
+            if to_reservation_id == -1:
+                messagebox.showerror("Error", "Wybierz produkt")
+                return
 
-            
+            to_reservation = con.get_product(to_reservation_id)
 
             top = Toplevel()
             top.title("Utwórz rezerwację")
+
+            top.grid_rowconfigure(0, weight=0)
+            top.grid_rowconfigure(1, weight=1)
+            top.grid_rowconfigure(2, weight=0)
+            top.grid_rowconfigure(3, weight=1)
+            top.grid_rowconfigure(4, weight=0)
+            top.grid_columnconfigure(0, weight=1)
+            top.grid_columnconfigure(1, weight=1)
+
             tytul_rezerwacji = Label(top, text=f"Zarezerwuj {to_reservation.brand} {to_reservation.model} "\
                 f"{to_reservation.year} {to_reservation.colour}", font=("Default", 14))
-            tytul_rezerwacji.grid(row=0, column=0, columnspan=2, pady=10, sticky="nsew")
+            tytul_rezerwacji.grid(row=0, column=0, columnspan=2, pady=10, sticky="nsew") 
 
             customer_frame = ttk.Frame(top)
-            customer_frame.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
+            customer_frame.grid(row=1, columnspan=2, column=0, padx=10, pady=10, sticky="nsew")
             customer_frame.grid_rowconfigure(0, weight=1)
             customer_frame.grid_columnconfigure(0, weight=1)
 
@@ -194,64 +252,64 @@ class main_window:
             res_customers_tree.heading("phone", text="Nr.Tel.")
             res_customers_tree.heading("email", text="Email")
 
-            res_customers_tree.grid(row=1, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
+            res_customers_tree.grid(row=0, column=0, sticky="nsew", padx=0, pady=10) #row1??? columnspan=2, 
 
-            for item in res_customers_tree.get_children():
-                res_customers_tree.delete(item)
+            fun.refresh_res_customer(res_customers_tree)
 
-            customers = con.get_all_customers()
+            customer_addons_frame = ttk.Frame(top)
+            customer_addons_frame.grid(row=2, column=0, columnspan=2, sticky="nsew")
+            customer_addons_frame.grid_rowconfigure(0, weight=0)
+            customer_addons_frame.grid_columnconfigure(0, weight=0)
+            customer_addons_frame.grid_columnconfigure(1, weight=1)
+            customer_addons_frame.grid_columnconfigure(2, weight=0)
 
-            for customer in customers:
-                res_customers_tree.insert("", "end", values=(customer.id, customer.name, customer.phone, 
-                customer.email))
 
+            search_label = Label(customer_addons_frame, text="Wyszukaj:", padx=10)
+            search_label.grid(row=0, column=0, sticky="w")
+            search_entry = ttk.Entry(customer_addons_frame)
+            search_entry.grid(row=0, column=1, padx=10, pady=0, sticky="ew")
+            search_entry.bind("<KeyRelease>", lambda x: fun.filter_tree(search_entry, con.get_all_customers(), res_customers_tree, "name"))
+
+            new_customer_button = Button(customer_addons_frame, text="Nowy klient", command=lambda: self.create_new_customer(lambda: fun.refresh_res_customer(res_customers_tree)))
+            new_customer_button.grid(row=0, column=2, padx=10, pady=0, sticky="e")
 
             reservation_frame = ttk.Frame(top)
-            reservation_frame.grid(row=2, column=0, padx=10, pady=10, sticky="nsew")
-            reservation_frame.grid_rowconfigure(0, weight=1)  
-            reservation_frame.grid_rowconfigure(1, weight=1)  
-            reservation_frame.grid_columnconfigure(0, weight=1)
+            reservation_frame.grid(row=3, columnspan=2, column=0, padx=10, pady=10, sticky="nsew")
+            reservation_frame.grid_rowconfigure(0, weight=0)
+            reservation_frame.grid_rowconfigure(1, weight=1)
+            reservation_frame.grid_columnconfigure(0, weight=0)
+            reservation_frame.grid_columnconfigure(1, weight=1)
+            reservation_frame.grid_columnconfigure(2, weight=0)
+            reservation_frame.grid_columnconfigure(3, weight=1)
 
             reservation_advance_label = Label(reservation_frame, text = "Wartość zaliczki:")
             reservation_advance_entry = ttk.Entry(reservation_frame)
 
             reservation_advance_label.grid(row=0, column=0, padx=10, pady=10, sticky="w")
-            reservation_advance_entry.grid(row=0, column=1, padx=10, pady=10, sticky="ew")
+            reservation_advance_entry.grid(row=0, column=1, padx=0, pady=10, sticky="ew")
 
-            new_price_label = Label(reservation_frame, text = "Nowa cena:")
+            new_price_label = Label(reservation_frame, text = "Ustalona cena:")
             new_price_entry = ttk.Entry(reservation_frame)
 
             new_price_label.grid(row=0, column=2, padx=10, pady=10, sticky="w")
-            new_price_entry.grid(row=0, column=3, padx=10, pady=10, sticky="ew")
+            new_price_entry.grid(row=0, column=3, padx=0, pady=10, sticky="ew")
+            new_price_entry.insert(0, "{:.2f}".format(to_reservation.price))
 
             adnotation_label = Label(reservation_frame, text = "Uwagi:")
-            adnotation_entry = ttk.Entry(reservation_frame)
+            adnotation_entry = Text(reservation_frame, wrap=WORD, height=5)
 
 
             adnotation_label.grid(row=1, column=0, padx=10, pady=10, sticky="w")
-            adnotation_entry.grid(row=1, column=1, padx=10, pady=10, sticky="nsew")
-
-            adnotation_entry.config(width=50)
+            adnotation_entry.grid(row=1, column=1, padx=0, pady=10, sticky="nsew", columnspan=3)
             
+            cancel_button = Button(top, text="Anuluj", command=lambda: top.destroy())
+            cancel_button.grid(row=4, column=0, padx=10, pady=10, sticky="w")
 
             make_button = Button(top, text="Zarezerwuj", command=lambda: [fun.confirm_reservation(to_reservation, fun.get_selected_element_id(res_customers_tree), 
-                reservation_advance_entry.get(), self.free_products_tree, self.customers_tree, self.reservations_tree, self.show_finalized, 
+                reservation_advance_entry.get().strip(), new_price_entry.get().strip(), adnotation_entry.get('1.0', 'end').strip(), self.free_products_tree, self.customers_tree, self.reservations_tree, self.show_finalized, 
                 self.all_products_tree, self.show_sold, top)])
-            make_button.grid(row=3, column=0, padx=10, pady=10, sticky="e")
-
-            top.grid_rowconfigure(1, weight=1)  
-            top.grid_rowconfigure(2, weight=1)  
-            top.grid_columnconfigure(0, weight=1)
-
-            customer_frame.grid_rowconfigure(0, weight=1)  
-            customer_frame.grid_columnconfigure(0, weight=1)
-
-            reservation_frame.grid_rowconfigure(1, weight=1)
-            reservation_frame.grid_columnconfigure(1, weight=1)
-
-            advance_frame.grid_columnconfigure(0, weight=1)  
-            advance_frame.grid_columnconfigure(1, weight=1)
-        
+            make_button.grid(row=4, column=1, padx=10, pady=10, sticky="e")
+            
     
     def create_add_product_tab(self, tab):
         form_frame1 = ttk.Frame(tab)
@@ -301,11 +359,16 @@ class main_window:
         self.product_order_id_entry = ttk.Entry(form_frame4)
         self.product_order_id_entry.pack(side="left", padx=5, pady=5)
         
+        product_quantity_label = ttk.Label(form_frame4, text="Ilość:")
+        product_quantity_label.pack(side="left", padx=5, pady=5)
 
+        self.product_quantity_entry = ttk.Entry(form_frame4)
+        self.product_quantity_entry.insert(1, 1)
+        self.product_quantity_entry.pack(side="left", padx=5, pady=5)
         form_frame3 = ttk.Frame(tab)
         form_frame3.pack(padx=10, pady=10, anchor="w") 
 
         add_button = Button(form_frame3, text="Dodaj", command=lambda: [but.sum_up_product(self.product_brand_entry.get().lower().strip(), self.product_model_entry.get().lower().strip(),
-            self.product_colour_entry.get().lower().strip(), self.product_price_entry.get().lower().strip(), self.product_year_entry.get().lower().strip(), self.product_order_id_entry.get().lower().strip()), 
-            fun.refresh_table(self.free_products_tree, self.customers_tree, self.reservations_tree, self.show_finalized, self.all_products_tree, self.show_sold)])
+            self.product_colour_entry.get().lower().strip(), self.product_price_entry.get().lower().strip(), self.product_year_entry.get().lower().strip(), self.product_order_id_entry.get().lower().strip(),
+            self.product_quantity_entry.get().strip()), fun.refresh_table(self.free_products_tree, self.customers_tree, self.reservations_tree, self.show_finalized, self.all_products_tree, self.show_sold)])
         add_button.pack(side="left", padx=5, pady=5)
