@@ -1,14 +1,20 @@
-from tkinter import ttk, messagebox, Toplevel, Label, Button, IntVar, Checkbutton, Text, WORD
+from tkinter import ttk, messagebox, Toplevel, Label, Button, IntVar, Checkbutton, Text, WORD, StringVar, OptionMenu, END
 import src.controllers as con
 import src.utils.funcs as fun
 import src.utils.buttons as but
 import time
+from PIL import Image, ImageTk
 
 class main_window:    
     def __init__(self, root):
         self.root = root
         self.root.title("Zamówienia Motorland")
-        self.root.geometry("1400x800")
+        self.root.geometry("1450x800")
+
+        ico = Image.open('src/static/icon.png')
+        photo = ImageTk.PhotoImage(ico)
+        root.wm_iconphoto(False, photo)
+
         notebook = ttk.Notebook(self.root)
 
         tab1 = ttk.Frame(notebook)
@@ -16,18 +22,21 @@ class main_window:
         tab3 = ttk.Frame(notebook)
         tab4 = ttk.Frame(notebook)
         tab5 = ttk.Frame(notebook)
+        tab6 = ttk.Frame(notebook)
 
         notebook.add(tab1, text="Wolne Pojazdy")
         notebook.add(tab5, text="Wszystkie Pojazdy")
         notebook.add(tab2, text="Klienci")
         notebook.add(tab3, text="Rezerwacje")
         notebook.add(tab4, text="Dodaj Pojazd")
+        notebook.add(tab6, text="Dodaj opcję")
 
         self.create_free_products_tab(tab1)
         self.create_all_products_tab(tab5)
         self.create_customers_tab(tab2)
         self.create_reservations_tab(tab3)
         self.create_add_product_tab(tab4)
+        self.create_add_option_tab(tab6)
 
 
         fun.refresh_table(self.free_products_tree, self.customers_tree, self.reservations_tree, self.show_finalized, self.all_products_tree, self.show_sold)
@@ -66,10 +75,10 @@ class main_window:
         Button1.pack()
 
         self.all_products_tree = ttk.Treeview(tab, columns=("id", "brand", "model", "year", 
-        "colour", "price", "state", "added_on", "reservation", "order_id"), show="headings")
+        "colour", "price", "state", "added_on", "reservation", "expected_delivery", "order_id"), show="headings")
 
         self.all_products_tree["displaycolumns"]=("brand", "model", "year", 
-        "colour", "price", "state", "added_on", "reservation", "order_id")
+        "colour", "price", "state", "added_on", "reservation", "expected_delivery", "order_id")
 
 
 
@@ -81,16 +90,19 @@ class main_window:
         self.all_products_tree.heading("state", text="Stan")
         self.all_products_tree.heading("added_on", text="Dodany")
         self.all_products_tree.heading("reservation", text="Zarezerwowany")
+        self.all_products_tree.heading("expected_delivery", text="Przew. dostawa")
         self.all_products_tree.heading("order_id", text="Nr Zamówienia")
     
         self.all_products_tree.column("brand", width="100")
         self.all_products_tree.column("model", width="150")
-        self.all_products_tree.column("year", width="70")
-        self.all_products_tree.column("colour", width="120")
+        self.all_products_tree.column("year", width="50")
+        self.all_products_tree.column("colour", width="100")
         self.all_products_tree.column("price", width="100")
         self.all_products_tree.column("state", width="150")
         self.all_products_tree.column("reservation", width="100")
-        self.all_products_tree.column("added_on", width="150")
+        self.all_products_tree.column("added_on", width="100")
+        self.all_products_tree.column("order_id", width="100")
+        self.all_products_tree.column("expected_delivery", width="120")
 
         self.all_products_tree.bind("<Double-1>", lambda x:[self.create_reservation( 
         fun.get_selected_element_id(self.all_products_tree), fun.get_is_reserved(self.all_products_tree))])
@@ -180,31 +192,19 @@ class main_window:
 
         Button1.pack()
         
-        self.reservations_tree = ttk.Treeview(tab, columns=("id", "name", "phone", "email", 
-        "date", "advance", "brand", "model", "colour"), show="headings")
+        self.reservations_tree = ttk.Treeview(tab, columns=("id", "name",
+        "date",  "brand", "model"), show="headings")
         
-        self.reservations_tree["displaycolumns"]=("name", "phone", "email", 
-        "date", "advance", "brand", "model", "colour")
+        self.reservations_tree["displaycolumns"]=("name", 
+        "date", "brand", "model")
 
         self.reservations_tree.heading("id", text="ID")
         self.reservations_tree.heading("name", text="Imię i Nazwisko")
-        self.reservations_tree.heading("phone", text="Nr.Tel.")
-        self.reservations_tree.heading("email", text="Email")
         self.reservations_tree.heading("date", text="Data")
-        self.reservations_tree.heading("advance", text="Zaliczka")
         self.reservations_tree.heading("brand", text="Marka")
         self.reservations_tree.heading("model", text="Model")
-        self.reservations_tree.heading("colour", text="Kolor")
 
-
-        self.reservations_tree.column("name", width=200)
-        self.reservations_tree.column("phone", width=200)
-        self.reservations_tree.column("email", width=200)
-        self.reservations_tree.column("date", width=200)
-        self.reservations_tree.column("advance", width=150)
-        self.reservations_tree.column("brand", width=100)
-        self.reservations_tree.column("model", width=150)
-        self.reservations_tree.column("colour", width=150)
+        self.reservations_tree.bind("<Double-1>", lambda x: self.show_reservation_details(fun.get_selected_element_id(self.reservations_tree)))
 
         self.reservations_tree.pack(fill="both", expand=True, padx=10, pady=10)
 
@@ -212,7 +212,33 @@ class main_window:
         command=lambda: [but.delete_reservation(fun.get_selected_element_id(self.reservations_tree)), 
         fun.refresh_table(self.free_products_tree, self.customers_tree, self.reservations_tree, 
         self.show_finalized, self.all_products_tree, self.show_sold)])
-        delete_button.pack(pady=10, padx=10, anchor="sw")
+        delete_button.pack(pady=10, padx=10, side="left")
+
+        show_more_button = Button(tab, text="Pokaż szczegóły", command=lambda: self.show_reservation_details(fun.get_selected_element_id(self.reservations_tree)))
+        show_more_button.pack(padx=10, pady=10, side="right")
+
+
+    def show_reservation_details(self, res_id):
+        if res_id == -1:
+            messagebox.showerror("Error", "Wybierz rezerwację")
+            return
+
+        top=Toplevel()
+        top.title("Szczegóły rezerwacji")
+        reservarion = con.get_reservation(res_id)
+
+        label = Label(top, text=f"Imię i Nazwisko: {reservarion.Customer.name}\n"
+        f"Numer tel.: {reservarion.Customer.phone}\n"
+        f"Email: {reservarion.Customer.email}\n"
+        f"Marka: {reservarion.Product.brand}\n"
+        f"Model: {reservarion.Product.model}\n"
+        f"Rocznik: {reservarion.Product.year}\n"
+        f"Kolor: {reservarion.Product.colour}\n"
+        f"Data rezerwacji: {reservarion.Reservation.date.strftime('%d-%m-%Y %H:%M')}\n"
+        f"Wartość zaliczki: {reservarion.Reservation.advance}\n"
+        f"Uwagi do rezerwacji: {reservarion.Reservation.adnotation}\n"
+        , justify="left", wraplength=600)
+        label.pack(padx=10, pady=10)
 
 
     def create_reservation(self, to_reservation_id, is_reserved):
@@ -312,63 +338,100 @@ class main_window:
             
     
     def create_add_product_tab(self, tab):
-        form_frame1 = ttk.Frame(tab)
-        form_frame1.pack(padx=10, pady=10, anchor="w") 
+        
 
-        product_brand_label = ttk.Label(form_frame1, text="Marka:")
-        product_brand_label.pack(side="left", padx=5, pady=5)
+        product_brand_label = ttk.Label(tab, text="Marka:", justify="left")
+        product_brand_label.grid(row=0, column=0, padx=15, pady=15, sticky="w")
 
-        self.product_brand_entry = ttk.Entry(form_frame1)
-        self.product_brand_entry.pack(side="left", padx=5, pady=5)
+        product_brand_var = StringVar()
+        self.product_brand_entry = ttk.Combobox(tab, textvariable = product_brand_var, state="readonly")
+        self.product_brand_entry["values"] = con.get_brands_list()
+        self.product_brand_entry.grid(row=0, column=1, padx=15, pady=15, sticky="w")
 
 
-        product_model_label = ttk.Label(form_frame1, text="Model:")
-        product_model_label.pack(side="left", padx=5, pady=5)
+        product_model_label = ttk.Label(tab, text="Model:", justify="left")
+        product_model_label.grid(row=0, column=2, padx=15, pady=15, sticky="w")
 
-        self.product_model_entry = ttk.Entry(form_frame1)
-        self.product_model_entry.pack(side="left", padx=5, pady=5)
+        product_model_var = StringVar()
+        self.product_model_entry = ttk.Combobox(tab, textvariable = product_model_var, state="readonly")
+        self.product_model_entry.bind("<Button-1>", lambda x: fun.fill_models(self.product_model_entry, product_brand_var.get()))
+        self.product_model_entry.grid(row=0, column=3, padx=15, pady=15, sticky="w")
 
-        form_frame2 = ttk.Frame(tab)
-        form_frame2.pack(padx=10, pady=10, anchor="w") 
 
-        product_colour_label = ttk.Label(form_frame2, text="Kolor:")
-        product_colour_label.pack(side="left", padx=5, pady=5)
+        product_colour_label = ttk.Label(tab, text="Kolor:", justify="left")
+        product_colour_label.grid(row=1, column=0, padx=15, pady=15, sticky="w")
 
-        self.product_colour_entry = ttk.Entry(form_frame2)
-        self.product_colour_entry.pack(side="left", padx=5, pady=5)
+        product_colour_var = StringVar()
+        self.product_colour_entry = ttk.Combobox(tab, textvariable = product_colour_var, state="readonly")
+        self.product_colour_entry["values"] = con.get_colours_list()
+        self.product_colour_entry.grid(row=1, column=1, padx=15, pady=15, sticky="w")
         
         
-        product_price_label = ttk.Label(form_frame2, text="Cena:")
-        product_price_label.pack(side="left", padx=5, pady=5)
+        product_price_label = ttk.Label(tab, text="Cena:", justify="left")
+        product_price_label.grid(row=2, column=0, padx=15, pady=15, sticky="w")
 
-        self.product_price_entry = ttk.Entry(form_frame2)
-        self.product_price_entry.pack(side="left", padx=5, pady=5)
+        self.product_price_entry = ttk.Entry(tab)
+        self.product_price_entry.grid(row=2, column=1, padx=15, pady=15, sticky="ew")
 
-        form_frame4 = ttk.Frame(tab)
-        form_frame4.pack(padx=10, pady=10, anchor="w") 
 
-        product_year_label = ttk.Label(form_frame4, text="Rocznik")
-        product_year_label.pack(side="left", padx=5, pady=5)
+        product_year_label = ttk.Label(tab, text="Rocznik:", justify="left")
+        product_year_label.grid(row=1, column=2, padx=15, pady=15, sticky="w")
 
-        self.product_year_entry = ttk.Entry(form_frame4)
-        self.product_year_entry.pack(side="left", padx=5, pady=5)
+        self.product_year_entry = ttk.Entry(tab)
+        self.product_year_entry.grid(row=1, column=3, padx=15, pady=15, sticky="ew")
 
-        product_order_id_label = ttk.Label(form_frame4, text="Nr zamówienia:")
-        product_order_id_label.pack(side="left", padx=5, pady=5)
+        product_order_id_label = ttk.Label(tab, text="Nr zamówienia:", justify="left")
+        product_order_id_label.grid(row=2, column=2, padx=15, pady=15, sticky="w")
 
-        self.product_order_id_entry = ttk.Entry(form_frame4)
-        self.product_order_id_entry.pack(side="left", padx=5, pady=5)
+        self.product_order_id_entry = ttk.Entry(tab)
+        self.product_order_id_entry.grid(row=2, column=3, padx=15, pady=15, sticky="ew")
         
-        product_quantity_label = ttk.Label(form_frame4, text="Ilość:")
-        product_quantity_label.pack(side="left", padx=5, pady=5)
+        product_quantity_label = ttk.Label(tab, text="Ilość:", justify="left")
+        product_quantity_label.grid(row=3, column=2, padx=15, pady=15, sticky="w")
 
-        self.product_quantity_entry = ttk.Entry(form_frame4)
+        self.product_quantity_entry = ttk.Entry(tab)
         self.product_quantity_entry.insert(1, 1)
-        self.product_quantity_entry.pack(side="left", padx=5, pady=5)
-        form_frame3 = ttk.Frame(tab)
-        form_frame3.pack(padx=10, pady=10, anchor="w") 
+        self.product_quantity_entry.grid(row=3, column=3, padx=15, pady=15, sticky="ew")
 
-        add_button = Button(form_frame3, text="Dodaj", command=lambda: [but.sum_up_product(self.product_brand_entry.get().lower().strip(), self.product_model_entry.get().lower().strip(),
-            self.product_colour_entry.get().lower().strip(), self.product_price_entry.get().lower().strip(), self.product_year_entry.get().lower().strip(), self.product_order_id_entry.get().lower().strip(),
-            self.product_quantity_entry.get().strip()), fun.refresh_table(self.free_products_tree, self.customers_tree, self.reservations_tree, self.show_finalized, self.all_products_tree, self.show_sold)])
-        add_button.pack(side="left", padx=5, pady=5)
+        product_expected_delivery_label = ttk.Label(tab, text="Przewidywana dostawa:", justify="left")
+        product_expected_delivery_label.grid(row=3, column=0, padx=15, pady=15, sticky="w")
+
+        self.product_expected_delivery_entry = ttk.Entry(tab)
+        self.product_expected_delivery_entry.grid(row=3, column=1, padx=15, pady=15, sticky="ew")
+
+
+        add_button = Button(tab, text="Dodaj", command=lambda: [but.sum_up_product(product_brand_var.get().strip(), product_model_var.get().strip(),
+            product_colour_var.get().strip(), self.product_price_entry.get().lower().strip(), self.product_year_entry.get().lower().strip(), self.product_order_id_entry.get().strip(),
+            self.product_quantity_entry.get().strip(), self.product_expected_delivery_entry.get().strip()), fun.refresh_table(self.free_products_tree, self.customers_tree, self.reservations_tree, self.show_finalized, self.all_products_tree, self.show_sold),
+            self.product_brand_entry.set(""), self.product_model_entry.set(""), self.product_colour_entry.set(""), self.product_year_entry.delete(0, END), self.product_order_id_entry.delete(0, END), self.product_price_entry.delete(0, END), 
+            self.product_expected_delivery_entry.delete(0, END), self.product_quantity_entry.delete(0, END), self.product_quantity_entry.insert(0,"1")])
+        add_button.grid(row=4, column=0, padx=15, pady=15, sticky="w")
+
+        
+    def create_add_option_tab(self, tab):
+        brand_label = Label(tab, text = "Dodaj markę: ")
+        brand_label.grid(row=0, column=0, padx=10, pady=10, sticky="w")
+        brand_entry = ttk.Entry(tab)
+        brand_entry.grid(row=0, column=1, padx=10, pady=10, columnspan=2, sticky="ew")
+        brand_button = Button(tab, text="Dodaj", command=lambda: [fun.add_brand(brand_entry.get(), self.product_brand_entry, self.add_model_brand_entry), brand_entry.delete(0, END)])
+        brand_button.grid(row=0, column=3, padx=10, pady=10, sticky="w")
+
+
+        colour_label = Label(tab, text = "Dodaj kolor: ")
+        colour_label.grid(row=2, column=0, padx=10, pady=10, sticky="w")
+        colour_entry = ttk.Entry(tab)
+        colour_entry.grid(row=2, column=1, padx=10, pady=10, columnspan=2, sticky="ew")
+        colour_button = Button(tab, text="Dodaj", command=lambda: [fun.add_colour(colour_entry.get(), self.product_colour_entry), colour_entry.delete(0, END)])
+        colour_button.grid(row=2, column=3, padx=10, pady=10, sticky="w")
+
+
+        model_label = Label(tab, text = "Dodaj model: ")
+        model_label.grid(row=1, column=0, padx=10, pady=10, sticky="w")
+        model_entry = ttk.Entry(tab)
+        new_model_brand = StringVar()
+        self.add_model_brand_entry=ttk.Combobox(tab, textvariable=new_model_brand, state="readonly")
+        self.add_model_brand_entry["values"] = con.get_brands_list()
+        self.add_model_brand_entry.grid(row=1, column=1, padx=10, pady=10, sticky="w")
+        model_entry.grid(row=1, column=2, padx=10, pady=10, sticky="w")
+        model_button = Button(tab, text="Dodaj", command=lambda: [fun.add_model(model_entry.get(), new_model_brand.get()), model_entry.delete(0, END), self.add_model_brand_entry.set('')])
+        model_button.grid(row=1, column=3, padx=10, pady=10, sticky="w")

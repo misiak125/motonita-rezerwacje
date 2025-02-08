@@ -24,7 +24,7 @@ def on_customer_click(event):
     animate_gif(gif_label, frames, frame_counter)
 
 
-def sum_up_product(product_brand, product_model, product_colour, product_price, product_year, product_order_id, quantity):
+def sum_up_product(product_brand, product_model, product_colour, product_price, product_year, product_order_id, quantity, expected_delivery):
 
         if not product_price:
             product_price = 0.0
@@ -47,11 +47,12 @@ def sum_up_product(product_brand, product_model, product_colour, product_price, 
             product_order_id = str(product_order_id)
             product_year = int(product_year)
             quantity = int(quantity)
+            expected_delivery = str(expected_delivery)
             if product_year < 1000:
                 product_year+=2000
             for i in range(quantity):
-                con.add_product(product_brand, product_model, product_colour, product_year, product_price, product_order_id)
-            messagebox.showinfo("Success", "Dodano produkt")
+                con.add_product(product_brand, product_model, product_colour, product_year, product_price, product_order_id, expected_delivery)
+            messagebox.showinfo("Sukces", "Dodano produkt")
         except ValueError:
             messagebox.showerror("Error", "Niewłaściwie podane dane")
 
@@ -76,23 +77,20 @@ def sum_up_customer(new_customer_name, new_customer_phone, new_customer_email, l
         messagebox.showerror("Error", "Źle wprowadzono adres email", parent=lasttop)
         return
     if new_customer_email=="":
-        ensure_no_email(lasttop, new_customer_name, new_customer_phone, new_customer_email, free_products_tree, 
-    customers_tree, reservations_tree, show_finalized, all_products_tree, show_sold)
+        ensure_no_email(lasttop, new_customer_name, new_customer_phone, new_customer_email)
         return
         
     lasttop.destroy()
     con.add_customer(new_customer_name, new_customer_phone, new_customer_email)
 
 
-def ensure_no_email(lasttop, new_customer_name, new_customer_phone, new_customer_email, free_products_tree, 
-    customers_tree, reservations_tree, show_finalized, all_products_tree, show_sold):
+def ensure_no_email(lasttop, new_customer_name, new_customer_phone, new_customer_email):
     top=Toplevel()
     ask_label = Label(top, text="Czy chcesz dodać adres email?", font=("Default", 14))
     ask_label.grid(pady=10, padx=10, row=0, column=0, columnspan=2, sticky="nsew")
 
     yes_button = Button(top, text="Tak", command=lambda: top.destroy())
-    no_button = Button(top, text="Nie", command=lambda: [top.destroy(), con.add_customer(new_customer_name, new_customer_phone, new_customer_email), lasttop.destroy(),
-        refresh_table(free_products_tree, customers_tree, reservations_tree, show_finalized, all_products_tree, show_sold)])
+    no_button = Button(top, text="Nie", command=lambda: [top.destroy(), con.add_customer(new_customer_name, new_customer_phone, new_customer_email), lasttop.destroy()])
 
     yes_button.grid(pady=10, padx=10, row=1, column=1, sticky="e")
     no_button.grid(pady=10, padx=10, row=1, column=0, sticky="w")

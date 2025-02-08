@@ -49,7 +49,7 @@ def confirm_reservation(to_reservation, reservation_customer_id, reservation_adv
             f"{to_reservation.colour} dla {reservation_customer.name}. \nNr.tel: {reservation_customer.phone} "\
             f"\nZaliczka: {reservation_advance:.2f}"\
             f"\nUstalona cena: {new_price:.2f}"\
-            f"\nUwagi: {adnotation}", font=("Default", 14), justify="left")
+            f"\nUwagi: {adnotation}", font=("Default", 14), justify="left", wraplength=700)
 
         
         final_res.pack(pady=20, padx=10, anchor="center")
@@ -61,7 +61,7 @@ def confirm_reservation(to_reservation, reservation_customer_id, reservation_adv
         cancel_button.pack(side="left", padx=10) 
 
         confirm_button = Button(frame1, text="Potwierdź", command = lambda: [con.make_reservation(reservation_customer_id, 
-            to_reservation.id, reservation_advance), con.change_price(to_reservation.id, new_price) ,top.destroy(), refresh_table(free_products_tree, customers_tree, reservations_tree, show_finalized, all_products_tree, show_sold)]) #dodaj happy informacje ze sie udalo, zamknij tez poprzednie okno
+            to_reservation.id, reservation_advance, adnotation), con.change_price(to_reservation.id, new_price) ,top.destroy(), refresh_table(free_products_tree, customers_tree, reservations_tree, show_finalized, all_products_tree, show_sold)]) #dodaj happy informacje ze sie udalo, zamknij tez poprzednie okno
         confirm_button.pack(side="right", padx=10)
 
 
@@ -108,9 +108,9 @@ def refresh_table(free_products_tree, customers_tree, reservations_tree, show_fi
             tag='even'
         else:
             tag='odd'
-        reservations_tree.insert("", "end", values=(res.Reservation.id, res.Customer.name, res.Customer.phone, 
-        res.Customer.email, res.Reservation.date.strftime("%d-%m-%Y %H:%M"), res.Reservation.advance, 
-        res.Product.brand, res.Product.model, res.Product.colour), tags=(tag,))
+        reservations_tree.insert("", "end", values=(res.Reservation.id, res.Customer.name,
+        res.Reservation.date.strftime("%d-%m-%Y %H:%M"),
+        res.Product.brand, res.Product.model), tags=(tag,))
 
     reservations_tree.tag_configure('odd', background='#BEBEBE')
 
@@ -133,7 +133,7 @@ def refresh_table(free_products_tree, customers_tree, reservations_tree, show_fi
             czy_rezerwowany = "TAK"
         all_products_tree.insert("", "end", values=(product.Product.id, product.Product.brand, product.Product.model, 
         product.Product.year, product.Product.colour, product.Product.price, product.Product.state, 
-        product.Product.added_on.strftime("%d-%m-%Y %H:%M:%S"), czy_rezerwowany, product.Product.order_id), tags=(tag,))
+        product.Product.added_on.strftime("%d-%m-%Y %H:%M"), czy_rezerwowany, product.Product.excepted_delivery, product.Product.order_id), tags=(tag,))
 
     all_products_tree.tag_configure('odd', background='#BEBEBE')
     
@@ -186,3 +186,38 @@ def get_product_specs_id(tree):
 
     
     return con.get_first_free_element(brand, model, colour, year).id
+
+
+def add_brand(brand, brand_cbox, new_brand_cbox):
+    if brand == "":
+        return
+    try:
+        con.add_brand(brand)
+        brand_cbox["values"] = con.get_brands_list()
+        new_brand_cbox["values"] = con.get_brands_list()
+        messagebox.showinfo("Sukces", "Pomyślnie dodano markę")
+    except:
+        messagebox.showerror("Error", "Nie udało się dodać marki")
+
+def add_colour(colour, colour_cbox):
+    if colour == "":
+        return
+    try:
+        con.add_colour(colour)
+        colour_cbox["values"] = con.get_colours_list()
+        messagebox.showinfo("Sukces", "Pomyślnie dodano kolor")
+    except:
+        messagebox.showerror("Error", "Nie udało się dodać koloru")
+
+def add_model(model, brand):
+    if model == "" or brand == "" or brand is None:
+        return
+    try:
+        con.add_model(model, brand)
+        messagebox.showinfo("Sukces", "Pomyślnie dodano model")
+    except:
+        messagebox.showerror("Error", "Nie udało się dodać modelu")
+
+def fill_models(models_cbox, brand):
+    models_cbox["values"] = con.get_models_list(brand)
+    models_cbox.set('')

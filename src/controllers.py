@@ -1,11 +1,11 @@
 from . import session
-from .models import Product, Customer, Reservation
+from .models import Product, Customer, Reservation, Colour, Brand, Model
 import datetime
 from sqlalchemy import Select, func, asc, desc, update, delete
 
-def add_product(brand, model, colour, year, price, order_id):
+def add_product(brand, model, colour, year, price, order_id, excepted_delivery):
     new_order = Product(brand=brand, model=model, colour=colour, year=year, added_on=datetime.datetime.now(),
-    price=price, order_id=order_id, state="Oczekujemy na dostawę")
+    price=price, order_id=order_id, state="Oczekujemy na dostawę", excepted_delivery = excepted_delivery)
 
     session.add(new_order)
     session.commit()
@@ -16,9 +16,9 @@ def add_customer(name, phone, email):
     session.add(new_customer)
     session.commit()
 
-def make_reservation(customer_id, product_id, advance):
+def make_reservation(customer_id, product_id, advance, adnotation):
     new_reservation=Reservation(date=datetime.datetime.now(), 
-    customer_id=customer_id, product_id=product_id, advance = advance)
+    customer_id=customer_id, product_id=product_id, advance = advance, adnotation = adnotation)
 
     session.add(new_reservation)
     session.commit()
@@ -130,3 +130,54 @@ def get_first_free_element(brand_given, model_given, colour_given, year_given):
             .first()
 
     return result
+
+def get_colours_list():
+    res = session.query(Colour).order_by(Colour.name)
+    lista = []
+    for col in res:
+        lista.append(col.name)
+    
+    return lista
+
+def add_colour(col):
+    colour = Colour(name=col)
+    session.add(colour)
+    session.commit()
+
+def get_brands_list():
+    res = session.query(Brand).order_by(Brand.name)
+    lista = []
+    for bra in res:
+        lista.append(bra.name)
+    
+    return lista
+
+
+def add_brand(bra):
+    brand = Brand(name=bra)
+    session.add(brand)
+    session.commit()
+
+
+def add_model(mod, brand):
+    brand = session.query(Brand).where(Brand.name == brand).first()
+    brand_idd = brand.id
+    new_model = Model(name=mod, brand_id= brand_idd)
+    session.add(new_model)
+    session.commit()
+
+def get_models_list(brand):
+    if brand is None or brand=="":
+        return []
+    brand = session.query(Brand).where(Brand.name == brand).first()
+    brand_idd = brand.id
+    res = session.query(Model).where(Model.brand_id == brand_idd).order_by(Model.name)
+    lista = []
+    for mod in res:
+        lista.append(mod.name)
+    
+    return lista
+    
+
+def get_reservation(id_given):
+    return session.query(Reservation, Product, Customer).join(Product).join(Customer).where(Reservation.id == id_given).first()
