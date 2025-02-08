@@ -14,7 +14,8 @@ class Product(Base):
     year = Column(Integer, nullable=False)
     state = Column(String)
     order_id = Column(String)
-    #reservation = Column(Boolean, nullable=False, default=False)
+    excepted_delivery = Column(String)
+    #reservation = Column(Boolean, nullable=False, default=False)comboboxleft
     #nazwa, kolor, rezerwacja
 
 class Customer(Base):
@@ -34,6 +35,7 @@ class Reservation(Base):
     customer_id=Column(ForeignKey("customers.id"))
     product_id=Column(ForeignKey("products.id"))
     advance = Column(Float, nullable=False)
+    adnotation = Column(String)
 
     #customer = relationship(Customer, back_populates="reservations")
     #product = relationship(Product, back_populates="reservations")
