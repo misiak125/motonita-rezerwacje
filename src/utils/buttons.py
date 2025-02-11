@@ -36,7 +36,7 @@ def sum_up_product(product_brand, product_model, product_colour, product_price, 
         except:
             pass
 
-        if not product_brand or not product_model or not product_colour or not quantity:
+        if not product_brand or not product_model or not product_colour or not quantity or not product_year:
             messagebox.showerror("Error", "Wypełnij pole Marka, Model, Rocznik, Kolor oraz Ilość")
             return
 

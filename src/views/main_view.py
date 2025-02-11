@@ -7,6 +7,7 @@ from PIL import Image, ImageTk
 from src import resource_path
 import os
 
+
 class main_window:    
     def __init__(self, root):
         self.root = root
@@ -342,7 +343,7 @@ class main_window:
     def create_add_product_tab(self, tab):
         
 
-        product_brand_label = ttk.Label(tab, text="Marka:", justify="left")
+        product_brand_label = ttk.Label(tab, text="Marka:*", justify="left")
         product_brand_label.grid(row=0, column=0, padx=15, pady=15, sticky="w")
 
         product_brand_var = StringVar()
@@ -351,7 +352,7 @@ class main_window:
         self.product_brand_entry.grid(row=0, column=1, padx=15, pady=15, sticky="w")
 
 
-        product_model_label = ttk.Label(tab, text="Model:", justify="left")
+        product_model_label = ttk.Label(tab, text="Model:*", justify="left")
         product_model_label.grid(row=0, column=2, padx=15, pady=15, sticky="w")
 
         product_model_var = StringVar()
@@ -360,7 +361,7 @@ class main_window:
         self.product_model_entry.grid(row=0, column=3, padx=15, pady=15, sticky="w")
 
 
-        product_colour_label = ttk.Label(tab, text="Kolor:", justify="left")
+        product_colour_label = ttk.Label(tab, text="Kolor:*", justify="left")
         product_colour_label.grid(row=1, column=0, padx=15, pady=15, sticky="w")
 
         product_colour_var = StringVar()
@@ -376,7 +377,7 @@ class main_window:
         self.product_price_entry.grid(row=2, column=1, padx=15, pady=15, sticky="ew")
 
 
-        product_year_label = ttk.Label(tab, text="Rocznik:", justify="left")
+        product_year_label = ttk.Label(tab, text="Rocznik:*", justify="left")
         product_year_label.grid(row=1, column=2, padx=15, pady=15, sticky="w")
 
         self.product_year_entry = ttk.Entry(tab)
@@ -388,7 +389,7 @@ class main_window:
         self.product_order_id_entry = ttk.Entry(tab)
         self.product_order_id_entry.grid(row=2, column=3, padx=15, pady=15, sticky="ew")
         
-        product_quantity_label = ttk.Label(tab, text="Ilość:", justify="left")
+        product_quantity_label = ttk.Label(tab, text="Ilość:*", justify="left")
         product_quantity_label.grid(row=3, column=2, padx=15, pady=15, sticky="w")
 
         self.product_quantity_entry = ttk.Entry(tab)
