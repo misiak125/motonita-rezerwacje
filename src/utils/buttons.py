@@ -3,12 +3,14 @@ from .funcs import animate_gif, refresh_table
 from tkinter import Toplevel, Label, ttk, messagebox, Button, StringVar
 from PIL import ImageTk, Image
 import src.controllers as con
+from src import resource_path
+import os
 
 def on_customer_click(event):
     top = Toplevel()
     frame_counter = 0
     top.title("GRATULACJE!")
-    cat_gif = Image.open(r"src/static/cat1.gif")
+    cat_gif = Image.open(resource_path(os.path.join("static", "cat1.gif")))
     frames = []
     for i in range(cat_gif.n_frames):
         cat_gif.seek(i)  

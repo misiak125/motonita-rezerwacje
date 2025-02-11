@@ -4,17 +4,19 @@ import src.utils.funcs as fun
 import src.utils.buttons as but
 import time
 from PIL import Image, ImageTk
+from src import resource_path
+import os
 
 class main_window:    
     def __init__(self, root):
         self.root = root
         self.root.title("Zamówienia Motorland")
-        self.root.geometry("1450x800")
-
-        ico = Image.open('src/static/icon.png')
+        self.root.geometry("1200x700")
+		
+        ico = Image.open(resource_path(os.path.join('static','icon.png')))
         photo = ImageTk.PhotoImage(ico)
         root.wm_iconphoto(False, photo)
-
+		
         notebook = ttk.Notebook(self.root)
 
         tab1 = ttk.Frame(notebook)
