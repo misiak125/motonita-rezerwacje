@@ -30,8 +30,8 @@ class main_window:
         notebook.add(tab5, text="Wszystkie Pojazdy")
         notebook.add(tab2, text="Klienci")
         notebook.add(tab3, text="Rezerwacje")
-        notebook.add(tab4, text="Dodaj Pojazd")
-        notebook.add(tab6, text="Dodaj opcję")
+        notebook.add(tab4, text="Zamówienie")
+        notebook.add(tab6, text="Dodaj Pojazd")
 
         self.create_free_products_tab(tab1)
         self.create_all_products_tab(tab5)
@@ -188,7 +188,7 @@ class main_window:
     def create_reservations_tab(self, tab):
         
         self.show_finalized = IntVar()
-        Button1 = Checkbutton(tab, text = "Pokaż ukończone tranzakcje", 
+        Button1 = Checkbutton(tab, text = "Pokaż ukończone transakcje", 
                     variable = self.show_finalized, onvalue = 1, offvalue = 0,
                     command=lambda: fun.refresh_table(self.free_products_tree, self.customers_tree, self.reservations_tree, self.show_finalized, self.all_products_tree, self.show_sold))
 
