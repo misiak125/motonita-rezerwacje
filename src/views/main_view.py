@@ -73,7 +73,7 @@ class main_window:
         self.show_sold = IntVar()
         Button1 = Checkbutton(tab, text = "Pokaż wydane pojazdy", 
                     variable = self.show_sold, onvalue = 1, offvalue = 0,
-                    command=lambda: fun.refresh_table(self.free_products_tree, self.customers_tree, self.reservations_tree, self.show_finalized, self.all_products_tree, self.show_sold))
+                    command=lambda: print("tu refresh"))
 
         Button1.pack()
 
@@ -115,14 +115,11 @@ class main_window:
 
         delete_button = Button(tab, text="Usuń", 
         command=lambda: [but.delete_product(fun.get_selected_element_id(self.all_products_tree), 
-        fun.get_is_reserved(self.all_products_tree)), 
-        fun.refresh_table(self.free_products_tree, self.customers_tree, self.reservations_tree, 
-        self.show_finalized, self.all_products_tree, self.show_sold)])
+        fun.get_is_reserved(self.all_products_tree))])
         delete_button.pack(pady=10, padx=10, side="left")
 
         change_state_button = Button(tab, text="Zmień stan", command=lambda: [but.change_state(fun.get_selected_element_id(self.all_products_tree), 
-        self.root), fun.refresh_table(self.free_products_tree, self.customers_tree, self.reservations_tree, 
-        self.show_finalized, self.all_products_tree, self.show_sold)])
+        self.root)])
         change_state_button.pack(padx=10, pady=10, side="right")
         
         create_reservation_button = Button(tab, text="Zarezerwuj", command=lambda: self.create_reservation( 
@@ -145,9 +142,7 @@ class main_window:
         create_new_customer_button.pack(side="right", padx=10, pady=10)
 
         delete_button = Button(tab, text="Usuń", 
-        command=lambda: [but.delete_customer(fun.get_selected_element_id(self.customers_tree)), 
-        fun.refresh_table(self.free_products_tree, self.customers_tree, self.reservations_tree, 
-        self.show_finalized, self.all_products_tree, self.show_sold)])
+        command=lambda: [but.delete_customer(fun.get_selected_element_id(self.customers_tree))])
         delete_button.pack(pady=10, padx=10, side="left")
 
 
@@ -176,8 +171,7 @@ class main_window:
         email_entry.grid(row=2, column=1, padx=10, pady=10, sticky="ew")
 
         add_button = Button(top, text="Dodaj", command=lambda:[but.sum_up_customer(name_entry.get().strip(), 
-            phone_entry.get().strip(), email_entry.get().strip(), top), 
-            fun.refresh_table(self.free_products_tree, self.customers_tree, self.reservations_tree, self.show_finalized, self.all_products_tree, self.show_sold)])
+            phone_entry.get().strip(), email_entry.get().strip(), top)])
         add_button.grid(row=3, column=1, padx=10, pady=10, sticky="e")
 
         top.wait_window()
@@ -191,7 +185,7 @@ class main_window:
         self.show_finalized = IntVar()
         Button1 = Checkbutton(tab, text = "Pokaż ukończone transakcje", 
                     variable = self.show_finalized, onvalue = 1, offvalue = 0,
-                    command=lambda: fun.refresh_table(self.free_products_tree, self.customers_tree, self.reservations_tree, self.show_finalized, self.all_products_tree, self.show_sold))
+                    command=lambda: print("tu refresh"))
 
         Button1.pack()
         
@@ -212,9 +206,7 @@ class main_window:
         self.reservations_tree.pack(fill="both", expand=True, padx=10, pady=10)
 
         delete_button = Button(tab, text="Usuń", 
-        command=lambda: [but.delete_reservation(fun.get_selected_element_id(self.reservations_tree)), 
-        fun.refresh_table(self.free_products_tree, self.customers_tree, self.reservations_tree, 
-        self.show_finalized, self.all_products_tree, self.show_sold)])
+        command=lambda: [but.delete_reservation(fun.get_selected_element_id(self.reservations_tree))])
         delete_button.pack(pady=10, padx=10, side="left")
 
         show_more_button = Button(tab, text="Pokaż szczegóły", command=lambda: self.show_reservation_details(fun.get_selected_element_id(self.reservations_tree)))
@@ -405,7 +397,7 @@ class main_window:
 
         add_button = Button(tab, text="Dodaj", command=lambda: [but.sum_up_product(product_brand_var.get().strip(), product_model_var.get().strip(),
             product_colour_var.get().strip(), self.product_price_entry.get().lower().strip(), self.product_year_entry.get().lower().strip(), self.product_order_id_entry.get().strip(),
-            self.product_quantity_entry.get().strip(), self.product_expected_delivery_entry.get().strip()), fun.refresh_table(self.free_products_tree, self.customers_tree, self.reservations_tree, self.show_finalized, self.all_products_tree, self.show_sold),
+            self.product_quantity_entry.get().strip(), self.product_expected_delivery_entry.get().strip()),
             self.product_brand_entry.set(""), self.product_model_entry.set(""), self.product_colour_entry.set(""), self.product_year_entry.delete(0, END), self.product_order_id_entry.delete(0, END), self.product_price_entry.delete(0, END), 
             self.product_expected_delivery_entry.delete(0, END), self.product_quantity_entry.delete(0, END), self.product_quantity_entry.insert(0,"1")])
         add_button.grid(row=4, column=0, padx=15, pady=15, sticky="w")

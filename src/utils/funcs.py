@@ -61,7 +61,7 @@ def confirm_reservation(to_reservation, reservation_customer_id, reservation_adv
         cancel_button.pack(side="left", padx=10) 
 
         confirm_button = Button(frame1, text="Potwierdź", command = lambda: [con.make_reservation(reservation_customer_id, 
-            to_reservation.id, reservation_advance, adnotation), con.change_price(to_reservation.id, new_price) ,top.destroy(), refresh_table(free_products_tree, customers_tree, reservations_tree, show_finalized, all_products_tree, show_sold)]) #dodaj happy informacje ze sie udalo, zamknij tez poprzednie okno
+            to_reservation.id, reservation_advance, adnotation), con.change_price(to_reservation.id, new_price) ,top.destroy()]) #dodaj happy informacje ze sie udalo, zamknij tez poprzednie okno
         confirm_button.pack(side="right", padx=10)
 
 

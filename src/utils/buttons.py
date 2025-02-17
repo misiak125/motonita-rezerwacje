@@ -1,5 +1,5 @@
 import re
-from .funcs import animate_gif, refresh_table
+from .funcs import animate_gif
 from tkinter import Toplevel, Label, ttk, messagebox, Button, StringVar
 from PIL import ImageTk, Image
 import src.controllers as con
