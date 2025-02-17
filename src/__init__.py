@@ -37,6 +37,7 @@ db_path = get_db_path()
 engine=create_engine(f"sqlite:///{db_path}")
 Session = sessionmaker(bind=engine, autocommit=False, autoflush=False)
 session = Session()
+q_session = Session()
 
 
 def initialize_database():
@@ -51,19 +52,14 @@ app = main_window(root)
 
 @event.listens_for(Session, 'after_commit')
 def refresh_after_commit(session):
+    #print("after_commit")
     from src.utils.funcs import refresh_table
-    print("after commit")
-    try:
-        session.begin()
-        refresh_table(app.free_products_tree, app.customers_tree, app.reservations_tree, app.show_finalized, app.all_products_tree, app.show_sold)
-  
-    except Exception as e:
-        print(f"Refresh error: {e}")
-    finally:
-        session.close()    
+    refresh_table(app.free_products_tree, app.customers_tree, app.reservations_tree, app.show_finalized, app.all_products_tree, app.show_sold)
+     
 
-    
+'''    
 @event.listens_for(engine, "engine_disposed")
 def reset_session(engine):
     session.expire_all()
     session.remove()
+'''

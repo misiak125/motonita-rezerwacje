@@ -73,7 +73,7 @@ class main_window:
         self.show_sold = IntVar()
         Button1 = Checkbutton(tab, text = "Pokaż wydane pojazdy", 
                     variable = self.show_sold, onvalue = 1, offvalue = 0,
-                    command=lambda: print("tu refresh"))
+                    command=lambda: con.fake_commit())
 
         Button1.pack()
 
@@ -185,7 +185,7 @@ class main_window:
         self.show_finalized = IntVar()
         Button1 = Checkbutton(tab, text = "Pokaż ukończone transakcje", 
                     variable = self.show_finalized, onvalue = 1, offvalue = 0,
-                    command=lambda: print("tu refresh"))
+                    command=lambda: con.fake_commit())
 
         Button1.pack()
         

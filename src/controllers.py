@@ -1,4 +1,4 @@
-from . import session
+from . import session, q_session, Session
 from .models import Product, Customer, Reservation, Colour, Brand, Model
 import datetime
 from sqlalchemy import Select, func, asc, desc, update, delete
@@ -36,19 +36,19 @@ def make_reservation(customer_id, product_id, advance, adnotation):
         raise
 
 def get_all_products():
-    return session.query(Product, Reservation).outerjoin(Reservation).where(Product.state != "Wydany").all()
+    return q_session.query(Product, Reservation).outerjoin(Reservation).where(Product.state != "Wydany").all()
 
 def get_all_old_products():
-    return session.query(Product, Reservation).outerjoin(Reservation).all()
+    return q_session.query(Product, Reservation).outerjoin(Reservation).all()
 
 def get_all_customers():
-    return session.query(Customer).order_by(desc(Customer.id)).all()
+    return q_session.query(Customer).order_by(desc(Customer.id)).all()
 
 def get_all_reservations():
-    return session.query(Reservation).all()
+    return q_session.query(Reservation).all()
 
 def get_free_products():
-    result = session.execute(
+    result = q_session.execute(
         Select(Product, func.max(Product.price), func.count(Product.id),func.lower(Product.model))
         .outerjoin(Reservation)
         .where(Reservation.id==None, Product.state != "Wydany")
@@ -59,7 +59,7 @@ def get_free_products():
     return result
 
 def get_full_reservations():
-    result = session.execute(
+    result = q_session.execute(
         Select(Reservation, Product, Customer)
         .join(Product).join(Customer)
         .where(Product.state != "Wydany")
@@ -68,7 +68,7 @@ def get_full_reservations():
     return result
 
 def get_full_old_reservations():
-    result = session.execute(
+    result = q_session.execute(
         Select(Reservation, Product, Customer)
         .join(Product).join(Customer)
         .order_by(Reservation.date.desc())
@@ -225,3 +225,21 @@ def get_models_list(brand):
 
 def get_reservation(id_given):
     return session.query(Reservation, Product, Customer).join(Product).join(Customer).where(Reservation.id == id_given).first()
+
+
+def fake_commit():
+    temp_session = Session()
+    try:
+        temp_session.begin()
+        
+        obj = None
+        if temp_session.dirty:
+            obj = list(temp_session.dirty)[0] 
+        
+        temp_session.commit()  
+        
+        if obj:
+            temp_session.refresh(obj) 
+
+    finally:
+        temp_session.close()
