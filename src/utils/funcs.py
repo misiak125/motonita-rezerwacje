@@ -65,7 +65,7 @@ def confirm_reservation(to_reservation, reservation_customer_id, reservation_adv
         confirm_button.pack(side="right", padx=10)
 
 
-def refresh_table(free_products_tree, customers_tree, reservations_tree, show_finalized, all_products_tree, show_sold):
+def refresh_table(free_products_tree, customers_tree, reservations_tree, show_finalized, all_products_tree, show_sold, show_reserved, all_prod_search):
     #print("refreshing")
     for item in free_products_tree.get_children():
         free_products_tree.delete(item)
@@ -122,18 +122,29 @@ def refresh_table(free_products_tree, customers_tree, reservations_tree, show_fi
     else:
         products = con.get_all_old_products()
     
-    for i, product in enumerate(products):
-        if i%2==0:
-            tag='even'
-        else:
-            tag='odd'
+    reserved_dict = {
+        'wszystkie' : "TAKNIE",
+        'zarezerwowane' : "TAK",
+        'niezarezerwowane' : "NIE"
+    }
+
+    i=0
+    all_prod_search_list = all_prod_search.strip().lower().split()
+    for product in products:
         if product.Reservation is None:
             czy_rezerwowany = "NIE"
         else:
             czy_rezerwowany = "TAK"
-        all_products_tree.insert("", "end", values=(product.Product.id, product.Product.brand, product.Product.model, 
-        product.Product.year, product.Product.colour, product.Product.price, product.Product.state, 
-        product.Product.added_on.strftime("%d-%m-%Y %H:%M"), czy_rezerwowany, product.Product.excepted_delivery, product.Product.order_id), tags=(tag,))
+        if compare_list_to_element(all_prod_search_list, [product.Product.brand, product.Product.model, 
+        product.Product.year, product.Product.colour, product.Product.order_id, product.Product.excepted_delivery, product.Product.state]) and czy_rezerwowany in reserved_dict[show_reserved]:
+            if i%2==0:
+                tag='even'
+            else:
+                tag='odd'
+            all_products_tree.insert("", "end", values=(product.Product.id, product.Product.brand, product.Product.model, 
+            product.Product.year, product.Product.colour, product.Product.price, product.Product.state, 
+            product.Product.added_on.strftime("%d-%m-%Y %H:%M"), czy_rezerwowany, product.Product.excepted_delivery, product.Product.order_id), tags=(tag,))
+            i+=1
 
     all_products_tree.tag_configure('odd', background='#BEBEBE')
     
@@ -221,3 +232,20 @@ def add_model(model, brand):
 def fill_models(models_cbox, brand):
     models_cbox["values"] = con.get_models_list(brand)
     models_cbox.set('')
+
+def compare_list_to_element(search_list, element) -> bool:
+    for search in search_list:
+        ok = 0
+        search = str(search)
+        search=search.strip()
+        #print("s ", search)
+        for val in element:
+            val = str(val)
+            val=val.strip()
+            #print("v ", val)
+            if search.lower() in val.lower(): 
+                ok=1
+                #print("OK", search, val)
+        if ok == 0: return 0
+    return 1
+    
