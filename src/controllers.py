@@ -243,3 +243,44 @@ def fake_commit():
 
     finally:
         temp_session.close()
+
+
+def drop_brand(brand_name):
+    try:
+        q = session.query(Brand).where(Brand.name==brand_name).first()
+        session.delete(q)
+        session.commit()
+    except:
+        session.rollback()
+        raise
+
+
+def drop_model(model_name, brand_name):
+    try:
+        brand = session.query(Brand).where(Brand.name==brand_name).first()
+        q = session.query(Model).where(Model.name==model_name, Model.brand_id==brand.id).first()
+        session.delete(q)
+        session.commit()
+    except:
+        session.rollback()
+        raise
+
+
+def drop_colour(colour_name):
+    try:
+        q = session.query(Colour).where(Colour.name==colour_name).first()
+        session.delete(q)
+        session.commit()
+    except:
+        session.rollback()
+        raise
+
+def get_brands_models(brand_name):
+    models = session.query(Model).join(Brand).where(Brand.name==brand_name)
+    return models
+
+def drop_brands_models(models):
+    for model in models:
+        session.delete(model)
+    
+    session.commit()

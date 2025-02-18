@@ -424,16 +424,20 @@ class main_window:
         brand_label.grid(row=0, column=0, padx=10, pady=10, sticky="w")
         brand_entry = ttk.Entry(tab)
         brand_entry.grid(row=0, column=1, padx=10, pady=10, columnspan=2, sticky="ew")
-        brand_button = Button(tab, text="Dodaj", command=lambda: [fun.add_brand(brand_entry.get(), self.product_brand_entry, self.add_model_brand_entry), brand_entry.delete(0, END)])
+        brand_button = Button(tab, text="Dodaj", command=lambda: [but.add_brand(brand_entry.get(), self.product_brand_entry, self.add_model_brand_entry), brand_entry.delete(0, END)])
         brand_button.grid(row=0, column=3, padx=10, pady=10, sticky="w")
+        drop_brand_button = Button(tab, text="Usuń", command=lambda: [but.delete_brand(brand_entry.get(), self.product_brand_entry, self.add_model_brand_entry), brand_entry.delete(0, END)])
+        drop_brand_button.grid(row=0, column=4, padx=10, pady=10, sticky="w")
 
 
         colour_label = Label(tab, text = "Dodaj kolor: ")
         colour_label.grid(row=2, column=0, padx=10, pady=10, sticky="w")
         colour_entry = ttk.Entry(tab)
         colour_entry.grid(row=2, column=1, padx=10, pady=10, columnspan=2, sticky="ew")
-        colour_button = Button(tab, text="Dodaj", command=lambda: [fun.add_colour(colour_entry.get(), self.product_colour_entry), colour_entry.delete(0, END)])
+        colour_button = Button(tab, text="Dodaj", command=lambda: [but.add_colour(colour_entry.get(), self.product_colour_entry), colour_entry.delete(0, END)])
         colour_button.grid(row=2, column=3, padx=10, pady=10, sticky="w")
+        drop_colour_button = Button(tab, text="Usuń", command=lambda: [but.delete_colour(colour_entry.get(), self.product_colour_entry), colour_entry.delete(0, END)])
+        drop_colour_button.grid(row=2, column=4, padx=10, pady=10, sticky="w")
 
 
         model_label = Label(tab, text = "Dodaj model: ")
@@ -444,5 +448,9 @@ class main_window:
         self.add_model_brand_entry["values"] = con.get_brands_list()
         self.add_model_brand_entry.grid(row=1, column=1, padx=10, pady=10, sticky="w")
         model_entry.grid(row=1, column=2, padx=10, pady=10, sticky="w")
-        model_button = Button(tab, text="Dodaj", command=lambda: [fun.add_model(model_entry.get(), new_model_brand.get()), model_entry.delete(0, END), self.add_model_brand_entry.set('')])
+        model_button = Button(tab, text="Dodaj", command=lambda: [but.add_model(model_entry.get(), new_model_brand.get()), model_entry.delete(0, END), self.add_model_brand_entry.set('')])
         model_button.grid(row=1, column=3, padx=10, pady=10, sticky="w")
+        drop_model_button = Button(tab, text="Usuń", command=lambda: [but.delete_model(model_entry.get(), new_model_brand.get()), model_entry.delete(0, END), self.add_model_brand_entry.set('')])
+        drop_model_button.grid(row=1, column=4, padx=10, pady=10, sticky="w")
+
+
