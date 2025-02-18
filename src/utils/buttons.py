@@ -1,13 +1,13 @@
 import re
-from .funcs import animate_gif, refresh_table
+from .funcs import animate_gif
 from tkinter import Toplevel, Label, ttk, messagebox, Button, StringVar
 from PIL import ImageTk, Image
 import src.controllers as con
 from src import resource_path
 import os
 
-def on_customer_click(event):
-    top = Toplevel()
+def on_customer_click(lasttop):
+    top = Toplevel(lasttop)
     frame_counter = 0
     top.title("GRATULACJE!")
     cat_gif = Image.open(resource_path(os.path.join("static", "cat1.gif")))
@@ -87,7 +87,7 @@ def sum_up_customer(new_customer_name, new_customer_phone, new_customer_email, l
 
 
 def ensure_no_email(lasttop, new_customer_name, new_customer_phone, new_customer_email):
-    top=Toplevel()
+    top=Toplevel(lasttop)
     ask_label = Label(top, text="Czy chcesz dodać adres email?", font=("Default", 14))
     ask_label.grid(pady=10, padx=10, row=0, column=0, columnspan=2, sticky="nsew")
 
@@ -102,14 +102,14 @@ def ensure_no_email(lasttop, new_customer_name, new_customer_phone, new_customer
     top.grid_rowconfigure(0, weight=1)
     
 
-def delete_product(product_id, is_reserved):
+def delete_product(product_id, is_reserved, lasttop):
     if product_id == -1:
         messagebox.showerror("Error", "Wybierz pojazd.")
         return
     if is_reserved == "TAK":
         messagebox.showerror("Error", "Ten pojazd jest zarezerwowany.\nAnuluj rezerwację tego pojazdu i spróbuj ponownie.")
         return
-    top = Toplevel()
+    top = Toplevel(lasttop)
     top.title("Potwierdź usunięcie")
     product = con.get_product(product_id)
 
@@ -127,14 +127,13 @@ def delete_product(product_id, is_reserved):
     yes_button = Button(top, text="TAK", command=lambda: [con.drop_product(product.id), top.destroy()])
     yes_button.grid(row=1, column=1, padx=10, pady=10, sticky="se")
 
-    top.wait_window()
 
 
-def delete_reservation(reservation_id):
+def delete_reservation(reservation_id, lasttop):
     if reservation_id == -1:
         messagebox.showerror("Error", "Wybierz rezerwację.")
         return
-    top = Toplevel()
+    top = Toplevel(lasttop)
     top.title("Potwierdź usunięcie")
     reservation = con.get_full_reservation(reservation_id)
 
@@ -153,10 +152,9 @@ def delete_reservation(reservation_id):
     yes_button = Button(top, text="TAK", command=lambda: [con.drop_reservation(reservation.Reservation.id), top.destroy()])
     yes_button.grid(row=1, column=1, padx=10, pady=10, sticky="se")
 
-    top.wait_window()
 
 
-def delete_customer(customer_id):
+def delete_customer(customer_id, lasttop):
     if customer_id == -1:
         messagebox.showerror("Error", "Wybierz klienta.")
         return
@@ -164,7 +162,7 @@ def delete_customer(customer_id):
     if con.do_customer_have_reservations(customer_id):
         messagebox.showerror("Error", "Ten klient posiada rezerwacje.\nAnuluj wszystkie rezerwacje tego klienta i spróbuj ponownie.")
         return
-    top = Toplevel()
+    top = Toplevel(lasttop)
     top.title("Potwierdź usunięcie")
 
     customer  = con.get_customer(customer_id)
@@ -183,7 +181,6 @@ def delete_customer(customer_id):
     yes_button = Button(top, text="TAK", command=lambda: [con.drop_customer(customer.id), top.destroy()])
     yes_button.grid(row=1, column=1, padx=10, pady=10, sticky="se")
 
-    top.wait_window()
 
 
 def change_state(product_id, lasttop):
