@@ -1,5 +1,4 @@
-from src import initialize_database, root
+from src import root
 
 if __name__ == "__main__":
-    initialize_database()
     root.mainloop()

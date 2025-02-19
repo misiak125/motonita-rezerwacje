@@ -44,18 +44,18 @@ class Brand(Base):
     __tablename__ = "brands"
 
     id = Column(Integer, primary_key=True)
-    name = Column(String, nullable=False)
+    name = Column(String, unique = True,  nullable=False)
 
 class Model(Base):
     __tablename__ = "models"
 
     id = Column(Integer, primary_key=True)
     brand_id = Column(ForeignKey("brands.id"))
-    name = Column(String, nullable=False)
+    name = Column(String, unique = True, nullable=False)
 
 class Colour(Base):
     __tablename__ = "colours"
 
     id = Column(Integer, primary_key=True)
-    name = Column(String, nullable=False)
+    name = Column(String, unique = True, nullable=False)
 

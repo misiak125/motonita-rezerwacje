@@ -40,11 +40,8 @@ session = Session()
 q_session = Session()
 
 
-def initialize_database():
-    #print(db_path, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-    from src.models import Brand, Model, Colour, Product, Customer, Reservation
-    Base.metadata.create_all(engine)
-
+from src.models import Brand, Model, Colour, Product, Customer, Reservation
+Base.metadata.create_all(engine)
 
 from src.views.main_view import main_window
 root = tk.Tk()
