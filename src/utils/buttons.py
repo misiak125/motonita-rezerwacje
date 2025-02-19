@@ -27,7 +27,7 @@ def on_customer_click(lasttop):
 
 
 def sum_up_product(product_brand, product_model, product_colour, product_price, product_year, product_order_id, quantity, expected_delivery):
-
+        #print(expected_delivery, type(expected_delivery))
         if not product_price:
             product_price = 0.0
 

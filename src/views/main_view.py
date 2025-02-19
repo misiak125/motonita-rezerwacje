@@ -1,4 +1,6 @@
 from tkinter import ttk, messagebox, Toplevel, Label, Button, IntVar, Checkbutton, Text, WORD, StringVar, OptionMenu, END
+from tkcalendar import DateEntry, Calendar
+from src.utils.elements import DateEntryWithCalendar
 import src.controllers as con
 import src.utils.funcs as fun
 import src.utils.buttons as but
@@ -14,7 +16,8 @@ class main_window:
         self.root.title("Zamówienia Motorland")
         self.root.geometry("1200x700")
 		
-        ico = Image.open(resource_path(os.path.join('static','icon.png')))
+
+        ico = Image.open(resource_path(os.path.join('static',resource_path(os.path.join('static', 'icon.png')))))
         photo = ImageTk.PhotoImage(ico)
         root.wm_iconphoto(False, photo)
 		
@@ -145,7 +148,7 @@ class main_window:
 
     def create_customers_tab(self, tab):
         self.customers_tree = ttk.Treeview(tab, columns=("id", "name", "phone", "email", "added_on"), show="headings")
-        self.customers_tree["displaycolumns"]=("name", "phone", "email", "added_on")
+        self.customers_tree["displaycolumns"]=("name", "phone", "email")
         self.customers_tree.heading("id", text="ID")
         self.customers_tree.heading("name", text="Imię i Nazwisko")
         self.customers_tree.heading("phone", text="Nr.Tel.")
@@ -206,16 +209,25 @@ class main_window:
         Button1.pack()
         
         self.reservations_tree = ttk.Treeview(tab, columns=("id", "name",
-        "date",  "brand", "model"), show="headings")
+        "date",  "brand", "model", "colour", "adnotations"), show="headings")
         
         self.reservations_tree["displaycolumns"]=("name", 
-        "date", "brand", "model")
+        "date", "brand", "model", "colour", "adnotations")
 
         self.reservations_tree.heading("id", text="ID")
         self.reservations_tree.heading("name", text="Imię i Nazwisko")
         self.reservations_tree.heading("date", text="Data")
         self.reservations_tree.heading("brand", text="Marka")
         self.reservations_tree.heading("model", text="Model")
+        self.reservations_tree.heading("colour", text="Kolor")
+        self.reservations_tree.heading("adnotations", text="Uwagi")
+
+        self.reservations_tree.column("name", width=100)
+        self.reservations_tree.column("date", width=100)
+        self.reservations_tree.column("brand", width=100)
+        self.reservations_tree.column("model", width=100)
+        self.reservations_tree.column("colour", width=100)
+        self.reservations_tree.column("adnotations")
 
         self.reservations_tree.bind("<Double-1>", lambda x: self.show_reservation_details(fun.get_selected_element_id(self.reservations_tree), self.root))
 
@@ -239,15 +251,15 @@ class main_window:
         reservarion = con.get_reservation(res_id)
 
         label = Label(top, text=f"Imię i Nazwisko: {reservarion.Customer.name}\n"
-        f"Numer tel.: {reservarion.Customer.phone}\n"
-        f"Email: {reservarion.Customer.email}\n"
-        f"Marka: {reservarion.Product.brand}\n"
-        f"Model: {reservarion.Product.model}\n"
-        f"Rocznik: {reservarion.Product.year}\n"
-        f"Kolor: {reservarion.Product.colour}\n"
-        f"Data rezerwacji: {reservarion.Reservation.date.strftime('%d-%m-%Y %H:%M')}\n"
-        f"Wartość zaliczki: {reservarion.Reservation.advance}\n"
-        f"Uwagi do rezerwacji: {reservarion.Reservation.adnotation}\n"
+        f"Numer tel.:  {reservarion.Customer.phone}\n"
+        f"Email:  {reservarion.Customer.email}\n"
+        f"Marka:  {reservarion.Product.brand}\n"
+        f"Model:  {reservarion.Product.model}\n"
+        f"Rocznik:  {reservarion.Product.year}\n"
+        f"Kolor:  {reservarion.Product.colour}\n"
+        f"Data rezerwacji:  {reservarion.Reservation.date.strftime('%d-%m-%Y %H:%M')}\n"
+        f"Wartość zaliczki:  {reservarion.Reservation.advance}\n"
+        f"Uwagi do rezerwacji:  {reservarion.Reservation.adnotation}\n"
         , justify="left", wraplength=600)
         label.pack(padx=10, pady=10)
 
@@ -407,13 +419,23 @@ class main_window:
         product_expected_delivery_label = ttk.Label(tab, text="Przewidywana dostawa:", justify="left")
         product_expected_delivery_label.grid(row=3, column=0, padx=15, pady=15, sticky="w")
 
-        self.product_expected_delivery_entry = ttk.Entry(tab)
-        self.product_expected_delivery_entry.grid(row=3, column=1, padx=15, pady=15, sticky="ew")
 
+        self.product_expected_delivery_entry = DateEntry(tab, date_pattern='dd.mm.yyyy', showweeknumbers=False,
+            weekendbackground = "#E5E5E5", 
+            weekendforeground = "#000000",
+            othermonthbackground = "#8F8F8F",
+            othermonthforeground = "#4A4A4A",
+            othermonthwebackground = "#8F8F8F",
+            othermonthweforeground = "#4A4A4A")
+        for child in self.product_expected_delivery_entry.winfo_children():
+            if isinstance(child, ttk.Button):
+                child.configure(style="TButton")
+        self.product_expected_delivery_entry.grid(row=3, column=1, padx=15, pady=15, sticky="ew")
+        self.product_expected_delivery_entry.delete(0, END)
 
         add_button = Button(tab, text="Dodaj", command=lambda: [but.sum_up_product(product_brand_var.get().strip(), product_model_var.get().strip(),
             product_colour_var.get().strip(), self.product_price_entry.get().lower().strip(), self.product_year_entry.get().lower().strip(), self.product_order_id_entry.get().strip(),
-            self.product_quantity_entry.get().strip(), self.product_expected_delivery_entry.get().strip()),
+            self.product_quantity_entry.get().strip(), self.product_expected_delivery_entry.get()),
             self.product_brand_entry.set(""), self.product_model_entry.set(""), self.product_colour_entry.set(""), self.product_year_entry.delete(0, END), self.product_order_id_entry.delete(0, END), self.product_price_entry.delete(0, END), 
             self.product_expected_delivery_entry.delete(0, END), self.product_quantity_entry.delete(0, END), self.product_quantity_entry.insert(0,"1")])
         add_button.grid(row=4, column=0, padx=15, pady=15, sticky="w")
