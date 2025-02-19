@@ -1,3 +1,5 @@
 sqlalchemy
 tkinter 
 pillow
+tkcalendar 
+alembic

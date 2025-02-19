@@ -108,9 +108,13 @@ def refresh_table(free_products_tree, customers_tree, reservations_tree, show_fi
             tag='even'
         else:
             tag='odd'
+        if len(res.Reservation.adnotation) > 30:
+            adnotation_text = res.Reservation.adnotation[0:30]+"..."
+        else:
+            adnotation_text = res.Reservation.adnotation[0:30]
         reservations_tree.insert("", "end", values=(res.Reservation.id, res.Customer.name,
         res.Reservation.date.strftime("%d-%m-%Y %H:%M"),
-        res.Product.brand, res.Product.model), tags=(tag,))
+        res.Product.brand, res.Product.model, res.Product.colour, adnotation_text), tags=(tag,))
 
     reservations_tree.tag_configure('odd', background='#BEBEBE')
 
