@@ -199,36 +199,6 @@ def get_product_specs_id(tree):
     return con.get_first_free_element(brand, model, colour, year).id
 
 
-def add_brand(brand, brand_cbox, new_brand_cbox):
-    if brand == "":
-        return
-    try:
-        con.add_brand(brand)
-        brand_cbox["values"] = con.get_brands_list()
-        new_brand_cbox["values"] = con.get_brands_list()
-        messagebox.showinfo("Sukces", "Pomyślnie dodano markę")
-    except:
-        messagebox.showerror("Error", "Nie udało się dodać marki")
-
-def add_colour(colour, colour_cbox):
-    if colour == "":
-        return
-    try:
-        con.add_colour(colour)
-        colour_cbox["values"] = con.get_colours_list()
-        messagebox.showinfo("Sukces", "Pomyślnie dodano kolor")
-    except:
-        messagebox.showerror("Error", "Nie udało się dodać koloru")
-
-def add_model(model, brand):
-    if model == "" or brand == "" or brand is None:
-        return
-    try:
-        con.add_model(model, brand)
-        messagebox.showinfo("Sukces", "Pomyślnie dodano model")
-    except:
-        messagebox.showerror("Error", "Nie udało się dodać modelu")
-
 def fill_models(models_cbox, brand):
     models_cbox["values"] = con.get_models_list(brand)
     models_cbox.set('')

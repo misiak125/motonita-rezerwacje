@@ -215,3 +215,78 @@ def change_state(product_id, lasttop):
     yes_button.grid(row=2, column=1, padx=10, pady=10, sticky="se")
     
     lasttop.wait_window(top)
+
+def add_brand(brand, brand_cbox, new_brand_cbox):
+    brand = brand.strip()
+    if brand == "":
+        return
+    try:
+        con.add_brand(brand)
+        brand_cbox["values"] = con.get_brands_list()
+        new_brand_cbox["values"] = con.get_brands_list()
+        messagebox.showinfo("Sukces", "Pomyślnie dodano markę")
+    except:
+        messagebox.showerror("Error", "Nie udało się dodać marki")
+
+def add_colour(colour, colour_cbox):
+    colour = colour.strip()
+    if colour == "":
+        return
+    try:
+        con.add_colour(colour)
+        colour_cbox["values"] = con.get_colours_list()
+        messagebox.showinfo("Sukces", "Pomyślnie dodano kolor")
+    except:
+        messagebox.showerror("Error", "Nie udało się dodać koloru")
+
+def add_model(model, brand):
+    model = model.strip()
+    if model == "" or brand == "" or brand is None:
+        return
+    try:
+        con.add_model(model, brand)
+        messagebox.showinfo("Sukces", "Pomyślnie dodano model")
+    except:
+        messagebox.showerror("Error", "Nie udało się dodać modelu")
+
+def delete_brand(brand, brand_cbox, new_brand_cbox):
+    brand = brand.strip()
+    if brand == "":
+        return
+    models = con.get_brands_models(brand)
+    if models is not None:
+        if not ensure_delete_models(): return
+    try:
+        con.drop_brands_models(models)
+        con.drop_brand(brand)
+        brand_cbox["values"] = con.get_brands_list()
+        new_brand_cbox["values"] = con.get_brands_list()
+        messagebox.showinfo("Sukces", "Pomyślnie usunięto markę")
+    except:
+        messagebox.showerror("Error", f"Nie udało się usunąć marki")
+
+def delete_colour(colour, colour_cbox):
+    colour = colour.strip()
+    if colour == "":
+        return
+    try:
+        con.drop_colour(colour)
+        colour_cbox["values"] = con.get_colours_list()
+        messagebox.showinfo("Sukces", "Pomyślnie usunięto kolor")
+    except:
+        messagebox.showerror("Error", "Nie udało się usunąć koloru")
+
+def delete_model(model, brand):
+    model = model.strip()
+    if model == "" or brand == "" or brand is None:
+        return
+    try:
+        con.drop_model(model, brand)
+        messagebox.showinfo("Sukces", "Pomyślnie usunięto model")
+    except:
+        messagebox.showerror("Error", f"Nie udało się usunąć modelu")
+
+
+def ensure_delete_models():
+    response = messagebox.askyesno("Potwierdzenie", "Ta marka posiada przypisane modele. Czy na pewno chcesz ją usunąć, a za razem jej wszystkie modele?")
+    return response
