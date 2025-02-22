@@ -1,6 +1,5 @@
 from tkinter import ttk, messagebox, Toplevel, Label, Button, IntVar, Checkbutton, Text, WORD, StringVar, OptionMenu, END
 from tkcalendar import DateEntry, Calendar
-from src.utils.elements import DateEntryWithCalendar
 import src.controllers as con
 import src.utils.funcs as fun
 import src.utils.buttons as but
