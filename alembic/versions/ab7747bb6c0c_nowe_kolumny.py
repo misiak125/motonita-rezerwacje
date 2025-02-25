@@ -30,4 +30,11 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    pass
+    with op.batch_alter_table("customers") as batch_op:
+        batch_op.drop_column("pesel")
+        batch_op.drop_column("nip")
+
+    
+    with op.batch_alter_table("reservations") as batch_op:
+        batch_op.drop_column("paid")
+        batch_op.drop_column("form")
