@@ -15,8 +15,6 @@ class Product(Base):
     state = Column(String)
     order_id = Column(String)
     excepted_delivery = Column(String)
-    #reservation = Column(Boolean, nullable=False, default=False)comboboxleft
-    #nazwa, kolor, rezerwacja
 
 class Customer(Base):
     __tablename__ = "customers"
@@ -26,6 +24,8 @@ class Customer(Base):
     phone = Column(String)
     email = Column(String)
     added_on = Column(DateTime, nullable=False) 
+    #pesel = Column(String)
+    #nip = Column(String)
 
 class Reservation(Base):
     __tablename__ = "reservations"
@@ -36,26 +36,25 @@ class Reservation(Base):
     product_id=Column(ForeignKey("products.id"))
     advance = Column(Float, nullable=False)
     adnotation = Column(String)
-
-    #customer = relationship(Customer, back_populates="reservations")
-    #product = relationship(Product, back_populates="reservations")
-
+    #form = Column(Boolean, nullable=False) #0=zaliczka 1=zadatek
+    #paid = Column(Boolean, nullable=False)
 class Brand(Base):
     __tablename__ = "brands"
 
     id = Column(Integer, primary_key=True)
-    name = Column(String, unique = True,  nullable=False)
+    name = Column(String,  nullable=False)
 
 class Model(Base):
     __tablename__ = "models"
 
     id = Column(Integer, primary_key=True)
     brand_id = Column(ForeignKey("brands.id"))
-    name = Column(String, unique = True, nullable=False)
+    name = Column(String , nullable=False)
+    namehash = Column(String, nullable=False)
 
 class Colour(Base):
     __tablename__ = "colours"
 
     id = Column(Integer, primary_key=True)
-    name = Column(String, unique = True, nullable=False)
+    name = Column(String, nullable=False)
 

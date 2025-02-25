@@ -276,8 +276,9 @@ def drop_colour(colour_name):
         raise
 
 def get_brands_models(brand_name):
-    models = session.query(Model).join(Brand).where(Brand.name==brand_name)
-    return models
+    
+    return session.query(Model).join(Brand).where(Brand.name == brand_name).all()
+    
 
 def drop_brands_models(models):
     for model in models:

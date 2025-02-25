@@ -254,7 +254,8 @@ def delete_brand(brand, brand_cbox, new_brand_cbox):
     if brand == "":
         return
     models = con.get_brands_models(brand)
-    if models is not None:
+    if models is not None or len(models)>0:
+        print(models)
         if not ensure_delete_models(): return
     try:
         con.drop_brands_models(models)
