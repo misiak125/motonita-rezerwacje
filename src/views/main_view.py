@@ -168,29 +168,41 @@ class main_window:
         top = Toplevel(lasttop)
         top.title("Dodaj nowego klienta")
         
-        name_label = Label(top, text="Imię i Nazwisko:")
+        name_label = Label(top, text="Imię i Nazwisko:*")
         name_label.grid(row=0, column=0, padx=10, pady=10, sticky="w")  # Align to the west (left)
 
         name_entry = ttk.Entry(top)
         name_entry.grid(row=0, column=1, padx=10, pady=10, sticky="ew")  # Expand horizontally
 
-        # Phone label and entry
-        phone_label = Label(top, text="Numer telefonu:")
+        
+        phone_label = Label(top, text="Numer telefonu:*")
         phone_label.grid(row=1, column=0, padx=10, pady=10, sticky="w")
 
         phone_entry = ttk.Entry(top)
         phone_entry.grid(row=1, column=1, padx=10, pady=10, sticky="ew")
 
-        # Email label and entry
+        
         email_label = Label(top, text="Email:")
         email_label.grid(row=2, column=0, padx=10, pady=10, sticky="w")
 
         email_entry = ttk.Entry(top)
         email_entry.grid(row=2, column=1, padx=10, pady=10, sticky="ew")
 
+        pesel_label = Label(top, text="Pesel:")
+        pesel_label.grid(row=3, column=0, padx=10, pady=10, sticky="w")
+
+        pesel_entry = ttk.Entry(top)
+        pesel_entry.grid(row=3, column=1, padx=10, pady=10, sticky="ew")
+
+        nip_label = Label(top, text="NIP:")
+        nip_label.grid(row=4, column=0, padx=10, pady=10, sticky="w")
+
+        nip_entry = ttk.Entry(top)
+        nip_entry.grid(row=4, column=1, padx=10, pady=10, sticky="ew")
+
         add_button = Button(top, text="Dodaj", command=lambda:[but.sum_up_customer(name_entry.get().strip(), 
-            phone_entry.get().strip(), email_entry.get().strip(), top)])
-        add_button.grid(row=3, column=1, padx=10, pady=10, sticky="e")
+            phone_entry.get().strip(), email_entry.get().strip(), pesel_entry.get().strip(), nip_entry.get().strip(), top)])
+        add_button.grid(row=5, column=1, padx=10, pady=10, sticky="e")
 
         lasttop.wait_window(top)
     

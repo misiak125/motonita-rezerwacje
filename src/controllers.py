@@ -14,7 +14,8 @@ def add_product(brand, model, colour, year, price, order_id, excepted_delivery):
         session.rollback()
         raise
 
-def add_customer(name, phone, email):
+def add_customer(name, phone, email, pesel, nip):
+    
     try: 
         new_customer=Customer(name=name, phone=phone, email=email, added_on=datetime.datetime.now())
 
@@ -203,7 +204,7 @@ def add_model(mod, brand):
     try:
         brand = session.query(Brand).where(Brand.name == brand).first()
         brand_idd = brand.id
-        new_model = Model(name=mod, brand_id= brand_idd)
+        new_model = Model(name=mod, brand_id= brand_idd, namehash=f"{brand_idd}$^{mod}")
         session.add(new_model)
         session.commit()
     except:

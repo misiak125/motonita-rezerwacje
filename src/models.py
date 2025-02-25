@@ -24,8 +24,8 @@ class Customer(Base):
     phone = Column(String)
     email = Column(String)
     added_on = Column(DateTime, nullable=False) 
-    #pesel = Column(String)
-    #nip = Column(String)
+    pesel = Column(String)
+    nip = Column(String)
 
 class Reservation(Base):
     __tablename__ = "reservations"
@@ -36,8 +36,9 @@ class Reservation(Base):
     product_id=Column(ForeignKey("products.id"))
     advance = Column(Float, nullable=False)
     adnotation = Column(String)
-    #form = Column(Boolean, nullable=False) #0=zaliczka 1=zadatek
-    #paid = Column(Boolean, nullable=False)
+    form = Column(Boolean) #0=zaliczka 1=zadatek
+    paid = Column(Boolean)
+    
 class Brand(Base):
     __tablename__ = "brands"
 
