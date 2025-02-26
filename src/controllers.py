@@ -3,10 +3,10 @@ from .models import Product, Customer, Reservation, Colour, Brand, Model
 import datetime
 from sqlalchemy import Select, func, asc, desc, update, delete
 
-def add_product(brand, model, colour, year, price, order_id, excepted_delivery):
+def add_product(brand, model, colour, year, price, order_id, expected_delivery):
     try:
         new_order = Product(brand=brand, model=model, colour=colour, year=year, added_on=datetime.datetime.now(),
-        price=price, order_id=order_id, state="Oczekujemy na dostawę", excepted_delivery = excepted_delivery)
+        price=price, order_id=order_id, state="Oczekujemy na dostawę", expected_delivery = expected_delivery, old_price=price)
 
         session.add(new_order)
         session.commit()
@@ -14,9 +14,10 @@ def add_product(brand, model, colour, year, price, order_id, excepted_delivery):
         session.rollback()
         raise
 
-def add_customer(name, phone, email):
+def add_customer(name, phone, email, pesel, nip):
+    
     try: 
-        new_customer=Customer(name=name, phone=phone, email=email, added_on=datetime.datetime.now())
+        new_customer=Customer(name=name, phone=phone, email=email, added_on=datetime.datetime.now(), pesel=pesel, nip=nip)
 
         session.add(new_customer)
         session.commit()
@@ -24,10 +25,11 @@ def add_customer(name, phone, email):
         session.rollback()
         raise
 
-def make_reservation(customer_id, product_id, advance, adnotation):
+def make_reservation(customer_id, product_id, advance, adnotation, form, paid):
     try:
         new_reservation=Reservation(date=datetime.datetime.now(), 
-        customer_id=customer_id, product_id=product_id, advance = advance, adnotation = adnotation)
+        customer_id=customer_id, product_id=product_id, advance = advance, adnotation = adnotation,
+        form=form, paid=paid)
 
         session.add(new_reservation)
         session.commit()
@@ -49,10 +51,21 @@ def get_all_reservations():
 
 def get_free_products():
     result = q_session.execute(
-        Select(Product, func.max(Product.price), func.count(Product.id),func.lower(Product.model))
+        Select(Product, func.max(Product.price), func.count(Product.id),func.lower(Product.model), func.min(Product.expected_delivery).label('expected_deliveryy')) #
         .outerjoin(Reservation)
         .where(Reservation.id==None, Product.state != "Wydany")
-        .group_by(Product.brand, Product.model, Product.colour)
+        .group_by(Product.brand, Product.model, Product.colour, Product.year)
+        .order_by(func.lower(Product.brand), func.lower(Product.model), Product.year, func.lower(Product.colour))
+    )
+    
+    return result
+
+def get_free_products_split():
+    result = q_session.execute(
+        Select(Product, func.max(Product.price), func.count(Product.id),func.lower(Product.model), Product.expected_delivery.label('expected_deliveryy'))
+        .outerjoin(Reservation)
+        .where(Reservation.id==None, Product.state != "Wydany")
+        .group_by(Product.brand, Product.model, Product.colour, Product.year, Product.expected_delivery)
         .order_by(func.lower(Product.brand), func.lower(Product.model), Product.year, func.lower(Product.colour))
     )
     
@@ -203,7 +216,7 @@ def add_model(mod, brand):
     try:
         brand = session.query(Brand).where(Brand.name == brand).first()
         brand_idd = brand.id
-        new_model = Model(name=mod, brand_id= brand_idd)
+        new_model = Model(name=mod, brand_id= brand_idd, namehash=f"{brand_idd}$^{mod}")
         session.add(new_model)
         session.commit()
     except:
@@ -276,8 +289,9 @@ def drop_colour(colour_name):
         raise
 
 def get_brands_models(brand_name):
-    models = session.query(Model).join(Brand).where(Brand.name==brand_name)
-    return models
+    
+    return session.query(Model).join(Brand).where(Brand.name == brand_name).all()
+    
 
 def drop_brands_models(models):
     for model in models:

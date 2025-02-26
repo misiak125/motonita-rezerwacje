@@ -1,5 +1,5 @@
 import re
-from .funcs import animate_gif
+from .funcs import animate_gif, validate_nip
 from tkinter import Toplevel, Label, ttk, messagebox, Button, StringVar
 from PIL import ImageTk, Image
 import src.controllers as con
@@ -49,7 +49,6 @@ def sum_up_product(product_brand, product_model, product_colour, product_price, 
             product_order_id = str(product_order_id)
             product_year = int(product_year)
             quantity = int(quantity)
-            expected_delivery = str(expected_delivery)
             if product_year < 1000:
                 product_year+=2000
             for i in range(quantity):
@@ -59,31 +58,40 @@ def sum_up_product(product_brand, product_model, product_colour, product_price, 
             messagebox.showerror("Error", "Niewłaściwie podane dane")
 
 
-def sum_up_customer(new_customer_name, new_customer_phone, new_customer_email, lasttop):
+def sum_up_customer(new_customer_name, new_customer_phone, new_customer_email, new_customer_pesel, new_customer_nip, lasttop):
 
     new_customer_email=str(new_customer_email)
     new_customer_phone=str(new_customer_phone)
     new_customer_phone=new_customer_phone.replace(' ', '')
     valid = re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', new_customer_email)
+    new_customer_phone = new_customer_phone.replace(" ", "")
     valid_phone = re.match("^\\+?[1-9][0-9]{7,14}$", new_customer_phone)
+    valid_pesel = re.match("^[0-9]{2}([02468]1|[13579][012])(0[1-9]|1[0-9]|2[0-9]|3[01])[0-9]{5}$", new_customer_pesel)
+    valid_nip = validate_nip(new_customer_nip)
     if new_customer_name=="":
         messagebox.showerror("Error", "Wprowadź imię i nazwisko", parent=lasttop)
         return
     if " " not in new_customer_name:
-        messagebox.showerror("Error", "Błędnie wprowadzone imię i nazwisko", parent=lasttop)
+        messagebox.showerror("Error", "Wporwadź poprawne imię i nazwisko", parent=lasttop)
         return
     if not valid_phone or new_customer_phone=="":
         messagebox.showerror("Error", "Wprowadź poprwany numer telefonu", parent=lasttop)
         return
     if not valid and not new_customer_email=="":
-        messagebox.showerror("Error", "Źle wprowadzono adres email", parent=lasttop)
+        messagebox.showerror("Error", "Wprowadź poprawny adres email", parent=lasttop)
+        return
+    if not valid_pesel and not new_customer_pesel=="":
+        messagebox.showerror("Error", "Wprowadź poprawny numer PESEL", parent=lasttop)
+        return
+    if valid_nip=='invalid':
+        messagebox.showerror("Error", "Wprowadź poprawny NIP", parent=lasttop)
         return
     if new_customer_email=="":
         ensure_no_email(lasttop, new_customer_name, new_customer_phone, new_customer_email)
         return
         
     lasttop.destroy()
-    con.add_customer(new_customer_name, new_customer_phone, new_customer_email)
+    con.add_customer(new_customer_name, new_customer_phone, new_customer_email, new_customer_pesel, valid_nip)
 
 
 def ensure_no_email(lasttop, new_customer_name, new_customer_phone, new_customer_email):
@@ -254,7 +262,8 @@ def delete_brand(brand, brand_cbox, new_brand_cbox):
     if brand == "":
         return
     models = con.get_brands_models(brand)
-    if models is not None:
+    if models is not None or len(models)>0:
+        print(models)
         if not ensure_delete_models(): return
     try:
         con.drop_brands_models(models)

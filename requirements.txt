@@ -1,5 +1,5 @@
 sqlalchemy
 tkinter 
 pillow
-tkcalendar 
+tkcalendar
 alembic

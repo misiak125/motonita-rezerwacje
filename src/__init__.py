@@ -51,7 +51,8 @@ app = main_window(root)
 def refresh_after_commit(session):
     #print("after_commit")
     from src.utils.funcs import refresh_table
-    refresh_table(app.free_products_tree, app.customers_tree, app.reservations_tree, app.show_finalized, app.all_products_tree, app.show_sold, app.show_reserved.get(), app.all_prod_search_entry.get())
+    refresh_table(app.free_products_tree, app.free_prod_search_entry.get(), app.split_dates.get(), app.customers_tree, app.customers_search_entry.get(), app.reservations_tree, 
+    app.reservation_search_entry.get(), app.show_finalized, app.all_products_tree, app.show_sold, app.show_reserved.get(), app.all_prod_search_entry.get())
      
 
 '''    
