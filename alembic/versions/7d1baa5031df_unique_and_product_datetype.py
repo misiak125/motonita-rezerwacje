@@ -22,33 +22,32 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     with op.batch_alter_table("products") as batch_op:
-        batch_op.add_column(sa.Column("expected_delivery_temp", sa.DateTime()))
+        batch_op.add_column(sa.Column("expected_delivery", sa.DateTime()))
         batch_op.add_column(sa.Column("old_price", sa.Float()))
 
     connection = op.get_bind()
     products_table = table(
         "products",
         column("id", sa.Integer),
-        column("expected_delivery", sa.String),
-        column("expected_delivery_temp", sa.DateTime),
+        column("excepted_delivery", sa.String),
+        column("expected_delivery", sa.DateTime),
         column("old_price", sa.Float),
         column("price", sa.Float)
     )
 
-    results = connection.execute(sa.select(products_table.c.id, products_table.c.expected_delivery))
+    results = connection.execute(sa.select(products_table.c.id, products_table.c.excepted_delivery, products_table.c.price))
     for row in results:
         try:
-            new_date = datetime.strptime(row.expected_delivery, "%d.%m.%Y")  
+            new_date = datetime.strptime(row.excepted_delivery, "%d.%m.%Y")  
         except (ValueError, TypeError):
             new_date = None 
         
         connection.execute(
-            products_table.update().where(products_table.c.id == row.id).values(expected_delivery_temp=new_date, old_price=row.price)
+            products_table.update().where(products_table.c.id == row.id).values(expected_delivery=new_date, old_price=row.price)
         )
 
     with op.batch_alter_table("products") as batch_op:
-        batch_op.drop_column("expected_delivery")
-        batch_op.alter_column("expected_delivery_temp", new_column_name="expected_delivery")
+        batch_op.drop_column("excepted_delivery")
 
     with op.batch_alter_table("brands") as batch_op:
         batch_op.alter_column("name", existing_type=sa.String(), nullable=False, unique=True)

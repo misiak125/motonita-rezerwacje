@@ -1,7 +1,7 @@
 import src.controllers as con
 from tkinter import Toplevel, Label, messagebox, Button, ttk
 import re
-
+from datetime import datetime
 
 def animate_gif(label, frames, frame_counter):
     label.config(image=frames[frame_counter])
@@ -86,10 +86,14 @@ reservarion_search, show_finalized, all_products_tree, show_sold, show_reserved,
             tag='even'
         else:
             tag='odd'
+        if product.expected_deliveryy is None:
+            delivery = ""
+        else:
+            delivery = product.expected_deliveryy.strftime('%d.%m.%Y')
         if compare_list_to_element(free_products_search.split(), [product.Product.brand, product.Product.model,
-            product.Product.year, product.Product.colour, product.max, product.Product.excepted_delivery]):
+            product.Product.year, product.Product.colour, product.max, delivery]):
             free_products_tree.insert("", "end", values=(product.Product.brand, product.Product.model,
-            product.Product.year, product.Product.colour, product.count, product.Product.excepted_delivery, product.max), tags=(tag,))
+            product.Product.year, product.Product.colour, product.count, delivery, product.max), tags=(tag,))
             i+=1
 
     free_products_tree.tag_configure('odd', background='#BEBEBE')
@@ -166,15 +170,20 @@ reservarion_search, show_finalized, all_products_tree, show_sold, show_reserved,
             czy_rezerwowany = "NIE"
         else:
             czy_rezerwowany = "TAK"
+
+        if product.Product.expected_delivery is None:
+            delivery = ""
+        else:
+            delivery = product.Product.expected_delivery.strftime('%d.%m.%Y')
         if compare_list_to_element(all_prod_search_list, [product.Product.brand, product.Product.model, 
-        product.Product.year, product.Product.colour, product.Product.order_id, product.Product.excepted_delivery, product.Product.state]) and czy_rezerwowany in reserved_dict[show_reserved]:
+        product.Product.year, product.Product.colour, product.Product.order_id, delivery, product.Product.state]) and czy_rezerwowany in reserved_dict[show_reserved]:
             if i%2==0:
                 tag='even'
             else:
                 tag='odd'
             all_products_tree.insert("", "end", values=(product.Product.id, product.Product.brand, product.Product.model, 
             product.Product.year, product.Product.colour, product.Product.price, product.Product.state, 
-            product.Product.added_on.strftime("%d-%m-%Y %H:%M"), czy_rezerwowany, product.Product.excepted_delivery, product.Product.order_id), tags=(tag,))
+            product.Product.added_on.strftime("%d-%m-%Y %H:%M"), czy_rezerwowany, delivery, product.Product.order_id), tags=(tag,))
             i+=1
 
     all_products_tree.tag_configure('odd', background='#BEBEBE')

@@ -11,10 +11,11 @@ class Product(Base):
     colour = Column(String, nullable=False)
     added_on = Column(DateTime, nullable=False)
     price = Column(Float)
+    old_price = Column(Float)
     year = Column(Integer, nullable=False)
     state = Column(String)
     order_id = Column(String)
-    excepted_delivery = Column(DateTime)
+    expected_delivery = Column(DateTime)
 
 class Customer(Base):
     __tablename__ = "customers"
@@ -43,7 +44,7 @@ class Brand(Base):
     __tablename__ = "brands"
 
     id = Column(Integer, primary_key=True)
-    name = Column(String,  nullable=False)
+    name = Column(String,  nullable=False, unique=True)
 
 class Model(Base):
     __tablename__ = "models"
@@ -51,11 +52,11 @@ class Model(Base):
     id = Column(Integer, primary_key=True)
     brand_id = Column(ForeignKey("brands.id"))
     name = Column(String , nullable=False)
-    namehash = Column(String, nullable=False)
+    namehash = Column(String, nullable=False, unique=True)
 
 class Colour(Base):
     __tablename__ = "colours"
 
     id = Column(Integer, primary_key=True)
-    name = Column(String, nullable=False)
+    name = Column(String, nullable=False, unique=True)
 

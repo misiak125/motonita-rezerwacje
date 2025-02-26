@@ -49,7 +49,6 @@ def sum_up_product(product_brand, product_model, product_colour, product_price, 
             product_order_id = str(product_order_id)
             product_year = int(product_year)
             quantity = int(quantity)
-            expected_delivery = str(expected_delivery)
             if product_year < 1000:
                 product_year+=2000
             for i in range(quantity):

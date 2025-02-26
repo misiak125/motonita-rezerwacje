@@ -3,10 +3,10 @@ from .models import Product, Customer, Reservation, Colour, Brand, Model
 import datetime
 from sqlalchemy import Select, func, asc, desc, update, delete
 
-def add_product(brand, model, colour, year, price, order_id, excepted_delivery):
+def add_product(brand, model, colour, year, price, order_id, expected_delivery):
     try:
         new_order = Product(brand=brand, model=model, colour=colour, year=year, added_on=datetime.datetime.now(),
-        price=price, order_id=order_id, state="Oczekujemy na dostawę", excepted_delivery = excepted_delivery)
+        price=price, order_id=order_id, state="Oczekujemy na dostawę", expected_delivery = expected_delivery, old_price=price)
 
         session.add(new_order)
         session.commit()
@@ -51,7 +51,7 @@ def get_all_reservations():
 
 def get_free_products():
     result = q_session.execute(
-        Select(Product, func.max(Product.price), func.count(Product.id),func.lower(Product.model)) #, func.min(Product.excepted_delivery)
+        Select(Product, func.max(Product.price), func.count(Product.id),func.lower(Product.model), func.min(Product.expected_delivery).label('expected_deliveryy')) #
         .outerjoin(Reservation)
         .where(Reservation.id==None, Product.state != "Wydany")
         .group_by(Product.brand, Product.model, Product.colour, Product.year)
@@ -62,10 +62,10 @@ def get_free_products():
 
 def get_free_products_split():
     result = q_session.execute(
-        Select(Product, func.max(Product.price), func.count(Product.id),func.lower(Product.model))
+        Select(Product, func.max(Product.price), func.count(Product.id),func.lower(Product.model), Product.expected_delivery.label('expected_deliveryy'))
         .outerjoin(Reservation)
         .where(Reservation.id==None, Product.state != "Wydany")
-        .group_by(Product.brand, Product.model, Product.colour, Product.year, Product.excepted_delivery)
+        .group_by(Product.brand, Product.model, Product.colour, Product.year, Product.expected_delivery)
         .order_by(func.lower(Product.brand), func.lower(Product.model), Product.year, func.lower(Product.colour))
     )
     

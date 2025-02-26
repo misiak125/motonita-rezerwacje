@@ -44,9 +44,9 @@ class main_window:
         self.create_add_option_tab(tab6)
 
 
-        #fun.refresh_table(self.free_products_tree, self.free_prod_search_entry.get(), self.split_dates.get(), 
-        #self.customers_tree, self.customers_search_entry.get(), self.reservations_tree, self.reservation_search_entry.get(),
-        #self.show_finalized, self.all_products_tree, self.show_sold, self.show_reserved.get(), self.all_prod_search_entry.get())
+        fun.refresh_table(self.free_products_tree, self.free_prod_search_entry.get(), self.split_dates.get(), 
+        self.customers_tree, self.customers_search_entry.get(), self.reservations_tree, self.reservation_search_entry.get(),
+        self.show_finalized, self.all_products_tree, self.show_sold, self.show_reserved.get(), self.all_prod_search_entry.get())
       
         notebook.pack(padx=10, pady=10, fill="both", expand=True)
         
@@ -63,17 +63,17 @@ class main_window:
         self.free_products_tree.heading("model", text="Model")
         self.free_products_tree.heading("year", text="Rocznik")
         self.free_products_tree.heading("colour", text="Kolor")
-        self.free_products_tree.heading("free_count", text="Liczba Dostępnych")
+        self.free_products_tree.heading("free_count", text="Liczba")
         self.free_products_tree.heading("date", text="Dostawa")
-        self.free_products_tree.heading("price", text="Najwyższa Cena")
+        self.free_products_tree.heading("price", text="Najw. Cena")
 
         self.free_products_tree.column("brand", width=100)
         self.free_products_tree.column("model", width=125)
         self.free_products_tree.column("year", width=75)
-        self.free_products_tree.column("colour", width=100)
-        self.free_products_tree.column("free_count", width=100)
-        self.free_products_tree.column("date", width=100)
-        self.free_products_tree.column("price", width=100)
+        self.free_products_tree.column("colour", width=150)
+        self.free_products_tree.column("free_count", width=30)
+        self.free_products_tree.column("date", width=80)
+        self.free_products_tree.column("price", width=60)
 
         self.free_products_tree.pack(fill="both", expand=True, padx=10, pady=10)
 
@@ -127,19 +127,19 @@ class main_window:
         self.all_products_tree.heading("state", text="Stan")
         self.all_products_tree.heading("added_on", text="Dodany")
         self.all_products_tree.heading("reservation", text="Zarezerwowany")
-        self.all_products_tree.heading("expected_delivery", text="Przew. dostawa")
+        self.all_products_tree.heading("expected_delivery", text="Dostawa")
         self.all_products_tree.heading("order_id", text="Nr Zamówienia")
     
         self.all_products_tree.column("brand", width="100")
         self.all_products_tree.column("model", width="150")
-        self.all_products_tree.column("year", width="50")
-        self.all_products_tree.column("colour", width="100")
-        self.all_products_tree.column("price", width="100")
-        self.all_products_tree.column("state", width="150")
-        self.all_products_tree.column("reservation", width="100")
+        self.all_products_tree.column("year", width="51")
+        self.all_products_tree.column("colour", width="150")
+        self.all_products_tree.column("price", width="80")
+        self.all_products_tree.column("state", width="100")
+        self.all_products_tree.column("reservation", width="112")
         self.all_products_tree.column("added_on", width="100")
         self.all_products_tree.column("order_id", width="100")
-        self.all_products_tree.column("expected_delivery", width="120")
+        self.all_products_tree.column("expected_delivery", width="80")
 
         self.all_products_tree.bind("<Double-1>", lambda x:[self.create_reservation( 
         fun.get_selected_element_id(self.all_products_tree), fun.get_is_reserved(self.all_products_tree), self.root)])
@@ -324,7 +324,7 @@ class main_window:
         f"Rocznik:  {reservarion.Product.year}\n"
         f"Cena:  {reservarion.Product.price}\n"
         f"Wartość zaliczki:  {reservarion.Reservation.advance}\n"
-        f"Przewidywana dostawa:  {reservarion.Product.excepted_delivery}\n"
+        f"Przewidywana dostawa:  {reservarion.Product.expected_delivery.strftime('%d.%m.%Y')}\n"
         f"Forma: {sform}\n"
         f"{spaid}\n"
         f"Uwagi do rezerwacji:  {reservarion.Reservation.adnotation}\n"
@@ -512,7 +512,7 @@ class main_window:
 
         add_button = Button(tab, text="Dodaj", command=lambda: [but.sum_up_product(product_brand_var.get().strip(), product_model_var.get().strip(),
             product_colour_var.get().strip(), self.product_price_entry.get().lower().strip(), self.product_year_entry.get().lower().strip(), self.product_order_id_entry.get().strip(),
-            self.product_quantity_entry.get().strip(), self.product_expected_delivery_entry.get()),
+            self.product_quantity_entry.get().strip(), self.product_expected_delivery_entry.get_date()),
             self.product_brand_entry.set(""), self.product_model_entry.set(""), self.product_colour_entry.set(""), self.product_year_entry.delete(0, END), self.product_order_id_entry.delete(0, END), self.product_price_entry.delete(0, END), 
             self.product_expected_delivery_entry.delete(0, END), self.product_quantity_entry.delete(0, END), self.product_quantity_entry.insert(0,"1")])
         add_button.grid(row=4, column=0, padx=15, pady=15, sticky="w")
