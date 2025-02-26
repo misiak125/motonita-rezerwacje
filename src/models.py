@@ -14,7 +14,7 @@ class Product(Base):
     year = Column(Integer, nullable=False)
     state = Column(String)
     order_id = Column(String)
-    excepted_delivery = Column(String)
+    excepted_delivery = Column(DateTime)
 
 class Customer(Base):
     __tablename__ = "customers"
