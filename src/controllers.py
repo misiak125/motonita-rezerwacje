@@ -17,7 +17,7 @@ def add_product(brand, model, colour, year, price, order_id, excepted_delivery):
 def add_customer(name, phone, email, pesel, nip):
     
     try: 
-        new_customer=Customer(name=name, phone=phone, email=email, added_on=datetime.datetime.now())
+        new_customer=Customer(name=name, phone=phone, email=email, added_on=datetime.datetime.now(), pesel=pesel, nip=nip)
 
         session.add(new_customer)
         session.commit()
@@ -25,10 +25,11 @@ def add_customer(name, phone, email, pesel, nip):
         session.rollback()
         raise
 
-def make_reservation(customer_id, product_id, advance, adnotation):
+def make_reservation(customer_id, product_id, advance, adnotation, form, paid):
     try:
         new_reservation=Reservation(date=datetime.datetime.now(), 
-        customer_id=customer_id, product_id=product_id, advance = advance, adnotation = adnotation)
+        customer_id=customer_id, product_id=product_id, advance = advance, adnotation = adnotation,
+        form=form, paid=paid)
 
         session.add(new_reservation)
         session.commit()
@@ -50,10 +51,21 @@ def get_all_reservations():
 
 def get_free_products():
     result = q_session.execute(
+        Select(Product, func.max(Product.price), func.count(Product.id),func.lower(Product.model)) #, func.min(Product.excepted_delivery)
+        .outerjoin(Reservation)
+        .where(Reservation.id==None, Product.state != "Wydany")
+        .group_by(Product.brand, Product.model, Product.colour, Product.year)
+        .order_by(func.lower(Product.brand), func.lower(Product.model), Product.year, func.lower(Product.colour))
+    )
+    
+    return result
+
+def get_free_products_split():
+    result = q_session.execute(
         Select(Product, func.max(Product.price), func.count(Product.id),func.lower(Product.model))
         .outerjoin(Reservation)
         .where(Reservation.id==None, Product.state != "Wydany")
-        .group_by(Product.brand, Product.model, Product.colour)
+        .group_by(Product.brand, Product.model, Product.colour, Product.year, Product.excepted_delivery)
         .order_by(func.lower(Product.brand), func.lower(Product.model), Product.year, func.lower(Product.colour))
     )
     

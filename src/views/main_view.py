@@ -1,4 +1,4 @@
-from tkinter import ttk, messagebox, Toplevel, Label, Button, IntVar, Checkbutton, Text, WORD, StringVar, OptionMenu, END
+from tkinter import ttk, messagebox, Toplevel, Label, Button, IntVar, Checkbutton, Text, WORD, StringVar, OptionMenu, END, BooleanVar
 from tkcalendar import DateEntry, Calendar
 import src.controllers as con
 import src.utils.funcs as fun
@@ -44,21 +44,37 @@ class main_window:
         self.create_add_option_tab(tab6)
 
 
-        fun.refresh_table(self.free_products_tree, self.customers_tree, self.reservations_tree, self.show_finalized, self.all_products_tree, self.show_sold, self.show_reserved.get(), self.all_prod_search_entry.get())
+        fun.refresh_table(self.free_products_tree, self.free_prod_search_entry.get(), self.split_dates.get(), 
+        self.customers_tree, self.customers_search_entry.get(), self.reservations_tree, self.reservation_search_entry.get(),
+        self.show_finalized, self.all_products_tree, self.show_sold, self.show_reserved.get(), self.all_prod_search_entry.get())
       
         notebook.pack(padx=10, pady=10, fill="both", expand=True)
         
 
     def create_free_products_tab(self, tab):
-    
+        self.split_dates = BooleanVar()
+        split_dates_button = Checkbutton(tab, variable=self.split_dates, text="Rozdziel przewidywane daty", 
+        onvalue=True, offvalue=False, command=lambda: con.fake_commit())
+        split_dates_button.pack(padx=10, pady=5)
+
         self.free_products_tree = ttk.Treeview(tab, columns=("brand", "model", "year", "colour", 
-        "free_count", "price"), show="headings")
+        "free_count", "date", "price"), show="headings")
         self.free_products_tree.heading("brand", text="Marka")
         self.free_products_tree.heading("model", text="Model")
         self.free_products_tree.heading("year", text="Rocznik")
         self.free_products_tree.heading("colour", text="Kolor")
         self.free_products_tree.heading("free_count", text="Liczba Dostępnych")
+        self.free_products_tree.heading("date", text="Dostawa")
         self.free_products_tree.heading("price", text="Najwyższa Cena")
+
+        self.free_products_tree.column("brand", width=100)
+        self.free_products_tree.column("model", width=125)
+        self.free_products_tree.column("year", width=75)
+        self.free_products_tree.column("colour", width=100)
+        self.free_products_tree.column("free_count", width=100)
+        self.free_products_tree.column("date", width=100)
+        self.free_products_tree.column("price", width=100)
+
         self.free_products_tree.pack(fill="both", expand=True, padx=10, pady=10)
 
         self.free_products_tree.bind("<Double-1>", lambda x: self.create_reservation( 
@@ -68,6 +84,12 @@ class main_window:
         create_reservation_button = Button(tab, text="Zarezerwuj", command=lambda: self.create_reservation( 
         fun.get_product_specs_id(self.free_products_tree), "NIE", self.root))
         create_reservation_button.pack(padx=10, pady=10, side="right")
+
+        free_prod_search_label = Label(tab, text="Wyszukaj:", padx=10)
+        free_prod_search_label.pack(padx=0, pady=10, side="left")
+        self.free_prod_search_entry = ttk.Entry(tab)
+        self.free_prod_search_entry.pack(padx=10, pady=20, fill="x")
+        self.free_prod_search_entry.bind("<KeyRelease>", lambda x: con.fake_commit())
 
 
     def create_all_products_tab(self, tab):
@@ -146,13 +168,14 @@ class main_window:
 
 
     def create_customers_tab(self, tab):
-        self.customers_tree = ttk.Treeview(tab, columns=("id", "name", "phone", "email", "added_on"), show="headings")
-        self.customers_tree["displaycolumns"]=("name", "phone", "email")
+        self.customers_tree = ttk.Treeview(tab, columns=("id", "name", "phone", "email", "pesel", "nip", "added_on"), show="headings")
+        self.customers_tree["displaycolumns"]=("name", "phone", "email", "pesel", "nip")
         self.customers_tree.heading("id", text="ID")
         self.customers_tree.heading("name", text="Imię i Nazwisko")
         self.customers_tree.heading("phone", text="Nr.Tel.")
         self.customers_tree.heading("email", text="Email")
-        self.customers_tree.heading("added_on", text="Dodany")
+        self.customers_tree.heading("pesel", text="PESEL")
+        self.customers_tree.heading("nip", text="NIP")
         self.customers_tree.bind("<Double-1>", lambda x: but.on_customer_click(self.root))
         self.customers_tree.pack(fill="both", expand=True, padx=10, pady=10)
 
@@ -163,17 +186,30 @@ class main_window:
         command=lambda: [but.delete_customer(fun.get_selected_element_id(self.customers_tree), self.root)])
         delete_button.pack(pady=10, padx=10, side="left")
 
+        
+        customers_search_label = Label(tab, text="Wyszukaj:", padx=10)
+        customers_search_label.pack(padx=0, pady=10, side="left")
+        self.customers_search_entry = ttk.Entry(tab)
+        self.customers_search_entry.pack(padx=10, pady=20, fill="x")
+        self.customers_search_entry.bind("<KeyRelease>", lambda x: con.fake_commit())
+
 
     def create_new_customer(self, lasttop, callback=None):
         top = Toplevel(lasttop)
         top.title("Dodaj nowego klienta")
+        top.columnconfigure(0, weight=0)
+        top.columnconfigure(1, weight=1)
+        top.rowconfigure(0, weight=1)
+        top.rowconfigure(1, weight=1)
+        top.rowconfigure(2, weight=1)
+        top.rowconfigure(3, weight=1)
+        top.rowconfigure(4, weight=1)
         
         name_label = Label(top, text="Imię i Nazwisko:*")
-        name_label.grid(row=0, column=0, padx=10, pady=10, sticky="w")  # Align to the west (left)
+        name_label.grid(row=0, column=0, padx=10, pady=10, sticky="w") 
 
         name_entry = ttk.Entry(top)
-        name_entry.grid(row=0, column=1, padx=10, pady=10, sticky="ew")  # Expand horizontally
-
+        name_entry.grid(row=0, column=1, padx=10, pady=10, sticky="ew") 
         
         phone_label = Label(top, text="Numer telefonu:*")
         phone_label.grid(row=1, column=0, padx=10, pady=10, sticky="w")
@@ -188,7 +224,7 @@ class main_window:
         email_entry = ttk.Entry(top)
         email_entry.grid(row=2, column=1, padx=10, pady=10, sticky="ew")
 
-        pesel_label = Label(top, text="Pesel:")
+        pesel_label = Label(top, text="PESEL:")
         pesel_label.grid(row=3, column=0, padx=10, pady=10, sticky="w")
 
         pesel_entry = ttk.Entry(top)
@@ -203,6 +239,9 @@ class main_window:
         add_button = Button(top, text="Dodaj", command=lambda:[but.sum_up_customer(name_entry.get().strip(), 
             phone_entry.get().strip(), email_entry.get().strip(), pesel_entry.get().strip(), nip_entry.get().strip(), top)])
         add_button.grid(row=5, column=1, padx=10, pady=10, sticky="e")
+
+        
+        top.geometry(f"400x{top.winfo_reqheight()+70}")
 
         lasttop.wait_window(top)
     
@@ -252,6 +291,13 @@ class main_window:
         show_more_button.pack(padx=10, pady=10, side="right")
 
 
+        reservation_search_label = Label(tab, text="Wyszukaj:", padx=10)
+        reservation_search_label.pack(padx=0, pady=10, side="left")
+        self.reservation_search_entry = ttk.Entry(tab)
+        self.reservation_search_entry.pack(padx=10, pady=20, fill="x")
+        self.reservation_search_entry.bind("<KeyRelease>", lambda x: con.fake_commit())
+
+
     def show_reservation_details(self, res_id, lasttop):
         if res_id == -1:
             messagebox.showerror("Error", "Wybierz rezerwację")
@@ -261,16 +307,28 @@ class main_window:
         top.title("Szczegóły rezerwacji")
         reservarion = con.get_reservation(res_id)
 
+        if reservarion.Reservation.paid: spaid="Zapłacono"
+        else: spaid="Nie zapłacono"
+
+        if reservarion.Reservation.form: sform="Zadatek"
+        else: sform="Zaliczka"
+
         label = Label(top, text=f"Imię i Nazwisko: {reservarion.Customer.name}\n"
         f"Numer tel.:  {reservarion.Customer.phone}\n"
         f"Email:  {reservarion.Customer.email}\n"
+        f"PESEL:  {reservarion.Customer.pesel}\n"
+        f"NIP:  {reservarion.Customer.nip}\n"
         f"Marka:  {reservarion.Product.brand}\n"
         f"Model:  {reservarion.Product.model}\n"
-        f"Rocznik:  {reservarion.Product.year}\n"
         f"Kolor:  {reservarion.Product.colour}\n"
-        f"Data rezerwacji:  {reservarion.Reservation.date.strftime('%d-%m-%Y %H:%M')}\n"
+        f"Rocznik:  {reservarion.Product.year}\n"
+        f"Cena:  {reservarion.Product.price}\n"
         f"Wartość zaliczki:  {reservarion.Reservation.advance}\n"
+        f"Przewidywana dostawa:  {reservarion.Product.excepted_delivery}\n"
+        f"Forma: {sform}\n"
+        f"{spaid}\n"
         f"Uwagi do rezerwacji:  {reservarion.Reservation.adnotation}\n"
+        f"Data rezerwacji:  {reservarion.Reservation.date.strftime('%d-%m-%Y %H:%M')}\n"
         , justify="left", wraplength=600)
         label.pack(padx=10, pady=10)
 
@@ -336,7 +394,8 @@ class main_window:
             reservation_frame = ttk.Frame(top)
             reservation_frame.grid(row=3, columnspan=2, column=0, padx=10, pady=10, sticky="nsew")
             reservation_frame.grid_rowconfigure(0, weight=0)
-            reservation_frame.grid_rowconfigure(1, weight=1)
+            reservation_frame.grid_rowconfigure(1, weight=0)
+            reservation_frame.grid_rowconfigure(2, weight=1)
             reservation_frame.grid_columnconfigure(0, weight=0)
             reservation_frame.grid_columnconfigure(1, weight=1)
             reservation_frame.grid_columnconfigure(2, weight=0)
@@ -351,23 +410,32 @@ class main_window:
             new_price_label = Label(reservation_frame, text = "Ustalona cena:")
             new_price_entry = ttk.Entry(reservation_frame)
 
-            new_price_label.grid(row=0, column=2, padx=10, pady=10, sticky="w")
-            new_price_entry.grid(row=0, column=3, padx=0, pady=10, sticky="ew")
+            new_price_label.grid(row=1, column=0, padx=10, pady=10, sticky="w")
+            new_price_entry.grid(row=1, column=1, padx=0, pady=10, sticky="ew")
             new_price_entry.insert(0, "{:.2f}".format(to_reservation.price))
+
+            reservation_form = StringVar()
+            reservation_form.set('zaliczka')
+            form_box=OptionMenu(reservation_frame, reservation_form, *['zaliczka', 'zadatek'])
+            form_box.grid(row=0, column=2, padx=0, pady=10, columnspan=2)
+
+            reservation_paid = BooleanVar()
+            paid_button = Checkbutton(reservation_frame, text="Zapłacono", variable=reservation_paid, offvalue=False, onvalue=True)
+            paid_button.grid(row=1, column=2, padx=0, pady=10, columnspan=2)
 
             adnotation_label = Label(reservation_frame, text = "Uwagi:")
             adnotation_entry = Text(reservation_frame, wrap=WORD, height=5)
 
 
-            adnotation_label.grid(row=1, column=0, padx=10, pady=10, sticky="w")
-            adnotation_entry.grid(row=1, column=1, padx=0, pady=10, sticky="nsew", columnspan=3)
+            adnotation_label.grid(row=2, column=0, padx=10, pady=10, sticky="w")
+            adnotation_entry.grid(row=2, column=1, padx=0, pady=10, sticky="nsew", columnspan=3)
             
             cancel_button = Button(top, text="Anuluj", command=lambda: top.destroy())
             cancel_button.grid(row=4, column=0, padx=10, pady=10, sticky="w")
 
             make_button = Button(top, text="Zarezerwuj", command=lambda: [fun.confirm_reservation(to_reservation, fun.get_selected_element_id(res_customers_tree), 
-                reservation_advance_entry.get().strip(), new_price_entry.get().strip(), adnotation_entry.get('1.0', 'end').strip(), self.free_products_tree, self.customers_tree, self.reservations_tree, self.show_finalized, 
-                self.all_products_tree, self.show_sold, top)])
+                reservation_advance_entry.get().strip(), new_price_entry.get().strip(), adnotation_entry.get('1.0', 'end').strip(),
+                reservation_form.get(), reservation_paid.get(), top)])
             make_button.grid(row=4, column=1, padx=10, pady=10, sticky="e")
             
     
@@ -431,16 +499,14 @@ class main_window:
         product_expected_delivery_label.grid(row=3, column=0, padx=15, pady=15, sticky="w")
 
 
-        self.product_expected_delivery_entry = DateEntry(tab, date_pattern='dd.mm.yyyy', showweeknumbers=False,
+        self.product_expected_delivery_entry = DateEntry(tab, date_pattern='dd.mm.yyyy', showweeknumbers=False, selectmode='day',
+            font=("Default", 12),
             weekendbackground = "#E5E5E5", 
             weekendforeground = "#000000",
             othermonthbackground = "#8F8F8F",
             othermonthforeground = "#4A4A4A",
             othermonthwebackground = "#8F8F8F",
             othermonthweforeground = "#4A4A4A")
-        for child in self.product_expected_delivery_entry.winfo_children():
-            if isinstance(child, ttk.Button):
-                child.configure(style="TButton")
         self.product_expected_delivery_entry.grid(row=3, column=1, padx=15, pady=15, sticky="ew")
         self.product_expected_delivery_entry.delete(0, END)
 
