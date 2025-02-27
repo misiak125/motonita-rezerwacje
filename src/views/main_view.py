@@ -465,6 +465,7 @@ class main_window:
         self.product_model_entry = ttk.Combobox(tab, textvariable = product_model_var, state="readonly")
         self.product_model_entry.bind("<Button-1>", lambda x: fun.fill_models(self.product_model_entry, product_brand_var.get()))
         self.product_model_entry.grid(row=0, column=3, padx=15, pady=15, sticky="w")
+        self.product_brand_entry.bind("<<ComboboxSelected>>", lambda x: self.product_model_entry.set(""))
 
 
         product_colour_label = ttk.Label(tab, text="Kolor:*", justify="left")
