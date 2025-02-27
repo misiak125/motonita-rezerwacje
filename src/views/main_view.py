@@ -313,7 +313,8 @@ class main_window:
         if reservarion.Reservation.form: sform="Zadatek"
         else: sform="Zaliczka"
 
-        label = Label(top, text=f"Imię i Nazwisko: {reservarion.Customer.name}\n"
+        label = Label(top, font=("Default", 12),
+        text=f"Imię i Nazwisko: {reservarion.Customer.name}\n"
         f"Numer tel.:  {reservarion.Customer.phone}\n"
         f"Email:  {reservarion.Customer.email}\n"
         f"PESEL:  {reservarion.Customer.pesel}\n"
@@ -331,6 +332,9 @@ class main_window:
         f"Data rezerwacji:  {reservarion.Reservation.date.strftime('%d-%m-%Y %H:%M')}\n"
         , justify="left", wraplength=600)
         label.pack(padx=10, pady=10)
+
+        edit_button = Button(top, text="Edytuj", command=lambda: self.edit_reservation(res_id, top))
+        edit_button.pack(padx=10, pady=10, side='right')
 
 
     def create_reservation(self, to_reservation_id, is_reserved, lasttop):
@@ -415,7 +419,7 @@ class main_window:
             new_price_entry.insert(0, "{:.2f}".format(to_reservation.price))
 
             reservation_form = StringVar()
-            reservation_form.set('zaliczka')
+            reservation_form.set('zaliczka/zadatek')
             form_box=OptionMenu(reservation_frame, reservation_form, *['zaliczka', 'zadatek'])
             form_box.grid(row=0, column=2, padx=0, pady=10, columnspan=2)
 
@@ -553,3 +557,79 @@ class main_window:
         drop_model_button.grid(row=1, column=4, padx=10, pady=10, sticky="w")
 
 
+    def edit_reservation(self, reservation_id, lasttop):
+    
+        if reservation_id == -1:
+            messagebox.showerror("Error", "Wybierz produkt")
+            return
+
+        reservation = con.get_full_reservation(reservation_id)
+
+        top = Toplevel()
+        top.title("Edytuj rezerwację")
+        lasttop.destroy()
+
+        top.grid_rowconfigure(0, weight=0)
+        top.grid_rowconfigure(1, weight=1)
+        top.grid_rowconfigure(2, weight=0)
+        top.grid_columnconfigure(0, weight=1)
+        top.grid_columnconfigure(1, weight=1)
+
+        tytul_rezerwacji = Label(top, text=f"Edytuj {reservation.Product.brand} {reservation.Product.model} "\
+            f"dla {reservation.Customer.name}", font=("Default", 14))
+        tytul_rezerwacji.grid(row=0, column=0, columnspan=2, pady=10, sticky="nsew") 
+
+        reservation_frame = ttk.Frame(top)
+        reservation_frame.grid(row=1, columnspan=2, column=0, padx=10, pady=10, sticky="nsew")
+        reservation_frame.grid_rowconfigure(0, weight=0)
+        reservation_frame.grid_rowconfigure(1, weight=0)
+        reservation_frame.grid_rowconfigure(2, weight=1)
+        reservation_frame.grid_columnconfigure(0, weight=0)
+        reservation_frame.grid_columnconfigure(1, weight=1)
+        reservation_frame.grid_columnconfigure(2, weight=0)
+        reservation_frame.grid_columnconfigure(3, weight=1)
+
+        reservation_advance_label = Label(reservation_frame, text = "Wartość zaliczki:")
+        reservation_advance_entry = ttk.Entry(reservation_frame)
+        reservation_advance_entry.insert(0, reservation.Reservation.advance)
+
+        reservation_advance_label.grid(row=0, column=0, padx=10, pady=10, sticky="w")
+        reservation_advance_entry.grid(row=0, column=1, padx=0, pady=10, sticky="ew")
+
+        new_price_label = Label(reservation_frame, text = "Ustalona cena:")
+        new_price_entry = ttk.Entry(reservation_frame)
+        new_price_entry.insert(0,"{:.2f}".format(reservation.Product.price))
+
+        new_price_label.grid(row=1, column=0, padx=10, pady=10, sticky="w")
+        new_price_entry.grid(row=1, column=1, padx=0, pady=10, sticky="ew")
+
+        reservation_form = StringVar()
+        if reservation.Reservation.form == 0:
+            og_form = "zaliczka"
+        else:
+            og_form = "zadatek"
+        reservation_form.set(og_form)
+        form_box=OptionMenu(reservation_frame, reservation_form, *['zaliczka', 'zadatek'])
+        form_box.grid(row=0, column=2, padx=0, pady=10, columnspan=2)
+
+        reservation_paid = BooleanVar()
+        paid_button = Checkbutton(reservation_frame, text="Zapłacono", variable=reservation_paid, offvalue=False, onvalue=True)
+        paid_button.grid(row=1, column=2, padx=0, pady=10, columnspan=2)
+        if reservation.Reservation.paid == True:
+            #paid_button.select()
+            reservation_paid.set(True)
+
+        adnotation_label = Label(reservation_frame, text = "Uwagi:")
+        adnotation_entry = Text(reservation_frame, wrap=WORD, height=5)
+        adnotation_entry.insert(END, reservation.Reservation.adnotation)
+
+        adnotation_label.grid(row=2, column=0, padx=10, pady=10, sticky="w")
+        adnotation_entry.grid(row=2, column=1, padx=0, pady=10, sticky="nsew", columnspan=3)
+        
+        cancel_button = Button(top, text="Anuluj", command=lambda: top.destroy())
+        cancel_button.grid(row=4, column=0, padx=10, pady=10, sticky="w")
+
+        make_button = Button(top, text="Akceptuj", command=lambda: [fun.confirm_edit_reservation(reservation, new_price_entry.get().strip(),
+            reservation_advance_entry.get().strip(),
+            reservation_form.get(), reservation_paid.get(), adnotation_entry.get('1.0', 'end').strip(), top)])
+        make_button.grid(row=4, column=1, padx=10, pady=10, sticky="e")

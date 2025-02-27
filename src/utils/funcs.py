@@ -12,6 +12,9 @@ def animate_gif(label, frames, frame_counter):
 def confirm_reservation(to_reservation, reservation_customer_id, reservation_advance, new_price, adnotation, reservation_form, reservarion_paid, lasttop):
     if new_price is None or new_price == "":
         new_price = to_reservation.price
+    if reservarion_form == 'zaliczka/zadatek':
+        messagebox.showerror("Error", "Wybierz zaliczka/zadatek", parent=lasttop)
+        return
 
     if reservation_customer_id == -1:
         messagebox.showerror("Error", "Wybierz klienta", parent=lasttop)
@@ -196,12 +199,14 @@ def get_selected_element_id(tree):
         ret = -1
     return ret
 
+
 def get_is_reserved(tree):
     try:
         ret = tree.item(tree.focus(), "values")[8]
     except:
         ret = -1
     return ret
+
 
 def refresh_res_customer(tree):
     for item in tree.get_children():
@@ -243,6 +248,7 @@ def fill_models(models_cbox, brand):
     models_cbox["values"] = con.get_models_list(brand)
     models_cbox.set('')
 
+
 def compare_list_to_element(search_list, element) -> bool:
     for search in search_list:
         ok = 0
@@ -258,7 +264,8 @@ def compare_list_to_element(search_list, element) -> bool:
                 #print("OK", search, val)
         if ok == 0: return 0
     return 1
-    
+
+
 def validate_nip(nip: str) -> str:
     normalized_nip = re.sub(r"\D", "", nip)
     
@@ -278,3 +285,136 @@ def validate_nip(nip: str) -> str:
     formatted_nip = f"{normalized_nip[:3]}-{normalized_nip[3:5]}-{normalized_nip[5:7]}-{normalized_nip[7:]}"
     
     return formatted_nip
+
+
+def validate_pesel(pesel: str) -> str:
+    normalized_pesel = re.sub(r"\D", "", pesel)
+    
+    if normalized_pesel == "":
+        return ""
+
+    if len(normalized_pesel) != 11:
+        return "invalid"
+
+    digits = [int(d) for d in normalized_pesel]
+
+    year = digits[0] * 10 + digits[1]
+    month = digits[2] * 10 + digits[3]
+    day = digits[4] * 10 + digits[5]
+
+    if 1 <= month <= 12:
+        year += 1900
+    elif 21 <= month <= 32:
+        year += 2000
+        month -= 20
+    elif 41 <= month <= 52:
+        year += 2100
+        month -= 40
+    elif 61 <= month <= 72:
+        year += 2200
+        month -= 60
+    elif 81 <= month <= 92:
+        year += 1800
+        month -= 80
+    else:
+        return "invalid"
+
+    try:
+        datetime(year, month, day)
+    except ValueError:
+        return "invalid"
+
+    weights = [1, 3, 7, 9, 1, 3, 7, 9, 1, 3] 
+    checksum = sum(w * d for w, d in zip(weights, digits[:-1])) % 10
+    checksum = (10 - checksum) % 10
+
+    if checksum != digits[-1]:
+        return "invalid"
+    
+    return normalized_pesel
+
+
+def confirm_edit_reservation(reservation, price_entry, advance_entry, form_entry, paid_entry, adnotation_entry, lasttop):
+    if price_entry == '' or price_entry is None:
+        messagebox.showerror("Error", "Podaj cenę", parent=lasttop)
+        return
+    
+    if advance_entry == '' or advance_entry is None:
+        messagebox.showerror("Error", "Podaj wartość zaliczki", parent=lasttop)
+        return
+
+    try:
+        advance_entry = advance_entry.replace(',', '.', 1)
+    except:
+        pass
+
+    try:
+        price_entry = price_entry.replace(',', '.', 1)
+    except:
+        pass
+
+    changes="Zmiany:\n"
+
+    try:
+        advance_entry = float(advance_entry)
+        advance_entry = round(advance_entry, 2)
+        price_entry = float(price_entry)
+        price_entry = round(price_entry, 2)
+    except Exception as e:
+        messagebox.showerror("Error", f"Błędnie podane dane\n{e}", parent=lasttop)
+        return
+    
+
+
+    if reservation.Product.price != price_entry:
+        changes = changes+f"Cena: {reservation.Product.price} 🡢 {price_entry}\n"
+    
+    if reservation.Reservation.advance != advance_entry:
+        changes = changes+f"Zaliczka: {reservation.Reservation.advance} 🡢 {advance_entry}\n"
+
+    if reservation.Reservation.form:
+        form = 'zadatek'
+    else:
+        form = 'zaliczka'
+    
+    if form_entry == 'zadatek':
+        new_form = True
+    else:
+        new_form = False
+
+    if form != form_entry:
+        changes = changes+f"Forma: {form} 🡢 {form_entry}\n"
+
+    if reservation.Reservation.paid:
+        og_paid = "Zapłacono"
+    else:
+        og_paid = "Nie zapłacono"
+
+    if paid_entry:
+        new_paid = "Zapłacono"
+    else:
+        new_paid = "Nie zapłacono"
+
+    if og_paid != new_paid:
+        changes = changes+f"{og_paid} 🡢 {new_paid}\n"
+
+    if reservation.Reservation.adnotation != adnotation_entry:
+        changes = changes+f"Uwagi: {reservation.Reservation.adnotation} 🡢 {adnotation_entry}\n"
+
+    if changes == "Zmiany:\n":
+        messagebox.showerror("Error", "Wprowadź zmiany", parent=lasttop)
+        return
+
+    
+    top = Toplevel()
+    lasttop.destroy()
+    top.title("Potwierdź zmiany")
+
+    changes_label=Label(top, text=changes, font=("Default, 12"), justify='left')
+    changes_label.pack(pady=10, padx=10)
+
+    yes_button = Button(top, text="Potwierdź", command=lambda: [con.edit_reservation(reservation.Reservation.id, price_entry, 
+    advance_entry, new_form, paid_entry, adnotation_entry), top.destroy()])
+    yes_button.pack(padx=10, pady=10, side='right')
+    no_button = Button(top, text="Anuluj", command=lambda: top.destroy())
+    no_button.pack(padx=10, pady=10, side='left')

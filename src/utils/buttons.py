@@ -1,5 +1,5 @@
 import re
-from .funcs import animate_gif, validate_nip
+from .funcs import animate_gif, validate_nip, validate_pesel
 from tkinter import Toplevel, Label, ttk, messagebox, Button, StringVar
 from PIL import ImageTk, Image
 import src.controllers as con
@@ -66,8 +66,8 @@ def sum_up_customer(new_customer_name, new_customer_phone, new_customer_email, n
     valid = re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', new_customer_email)
     new_customer_phone = new_customer_phone.replace(" ", "")
     valid_phone = re.match("^\\+?[1-9][0-9]{7,14}$", new_customer_phone)
-    valid_pesel = re.match("^[0-9]{2}([02468]1|[13579][012])(0[1-9]|1[0-9]|2[0-9]|3[01])[0-9]{5}$", new_customer_pesel)
     valid_nip = validate_nip(new_customer_nip)
+    valid_pesel = validate_pesel(new_customer_pesel)
     if new_customer_name=="":
         messagebox.showerror("Error", "Wprowadź imię i nazwisko", parent=lasttop)
         return
@@ -80,7 +80,7 @@ def sum_up_customer(new_customer_name, new_customer_phone, new_customer_email, n
     if not valid and not new_customer_email=="":
         messagebox.showerror("Error", "Wprowadź poprawny adres email", parent=lasttop)
         return
-    if not valid_pesel and not new_customer_pesel=="":
+    if valid_pesel == "invalid":
         messagebox.showerror("Error", "Wprowadź poprawny numer PESEL", parent=lasttop)
         return
     if valid_nip=='invalid':
@@ -91,7 +91,7 @@ def sum_up_customer(new_customer_name, new_customer_phone, new_customer_email, n
         return
         
     lasttop.destroy()
-    con.add_customer(new_customer_name, new_customer_phone, new_customer_email, new_customer_pesel, valid_nip)
+    con.add_customer(new_customer_name, new_customer_phone, new_customer_email, valid_pesel, valid_nip)
 
 
 def ensure_no_email(lasttop, new_customer_name, new_customer_phone, new_customer_email):
@@ -136,7 +136,6 @@ def delete_product(product_id, is_reserved, lasttop):
     yes_button.grid(row=1, column=1, padx=10, pady=10, sticky="se")
 
 
-
 def delete_reservation(reservation_id, lasttop):
     if reservation_id == -1:
         messagebox.showerror("Error", "Wybierz rezerwację.")
@@ -159,7 +158,6 @@ def delete_reservation(reservation_id, lasttop):
 
     yes_button = Button(top, text="TAK", command=lambda: [con.drop_reservation(reservation.Reservation.id), top.destroy()])
     yes_button.grid(row=1, column=1, padx=10, pady=10, sticky="se")
-
 
 
 def delete_customer(customer_id, lasttop):
@@ -188,7 +186,6 @@ def delete_customer(customer_id, lasttop):
 
     yes_button = Button(top, text="TAK", command=lambda: [con.drop_customer(customer.id), top.destroy()])
     yes_button.grid(row=1, column=1, padx=10, pady=10, sticky="se")
-
 
 
 def change_state(product_id, lasttop):
@@ -224,6 +221,7 @@ def change_state(product_id, lasttop):
     
     lasttop.wait_window(top)
 
+
 def add_brand(brand, brand_cbox, new_brand_cbox):
     brand = brand.strip()
     if brand == "":
@@ -236,6 +234,7 @@ def add_brand(brand, brand_cbox, new_brand_cbox):
     except:
         messagebox.showerror("Error", "Nie udało się dodać marki")
 
+
 def add_colour(colour, colour_cbox):
     colour = colour.strip()
     if colour == "":
@@ -247,6 +246,7 @@ def add_colour(colour, colour_cbox):
     except:
         messagebox.showerror("Error", "Nie udało się dodać koloru")
 
+
 def add_model(model, brand):
     model = model.strip()
     if model == "" or brand == "" or brand is None:
@@ -256,6 +256,7 @@ def add_model(model, brand):
         messagebox.showinfo("Sukces", "Pomyślnie dodano model")
     except:
         messagebox.showerror("Error", "Nie udało się dodać modelu")
+
 
 def delete_brand(brand, brand_cbox, new_brand_cbox):
     brand = brand.strip()
@@ -274,6 +275,7 @@ def delete_brand(brand, brand_cbox, new_brand_cbox):
     except:
         messagebox.showerror("Error", f"Nie udało się usunąć marki")
 
+
 def delete_colour(colour, colour_cbox):
     colour = colour.strip()
     if colour == "":
@@ -284,6 +286,7 @@ def delete_colour(colour, colour_cbox):
         messagebox.showinfo("Sukces", "Pomyślnie usunięto kolor")
     except:
         messagebox.showerror("Error", "Nie udało się usunąć koloru")
+
 
 def delete_model(model, brand):
     model = model.strip()
