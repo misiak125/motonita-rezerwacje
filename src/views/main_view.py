@@ -336,6 +336,9 @@ class main_window:
         edit_button = Button(top, text="Edytuj", command=lambda: self.edit_reservation(res_id, top))
         edit_button.pack(padx=10, pady=10, side='right')
 
+        change_state_button = Button(top, text="Zmień stan pojazdu", command=lambda: but.change_state(reservarion.Product.id, top))
+        change_state_button.pack(padx=10, pady=10, side='left')
+
 
     def create_reservation(self, to_reservation_id, is_reserved, lasttop):
         if is_reserved == "TAK":
