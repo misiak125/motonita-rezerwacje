@@ -126,7 +126,7 @@ class main_window:
         self.all_products_tree.heading("price", text="Cena")
         self.all_products_tree.heading("state", text="Stan")
         self.all_products_tree.heading("added_on", text="Dodany")
-        self.all_products_tree.heading("reservation", text="Zarezerwowany")
+        self.all_products_tree.heading("reservation", text="Rezerwacja")
         self.all_products_tree.heading("expected_delivery", text="Dostawa")
         self.all_products_tree.heading("order_id", text="Nr Zamówienia")
     
@@ -136,10 +136,10 @@ class main_window:
         self.all_products_tree.column("colour", width="150")
         self.all_products_tree.column("price", width="80")
         self.all_products_tree.column("state", width="100")
-        self.all_products_tree.column("reservation", width="112")
-        self.all_products_tree.column("added_on", width="100")
-        self.all_products_tree.column("order_id", width="100")
-        self.all_products_tree.column("expected_delivery", width="80")
+        self.all_products_tree.column("reservation", width="85")
+        self.all_products_tree.column("added_on", width="115")
+        self.all_products_tree.column("order_id", width="90")
+        self.all_products_tree.column("expected_delivery", width="75")
 
         self.all_products_tree.bind("<Double-1>", lambda x:[self.create_reservation( 
         fun.get_selected_element_id(self.all_products_tree), fun.get_is_reserved(self.all_products_tree), self.root)])
@@ -313,6 +313,10 @@ class main_window:
         if reservarion.Reservation.form: sform="Zadatek"
         else: sform="Zaliczka"
 
+        try:
+            expected_delivery = reservarion.Product.expected_delivery.strftime('%d.%m.%Y')
+        except:
+            expected_delivery = ""
         label = Label(top, font=("Default", 12),
         text=f"Imię i Nazwisko: {reservarion.Customer.name}\n"
         f"Numer tel.:  {reservarion.Customer.phone}\n"
@@ -323,9 +327,9 @@ class main_window:
         f"Model:  {reservarion.Product.model}\n"
         f"Kolor:  {reservarion.Product.colour}\n"
         f"Rocznik:  {reservarion.Product.year}\n"
-        f"Cena:  {reservarion.Product.price}\n"
-        f"Wartość zaliczki:  {reservarion.Reservation.advance}\n"
-        f"Przewidywana dostawa:  {reservarion.Product.expected_delivery.strftime('%d.%m.%Y')}\n"
+        f"Cena:  {fun.short_price(reservarion.Product.price)}\n"
+        f"Wartość zaliczki:  {fun.short_price(reservarion.Reservation.advance)}\n"
+        f"Przewidywana dostawa:  {expected_delivery}\n"
         f"Forma: {sform}\n"
         f"{spaid}\n"
         f"Uwagi do rezerwacji:  {reservarion.Reservation.adnotation}\n"
@@ -419,7 +423,7 @@ class main_window:
 
             new_price_label.grid(row=1, column=0, padx=10, pady=10, sticky="w")
             new_price_entry.grid(row=1, column=1, padx=0, pady=10, sticky="ew")
-            new_price_entry.insert(0, "{:.2f}".format(to_reservation.price))
+            new_price_entry.insert(0, fun.short_price(to_reservation.price))
 
             reservation_form = StringVar()
             reservation_form.set('zaliczka/zadatek')
@@ -595,14 +599,14 @@ class main_window:
 
         reservation_advance_label = Label(reservation_frame, text = "Wartość zaliczki:")
         reservation_advance_entry = ttk.Entry(reservation_frame)
-        reservation_advance_entry.insert(0, reservation.Reservation.advance)
+        reservation_advance_entry.insert(0,fun.short_price(reservation.Reservation.advance))
 
         reservation_advance_label.grid(row=0, column=0, padx=10, pady=10, sticky="w")
         reservation_advance_entry.grid(row=0, column=1, padx=0, pady=10, sticky="ew")
 
         new_price_label = Label(reservation_frame, text = "Ustalona cena:")
         new_price_entry = ttk.Entry(reservation_frame)
-        new_price_entry.insert(0,"{:.2f}".format(reservation.Product.price))
+        new_price_entry.insert(0, fun.short_price(reservation.Product.price))
 
         new_price_label.grid(row=1, column=0, padx=10, pady=10, sticky="w")
         new_price_entry.grid(row=1, column=1, padx=0, pady=10, sticky="ew")

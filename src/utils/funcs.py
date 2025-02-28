@@ -2,6 +2,7 @@ import src.controllers as con
 from tkinter import Toplevel, Label, messagebox, Button, ttk
 import re
 from datetime import datetime
+from math import trunc
 
 def animate_gif(label, frames, frame_counter):
     label.config(image=frames[frame_counter])
@@ -12,7 +13,7 @@ def animate_gif(label, frames, frame_counter):
 def confirm_reservation(to_reservation, reservation_customer_id, reservation_advance, new_price, adnotation, reservation_form, reservarion_paid, lasttop):
     if new_price is None or new_price == "":
         new_price = to_reservation.price
-    if reservarion_form == 'zaliczka/zadatek':
+    if reservation_form == 'zaliczka/zadatek':
         messagebox.showerror("Error", "Wybierz zaliczka/zadatek", parent=lasttop)
         return
 
@@ -36,8 +37,10 @@ def confirm_reservation(to_reservation, reservation_customer_id, reservation_adv
         try:
             reservation_advance = float(reservation_advance)
             reservation_advance = round(reservation_advance, 2)
+            reservation_advance = short_price(reservation_advance) 
             new_price = float(new_price)
             new_price = round(new_price, 2)
+            new_price = short_price(new_price)
         except:
             messagebox.showerror("Error", "Błędnie podane dane", parent=lasttop)
             return
@@ -51,10 +54,10 @@ def confirm_reservation(to_reservation, reservation_customer_id, reservation_adv
         if reservarion_paid: spaid="Zapłacono"
         else: spaid="Nie zapłacono"
 
-        final_res = Label(top, text=f"Zarezerwuj {to_reservation.brand} {to_reservation.model} {to_reservation.year} "\
+        final_res = Label(top, text = f"Zarezerwuj {to_reservation.brand} {to_reservation.model} {to_reservation.year} "\
             f"{to_reservation.colour} dla {reservation_customer.name}. \nNr.tel: {reservation_customer.phone} "\
-            f"\nZaliczka: {reservation_advance:.2f}"\
-            f"\nUstalona cena: {new_price:.2f}"\
+            f"\nZaliczka: {reservation_advance}"\
+            f"\nUstalona cena: {new_price:}"\
             f"\nUwagi: {adnotation}"\
             f"\nForma: {reservation_form}"\
             f"\n{spaid}", font=("Default", 14), justify="left", wraplength=700)
@@ -96,7 +99,7 @@ reservarion_search, show_finalized, all_products_tree, show_sold, show_reserved,
         if compare_list_to_element(free_products_search.split(), [product.Product.brand, product.Product.model,
             product.Product.year, product.Product.colour, product.max, delivery]):
             free_products_tree.insert("", "end", values=(product.Product.brand, product.Product.model,
-            product.Product.year, product.Product.colour, product.count, delivery, product.max), tags=(tag,))
+            product.Product.year, product.Product.colour, product.count, delivery, short_price(product.max)), tags=(tag,))
             i+=1
 
     free_products_tree.tag_configure('odd', background='#BEBEBE')
@@ -185,7 +188,7 @@ reservarion_search, show_finalized, all_products_tree, show_sold, show_reserved,
             else:
                 tag='odd'
             all_products_tree.insert("", "end", values=(product.Product.id, product.Product.brand, product.Product.model, 
-            product.Product.year, product.Product.colour, product.Product.price, product.Product.state, 
+            product.Product.year, product.Product.colour, short_price(product.Product.price), product.Product.state, 
             product.Product.added_on.strftime("%d-%m-%Y %H:%M"), czy_rezerwowany, delivery, product.Product.order_id), tags=(tag,))
             i+=1
 
@@ -358,6 +361,7 @@ def confirm_edit_reservation(reservation, price_entry, advance_entry, form_entry
     try:
         advance_entry = float(advance_entry)
         advance_entry = round(advance_entry, 2)
+        
         price_entry = float(price_entry)
         price_entry = round(price_entry, 2)
     except Exception as e:
@@ -367,10 +371,10 @@ def confirm_edit_reservation(reservation, price_entry, advance_entry, form_entry
 
 
     if reservation.Product.price != price_entry:
-        changes = changes+f"Cena: {reservation.Product.price} 🡢 {price_entry}\n"
+        changes = changes+f"Cena: {short_price(reservation.Product.price)} 🡢 {short_price(price_entry)}\n"
     
     if reservation.Reservation.advance != advance_entry:
-        changes = changes+f"Zaliczka: {reservation.Reservation.advance} 🡢 {advance_entry}\n"
+        changes = changes+f"Zaliczka: {short_price(reservation.Reservation.advance)} 🡢 {short_price(advance_entry)}\n"
 
     if reservation.Reservation.form:
         form = 'zadatek'
@@ -418,3 +422,10 @@ def confirm_edit_reservation(reservation, price_entry, advance_entry, form_entry
     yes_button.pack(padx=10, pady=10, side='right')
     no_button = Button(top, text="Anuluj", command=lambda: top.destroy())
     no_button.pack(padx=10, pady=10, side='left')
+
+
+def short_price(price):
+    if price % 1.0 == 0.0:
+        return str(trunc(price))
+    else:
+        return f"{price:.2f}"

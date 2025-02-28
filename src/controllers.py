@@ -116,6 +116,8 @@ def drop_product(id_given):
 
 def drop_reservation(id_given):
     try:
+        product = session.query(Product).join(Reservation).where(Reservation.id == id_given).first()
+        product.price = product.old_price
         session.execute(delete(Reservation).where(Reservation.id == id_given))
         session.commit()
     except:
