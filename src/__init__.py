@@ -55,9 +55,3 @@ def refresh_after_commit(session):
     app.reservation_search_entry.get(), app.show_finalized, app.all_products_tree, app.show_sold, app.show_reserved.get(), app.all_prod_search_entry.get())
      
 
-'''    
-@event.listens_for(engine, "engine_disposed")
-def reset_session(engine):
-    session.expire_all()
-    session.remove()
-'''

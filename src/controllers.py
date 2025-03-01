@@ -1,11 +1,11 @@
 from . import session, q_session, Session
 from .models import Product, Customer, Reservation, Colour, Brand, Model
-import datetime
+from datetime import datetime
 from sqlalchemy import Select, func, asc, desc, update, delete
 
 def add_product(brand, model, colour, year, price, order_id, expected_delivery):
     try:
-        new_order = Product(brand=brand, model=model, colour=colour, year=year, added_on=datetime.datetime.now(),
+        new_order = Product(brand=brand, model=model, colour=colour, year=year, added_on=datetime.now(),
         price=price, order_id=order_id, state="Oczekujemy na dostawę", expected_delivery = expected_delivery, old_price=price)
 
         session.add(new_order)
@@ -14,10 +14,11 @@ def add_product(brand, model, colour, year, price, order_id, expected_delivery):
         session.rollback()
         raise
 
+
 def add_customer(name, phone, email, pesel, nip):
     
     try: 
-        new_customer=Customer(name=name, phone=phone, email=email, added_on=datetime.datetime.now(), pesel=pesel, nip=nip)
+        new_customer=Customer(name=name, phone=phone, email=email, added_on=datetime.now(), pesel=pesel, nip=nip)
 
         session.add(new_customer)
         session.commit()
@@ -25,9 +26,10 @@ def add_customer(name, phone, email, pesel, nip):
         session.rollback()
         raise
 
+
 def make_reservation(customer_id, product_id, advance, adnotation, form, paid):
     try:
-        new_reservation=Reservation(date=datetime.datetime.now(), 
+        new_reservation=Reservation(date=datetime.now(), 
         customer_id=customer_id, product_id=product_id, advance = advance, adnotation = adnotation,
         form=form, paid=paid)
 
@@ -37,17 +39,22 @@ def make_reservation(customer_id, product_id, advance, adnotation, form, paid):
         session.rollback()
         raise
 
+
 def get_all_products():
-    return q_session.query(Product, Reservation).outerjoin(Reservation).where(Product.state != "Wydany").all()
+    return q_session.query(Product, Reservation).outerjoin(Reservation).where(Product.state != "Wydany").order_by(desc(Product.id)).all()
+
 
 def get_all_old_products():
-    return q_session.query(Product, Reservation).outerjoin(Reservation).all()
+    return q_session.query(Product, Reservation).outerjoin(Reservation).order_by(desc(Product.id)).all()
+
 
 def get_all_customers():
     return q_session.query(Customer).order_by(desc(Customer.id)).all()
 
+
 def get_all_reservations():
     return q_session.query(Reservation).all()
+
 
 def get_free_products():
     result = q_session.execute(
@@ -60,6 +67,7 @@ def get_free_products():
     
     return result
 
+
 def get_free_products_split():
     result = q_session.execute(
         Select(Product, func.max(Product.price), func.count(Product.id),func.lower(Product.model), Product.expected_delivery.label('expected_deliveryy'))
@@ -71,6 +79,7 @@ def get_free_products_split():
     
     return result
 
+
 def get_full_reservations():
     result = q_session.execute(
         Select(Reservation, Product, Customer)
@@ -80,6 +89,7 @@ def get_full_reservations():
     )
     return result
 
+
 def get_full_old_reservations():
     result = q_session.execute(
         Select(Reservation, Product, Customer)
@@ -88,8 +98,10 @@ def get_full_old_reservations():
     )
     return result
 
+
 def get_product(id_given):
     return session.query(Product).where(Product.id == id_given).first()
+
 
 def get_customer(id_given):
     return session.query(Customer).where(Customer.id == id_given).first()
@@ -116,6 +128,8 @@ def drop_product(id_given):
 
 def drop_reservation(id_given):
     try:
+        product = session.query(Product).join(Reservation).where(Reservation.id == id_given).first()
+        product.price = product.old_price
         session.execute(delete(Reservation).where(Reservation.id == id_given))
         session.commit()
     except:
@@ -156,13 +170,16 @@ def change_state(product_id, new_state):
         raise
 
 
-def get_first_free_element(brand_given, model_given, colour_given, year_given):
+def get_first_free_element(brand_given, model_given, colour_given, year_given, delivery_given):
+    if delivery_given != "": 
+        delivery_given = datetime.strptime(delivery_given, "%d.%m.%Y")
+    else: 
+        delivery_given = None
     result = session.query(Product)\
         .outerjoin(Reservation)\
-        .where(Reservation.id==None, Product.state == "Na stanie", 
+        .where(Reservation.id==None, Product.state == "Oczekujemy na dostawę", 
         Product.brand==brand_given, Product.model==model_given,
-        Product.colour==colour_given, Product.year==year_given)\
-        .order_by(Product.added_on)\
+        Product.colour==colour_given, Product.year==year_given, Product.expected_delivery==delivery_given)\
         .first()
     
     if result is None:
@@ -170,11 +187,11 @@ def get_first_free_element(brand_given, model_given, colour_given, year_given):
             .outerjoin(Reservation)\
             .where(Reservation.id==None, Product.state != "Wydany", 
             Product.brand==brand_given, Product.model==model_given,
-            Product.colour==colour_given, Product.year==year_given)\
-            .order_by(Product.added_on)\
+            Product.colour==colour_given, Product.year==year_given, Product.expected_delivery==delivery_given)\
             .first()
 
     return result
+
 
 def get_colours_list():
     res = session.query(Colour).order_by(Colour.name)
@@ -184,6 +201,7 @@ def get_colours_list():
     
     return lista
 
+
 def add_colour(col):
     try:
         colour = Colour(name=col)
@@ -192,6 +210,7 @@ def add_colour(col):
     except:
         session.rollback()
         raise
+
 
 def get_brands_list():
     res = session.query(Brand).order_by(Brand.name)
@@ -222,6 +241,7 @@ def add_model(mod, brand):
     except:
         session.rollback()
         raise
+
 
 def get_models_list(brand):
     if brand is None or brand=="":
@@ -288,6 +308,7 @@ def drop_colour(colour_name):
         session.rollback()
         raise
 
+
 def get_brands_models(brand_name):
     
     return session.query(Model).join(Brand).where(Brand.name == brand_name).all()
@@ -297,4 +318,42 @@ def drop_brands_models(models):
     for model in models:
         session.delete(model)
     
+    session.commit()
+
+
+def edit_reservation(reservarion_id, new_price, new_advance, new_form, new_paid, new_adnotation):
+    reservation = session.query(Reservation, Product).join(Product).where(Reservation.id==reservarion_id).first()
+    reservation.Product.price = new_price
+    reservation.Reservation.adnotation = new_adnotation
+    reservation.Reservation.advance = new_advance
+    reservation.Reservation.form = new_form
+    reservation.Reservation.paid = new_paid
+
+    session.commit()
+
+def edit_product(product_id, product_brand, product_model, product_colour, 
+    product_price, product_year, product_order_id, product_state, expected_delivery):
+    
+    product = session.query(Product).where(Product.id == product_id).first()
+
+    product.brand = product_brand
+    product.model = product_model
+    product.colour = product_colour
+    product.price = product_price
+    product.year = product_year
+    product.order_id = product_order_id
+    product.state = product_state
+    product.expected_delivery = expected_delivery
+
+    session.commit()
+
+def edit_customer(customer_id, name, phone, email, pesel, nip):
+    customer = session.query(Customer).where(Customer.id == customer_id).first()
+
+    customer.name = name
+    customer.phone = phone
+    customer.email = email
+    customer.pesel = pesel
+    customer.nip = nip
+
     session.commit()

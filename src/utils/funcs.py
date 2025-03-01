@@ -2,6 +2,7 @@ import src.controllers as con
 from tkinter import Toplevel, Label, messagebox, Button, ttk
 import re
 from datetime import datetime
+from math import trunc
 
 def animate_gif(label, frames, frame_counter):
     label.config(image=frames[frame_counter])
@@ -12,6 +13,9 @@ def animate_gif(label, frames, frame_counter):
 def confirm_reservation(to_reservation, reservation_customer_id, reservation_advance, new_price, adnotation, reservation_form, reservarion_paid, lasttop):
     if new_price is None or new_price == "":
         new_price = to_reservation.price
+    if reservation_form == 'zaliczka/zadatek':
+        messagebox.showerror("Error", "Wybierz zaliczka/zadatek", parent=lasttop)
+        return
 
     if reservation_customer_id == -1:
         messagebox.showerror("Error", "Wybierz klienta", parent=lasttop)
@@ -33,8 +37,10 @@ def confirm_reservation(to_reservation, reservation_customer_id, reservation_adv
         try:
             reservation_advance = float(reservation_advance)
             reservation_advance = round(reservation_advance, 2)
+            reservation_advance = short_price(reservation_advance) 
             new_price = float(new_price)
             new_price = round(new_price, 2)
+            new_price = short_price(new_price)
         except:
             messagebox.showerror("Error", "Błędnie podane dane", parent=lasttop)
             return
@@ -48,10 +54,10 @@ def confirm_reservation(to_reservation, reservation_customer_id, reservation_adv
         if reservarion_paid: spaid="Zapłacono"
         else: spaid="Nie zapłacono"
 
-        final_res = Label(top, text=f"Zarezerwuj {to_reservation.brand} {to_reservation.model} {to_reservation.year} "\
+        final_res = Label(top, text = f"Zarezerwuj {to_reservation.brand} {to_reservation.model} {to_reservation.year} "\
             f"{to_reservation.colour} dla {reservation_customer.name}. \nNr.tel: {reservation_customer.phone} "\
-            f"\nZaliczka: {reservation_advance:.2f}"\
-            f"\nUstalona cena: {new_price:.2f}"\
+            f"\nZaliczka: {reservation_advance}"\
+            f"\nUstalona cena: {new_price:}"\
             f"\nUwagi: {adnotation}"\
             f"\nForma: {reservation_form}"\
             f"\n{spaid}", font=("Default", 14), justify="left", wraplength=700)
@@ -93,7 +99,7 @@ reservarion_search, show_finalized, all_products_tree, show_sold, show_reserved,
         if compare_list_to_element(free_products_search.split(), [product.Product.brand, product.Product.model,
             product.Product.year, product.Product.colour, product.max, delivery]):
             free_products_tree.insert("", "end", values=(product.Product.brand, product.Product.model,
-            product.Product.year, product.Product.colour, product.count, delivery, product.max), tags=(tag,))
+            product.Product.year, product.Product.colour, product.count, delivery, short_price(product.max)), tags=(tag,))
             i+=1
 
     free_products_tree.tag_configure('odd', background='#BEBEBE')
@@ -182,7 +188,7 @@ reservarion_search, show_finalized, all_products_tree, show_sold, show_reserved,
             else:
                 tag='odd'
             all_products_tree.insert("", "end", values=(product.Product.id, product.Product.brand, product.Product.model, 
-            product.Product.year, product.Product.colour, product.Product.price, product.Product.state, 
+            product.Product.year, product.Product.colour, short_price(product.Product.price), product.Product.state, 
             product.Product.added_on.strftime("%d-%m-%Y %H:%M"), czy_rezerwowany, delivery, product.Product.order_id), tags=(tag,))
             i+=1
 
@@ -196,12 +202,14 @@ def get_selected_element_id(tree):
         ret = -1
     return ret
 
+
 def get_is_reserved(tree):
     try:
         ret = tree.item(tree.focus(), "values")[8]
     except:
         ret = -1
     return ret
+
 
 def refresh_res_customer(tree):
     for item in tree.get_children():
@@ -231,17 +239,19 @@ def get_product_specs_id(tree):
         model = tree.item(tree.focus(), "values")[1]
         year = tree.item(tree.focus(), "values")[2]
         colour = tree.item(tree.focus(), "values")[3]
+        delivery = tree.item(tree.focus(), "values")[5]
 
     except:
         return -1
 
     
-    return con.get_first_free_element(brand, model, colour, year).id
-
+    return con.get_first_free_element(brand, model, colour, year, delivery).id
+    
 
 def fill_models(models_cbox, brand):
     models_cbox["values"] = con.get_models_list(brand)
     models_cbox.set('')
+
 
 def compare_list_to_element(search_list, element) -> bool:
     for search in search_list:
@@ -258,7 +268,8 @@ def compare_list_to_element(search_list, element) -> bool:
                 #print("OK", search, val)
         if ok == 0: return 0
     return 1
-    
+
+
 def validate_nip(nip: str) -> str:
     normalized_nip = re.sub(r"\D", "", nip)
     
@@ -278,3 +289,57 @@ def validate_nip(nip: str) -> str:
     formatted_nip = f"{normalized_nip[:3]}-{normalized_nip[3:5]}-{normalized_nip[5:7]}-{normalized_nip[7:]}"
     
     return formatted_nip
+
+
+def validate_pesel(pesel: str) -> str:
+    normalized_pesel = re.sub(r"\D", "", pesel)
+    
+    if normalized_pesel == "":
+        return ""
+
+    if len(normalized_pesel) != 11:
+        return "invalid"
+
+    digits = [int(d) for d in normalized_pesel]
+
+    year = digits[0] * 10 + digits[1]
+    month = digits[2] * 10 + digits[3]
+    day = digits[4] * 10 + digits[5]
+
+    if 1 <= month <= 12:
+        year += 1900
+    elif 21 <= month <= 32:
+        year += 2000
+        month -= 20
+    elif 41 <= month <= 52:
+        year += 2100
+        month -= 40
+    elif 61 <= month <= 72:
+        year += 2200
+        month -= 60
+    elif 81 <= month <= 92:
+        year += 1800
+        month -= 80
+    else:
+        return "invalid"
+
+    try:
+        datetime(year, month, day)
+    except ValueError:
+        return "invalid"
+
+    weights = [1, 3, 7, 9, 1, 3, 7, 9, 1, 3] 
+    checksum = sum(w * d for w, d in zip(weights, digits[:-1])) % 10
+    checksum = (10 - checksum) % 10
+
+    if checksum != digits[-1]:
+        return "invalid"
+    
+    return normalized_pesel
+
+
+def short_price(price):
+    if price % 1.0 == 0.0:
+        return str(trunc(price))
+    else:
+        return f"{price:.2f}"

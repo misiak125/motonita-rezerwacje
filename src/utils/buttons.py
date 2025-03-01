@@ -1,5 +1,5 @@
 import re
-from .funcs import animate_gif, validate_nip
+from .funcs import animate_gif, validate_nip, validate_pesel, short_price
 from tkinter import Toplevel, Label, ttk, messagebox, Button, StringVar
 from PIL import ImageTk, Image
 import src.controllers as con
@@ -26,8 +26,11 @@ def on_customer_click(lasttop):
     animate_gif(gif_label, frames, frame_counter)
 
 
-def sum_up_product(product_brand, product_model, product_colour, product_price, product_year, product_order_id, quantity, expected_delivery):
-        #print(expected_delivery, type(expected_delivery))
+def sum_up_product(product_brand, product_model, product_colour, product_price, product_year, product_order_id, quantity, expected_delivery_str, expected_delivery):
+        #print(f"!{expected_delivery_str}!")
+        if expected_delivery_str == "" or expected_delivery_str == None:
+            #print("here")
+            expected_delivery = None
         if not product_price:
             product_price = 0.0
 
@@ -66,8 +69,8 @@ def sum_up_customer(new_customer_name, new_customer_phone, new_customer_email, n
     valid = re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', new_customer_email)
     new_customer_phone = new_customer_phone.replace(" ", "")
     valid_phone = re.match("^\\+?[1-9][0-9]{7,14}$", new_customer_phone)
-    valid_pesel = re.match("^[0-9]{2}([02468]1|[13579][012])(0[1-9]|1[0-9]|2[0-9]|3[01])[0-9]{5}$", new_customer_pesel)
     valid_nip = validate_nip(new_customer_nip)
+    valid_pesel = validate_pesel(new_customer_pesel)
     if new_customer_name=="":
         messagebox.showerror("Error", "Wprowadź imię i nazwisko", parent=lasttop)
         return
@@ -80,27 +83,27 @@ def sum_up_customer(new_customer_name, new_customer_phone, new_customer_email, n
     if not valid and not new_customer_email=="":
         messagebox.showerror("Error", "Wprowadź poprawny adres email", parent=lasttop)
         return
-    if not valid_pesel and not new_customer_pesel=="":
+    if valid_pesel == "invalid":
         messagebox.showerror("Error", "Wprowadź poprawny numer PESEL", parent=lasttop)
         return
     if valid_nip=='invalid':
         messagebox.showerror("Error", "Wprowadź poprawny NIP", parent=lasttop)
         return
     if new_customer_email=="":
-        ensure_no_email(lasttop, new_customer_name, new_customer_phone, new_customer_email)
+        ensure_no_email(lasttop, new_customer_name, new_customer_phone, new_customer_email, valid_pesel, valid_nip)
         return
         
     lasttop.destroy()
-    con.add_customer(new_customer_name, new_customer_phone, new_customer_email, new_customer_pesel, valid_nip)
+    con.add_customer(new_customer_name, new_customer_phone, new_customer_email, valid_pesel, valid_nip)
 
 
-def ensure_no_email(lasttop, new_customer_name, new_customer_phone, new_customer_email):
+def ensure_no_email(lasttop, new_customer_name, new_customer_phone, new_customer_email, new_customer_pesel, new_customer_nip):
     top=Toplevel(lasttop)
     ask_label = Label(top, text="Czy chcesz dodać adres email?", font=("Default", 14))
     ask_label.grid(pady=10, padx=10, row=0, column=0, columnspan=2, sticky="nsew")
 
     yes_button = Button(top, text="Tak", command=lambda: top.destroy())
-    no_button = Button(top, text="Nie", command=lambda: [top.destroy(), con.add_customer(new_customer_name, new_customer_phone, new_customer_email), lasttop.destroy()])
+    no_button = Button(top, text="Nie", command=lambda: [top.destroy(), con.add_customer(new_customer_name, new_customer_phone, new_customer_email, new_customer_pesel, new_customer_nip), lasttop.destroy()])
 
     yes_button.grid(pady=10, padx=10, row=1, column=1, sticky="e")
     no_button.grid(pady=10, padx=10, row=1, column=0, sticky="w")
@@ -136,7 +139,6 @@ def delete_product(product_id, is_reserved, lasttop):
     yes_button.grid(row=1, column=1, padx=10, pady=10, sticky="se")
 
 
-
 def delete_reservation(reservation_id, lasttop):
     if reservation_id == -1:
         messagebox.showerror("Error", "Wybierz rezerwację.")
@@ -159,7 +161,6 @@ def delete_reservation(reservation_id, lasttop):
 
     yes_button = Button(top, text="TAK", command=lambda: [con.drop_reservation(reservation.Reservation.id), top.destroy()])
     yes_button.grid(row=1, column=1, padx=10, pady=10, sticky="se")
-
 
 
 def delete_customer(customer_id, lasttop):
@@ -190,7 +191,6 @@ def delete_customer(customer_id, lasttop):
     yes_button.grid(row=1, column=1, padx=10, pady=10, sticky="se")
 
 
-
 def change_state(product_id, lasttop):
     if product_id==-1:
         messagebox.showerror("Error", "Wybierz produkt")
@@ -198,7 +198,6 @@ def change_state(product_id, lasttop):
     
     top=Toplevel(lasttop)
     top.title("Zmień stan pojazdu")
-
     top.rowconfigure(0, weight=1)
     top.rowconfigure(1, weight=1)
     top.columnconfigure(0, weight=1)
@@ -213,6 +212,7 @@ def change_state(product_id, lasttop):
     select = ttk.Combobox(top, textvariable = product_new_state,  state="readonly")
     select['values'] = ("Oczekujemy na dostawę", "Na stanie", "Wydany")
     select.grid(row=1, column=0, columnspan=2, padx=10, pady=10)
+    product_new_state.set(product.state)
 
 
     no_button = Button(top, text="Anuluj", command=top.destroy)
@@ -222,9 +222,10 @@ def change_state(product_id, lasttop):
     yes_button = Button(top, text="Potwierdź", command=lambda: [con.change_state(product.id, product_new_state.get()), top.destroy()])
     yes_button.grid(row=2, column=1, padx=10, pady=10, sticky="se")
     
-    lasttop.wait_window(top)
+    
 
-def add_brand(brand, brand_cbox, new_brand_cbox):
+
+def add_brand(brand, brand_cbox, new_brand_cbox, edit_brand_cbox):
     brand = brand.strip()
     if brand == "":
         return
@@ -232,9 +233,11 @@ def add_brand(brand, brand_cbox, new_brand_cbox):
         con.add_brand(brand)
         brand_cbox["values"] = con.get_brands_list()
         new_brand_cbox["values"] = con.get_brands_list()
+        edit_brand_cbox["values"] = con.get_brands_list()
         messagebox.showinfo("Sukces", "Pomyślnie dodano markę")
     except:
         messagebox.showerror("Error", "Nie udało się dodać marki")
+
 
 def add_colour(colour, colour_cbox):
     colour = colour.strip()
@@ -247,6 +250,7 @@ def add_colour(colour, colour_cbox):
     except:
         messagebox.showerror("Error", "Nie udało się dodać koloru")
 
+
 def add_model(model, brand):
     model = model.strip()
     if model == "" or brand == "" or brand is None:
@@ -256,6 +260,7 @@ def add_model(model, brand):
         messagebox.showinfo("Sukces", "Pomyślnie dodano model")
     except:
         messagebox.showerror("Error", "Nie udało się dodać modelu")
+
 
 def delete_brand(brand, brand_cbox, new_brand_cbox):
     brand = brand.strip()
@@ -274,6 +279,7 @@ def delete_brand(brand, brand_cbox, new_brand_cbox):
     except:
         messagebox.showerror("Error", f"Nie udało się usunąć marki")
 
+
 def delete_colour(colour, colour_cbox):
     colour = colour.strip()
     if colour == "":
@@ -284,6 +290,7 @@ def delete_colour(colour, colour_cbox):
         messagebox.showinfo("Sukces", "Pomyślnie usunięto kolor")
     except:
         messagebox.showerror("Error", "Nie udało się usunąć koloru")
+
 
 def delete_model(model, brand):
     model = model.strip()
@@ -299,3 +306,243 @@ def delete_model(model, brand):
 def ensure_delete_models():
     response = messagebox.askyesno("Potwierdzenie", "Ta marka posiada przypisane modele. Czy na pewno chcesz ją usunąć, a za razem jej wszystkie modele?")
     return response
+
+
+def confirm_edit_reservation(reservation, price_entry, advance_entry, form_entry, paid_entry, adnotation_entry, lasttop):
+    if price_entry == '' or price_entry is None:
+        messagebox.showerror("Error", "Podaj cenę", parent=lasttop)
+        return
+    
+    if advance_entry == '' or advance_entry is None:
+        messagebox.showerror("Error", "Podaj wartość zaliczki", parent=lasttop)
+        return
+
+    try:
+        advance_entry = advance_entry.replace(',', '.', 1)
+    except:
+        pass
+
+    try:
+        price_entry = price_entry.replace(',', '.', 1)
+    except:
+        pass
+
+    changes="Zmiany:\n"
+
+    try:
+        advance_entry = float(advance_entry)
+        advance_entry = round(advance_entry, 2)
+        
+        price_entry = float(price_entry)
+        price_entry = round(price_entry, 2)
+    except Exception as e:
+        messagebox.showerror("Error", f"Błędnie podane dane\n{e}", parent=lasttop)
+        return
+    
+
+
+    if reservation.Product.price != price_entry:
+        changes = changes+f"Cena: {short_price(reservation.Product.price)} 🡢 {short_price(price_entry)}\n"
+    
+    if reservation.Reservation.advance != advance_entry:
+        changes = changes+f"Zaliczka: {short_price(reservation.Reservation.advance)} 🡢 {short_price(advance_entry)}\n"
+
+    if reservation.Reservation.form:
+        form = 'zadatek'
+    else:
+        form = 'zaliczka'
+    
+    if form_entry == 'zadatek':
+        new_form = True
+    else:
+        new_form = False
+
+    if form != form_entry:
+        changes = changes+f"Forma: {form} 🡢 {form_entry}\n"
+
+    if reservation.Reservation.paid:
+        og_paid = "Zapłacono"
+    else:
+        og_paid = "Nie zapłacono"
+
+    if paid_entry:
+        new_paid = "Zapłacono"
+    else:
+        new_paid = "Nie zapłacono"
+
+    if og_paid != new_paid:
+        changes = changes+f"{og_paid} 🡢 {new_paid}\n"
+
+    if reservation.Reservation.adnotation != adnotation_entry:
+        changes = changes+f"Uwagi: {reservation.Reservation.adnotation} 🡢 {adnotation_entry}\n"
+
+    if changes == "Zmiany:\n":
+        messagebox.showerror("Error", "Wprowadź zmiany", parent=lasttop)
+        return
+
+    
+    top = Toplevel()
+    lasttop.destroy()
+    top.title("Potwierdź zmiany")
+
+    changes_label=Label(top, text=changes, font=("Default, 12"), justify='left')
+    changes_label.pack(pady=10, padx=10)
+
+    yes_button = Button(top, text="Potwierdź", command=lambda: [con.edit_reservation(reservation.Reservation.id, price_entry, 
+    advance_entry, new_form, paid_entry, adnotation_entry), top.destroy()])
+    yes_button.pack(padx=10, pady=10, side='right')
+    no_button = Button(top, text="Anuluj", command=lambda: top.destroy())
+    no_button.pack(padx=10, pady=10, side='left')
+
+
+def sum_up_edit_product(product_id, product_brand, product_model, product_colour, product_price, product_year, product_order_id, product_state, expected_delivery_str, expected_delivery, lasttop):
+    #print(f"!{expected_delivery_str}!")
+    if expected_delivery_str == "" or expected_delivery_str == None:
+        #print("here")
+        expected_delivery = None
+    if not product_price:
+        product_price = 0.0
+
+    try:
+        product_price = product_price.replace(',', '.', 1)
+    except:
+        pass
+
+    if not product_brand or not product_model or not product_colour or not product_year:
+        messagebox.showerror("Error", "Wypełnij pole Marka, Model, Rocznik, Kolor oraz Ilość")
+        return
+
+    try:
+        product_price = float(product_price)
+        product_price = round(product_price, 2)
+        product_model = str(product_model)
+        product_colour = str(product_colour)
+        product_brand = str(product_brand)
+        product_order_id = str(product_order_id)
+        product_year = int(product_year)
+        if product_year < 1000:
+            product_year+=2000
+    except ValueError:
+        messagebox.showerror("Error", "Niewłaściwie podane dane")
+        return
+
+    product = con.get_product(product_id)
+
+    changes = "Zmiany:\n"
+    if product_brand != product.brand: 
+        changes = changes+f"Marka: {product.brand} 🡢 {product_brand}\n"
+
+    if product_model != product.model: 
+        changes = changes+f"Model: {(product.model)} 🡢 {(product_model)}\n"
+
+    if product_colour != product.colour: 
+        changes = changes+f"Kolor: {(product.colour)} 🡢 {(product_colour)}\n"
+
+    if product_price != product.price: 
+        changes = changes+f"Cena: {short_price(product.price)} 🡢 {short_price(product_price)}\n"
+
+    if product_year != product.year: 
+        changes = changes+f"Roczni: {(product.year)} 🡢 {(product_year)}\n"
+
+    if product_order_id != product.order_id: 
+        changes = changes+f"Nr. zamówienia: {(product.order_id)} 🡢 {(product_order_id)}\n"
+
+    if product_state != product.state: 
+        changes = changes+f"Stan: {(product.state)} 🡢 {(product_state)}\n"
+
+    if product.expected_delivery is None:
+        og_delivery = None
+    else:
+        og_delivery = product.expected_delivery.strftime('%d.%m.%Y')
+
+    if expected_delivery is None:
+        fdelivery = None
+    else:
+        fdelivery = expected_delivery.strftime('%d.%m.%Y')
+
+    if fdelivery != og_delivery: 
+        changes = changes+f"Przewidywana dostawa: {og_delivery} 🡢 {fdelivery}\n"
+
+    if changes == "Zmiany:\n": 
+        messagebox.showerror("Error", "Wprowadź zmiany", parent=lasttop)
+        return
+    
+    lasttop.destroy()
+    top = Toplevel()
+
+    changes_label = Label(top, text=changes, font=("Default", 12), justify='left')
+    changes_label.grid(row=0, column=0, columnspan=2, pady=10, padx=10)
+    yes_button = Button(top, text="Potwierdź", command=lambda: [con.edit_product(product_id, product_brand, 
+    product_model, product_colour, product_price, product_year, product_order_id, product_state, expected_delivery), top.destroy()])
+    yes_button.grid(row=4, column=3, padx=15, pady=15, sticky="e")
+    no_button = Button(top, text="Anuluj", command=lambda: [top.destroy()])
+    no_button.grid(row=4, column=0, padx=15, pady=15, sticky="w")
+
+
+def sum_up_edit_customer(customer_id, new_customer_name, new_customer_phone, new_customer_email, new_customer_pesel, new_customer_nip, lasttop):
+
+    new_customer_email=str(new_customer_email)
+    new_customer_phone=str(new_customer_phone)
+    new_customer_phone=new_customer_phone.replace(' ', '')
+    valid = re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', new_customer_email)
+    new_customer_phone = new_customer_phone.replace(" ", "")
+    valid_phone = re.match("^\\+?[1-9][0-9]{7,14}$", new_customer_phone)
+    valid_nip = validate_nip(new_customer_nip)
+    valid_pesel = validate_pesel(new_customer_pesel)
+    if new_customer_name=="":
+        messagebox.showerror("Error", "Wprowadź imię i nazwisko", parent=lasttop)
+        return
+    if " " not in new_customer_name:
+        messagebox.showerror("Error", "Wporwadź poprawne imię i nazwisko", parent=lasttop)
+        return
+    if not valid_phone or new_customer_phone=="":
+        messagebox.showerror("Error", "Wprowadź poprwany numer telefonu", parent=lasttop)
+        return
+    if not valid and not new_customer_email=="":
+        messagebox.showerror("Error", "Wprowadź poprawny adres email", parent=lasttop)
+        return
+    if valid_pesel == "invalid":
+        messagebox.showerror("Error", "Wprowadź poprawny numer PESEL", parent=lasttop)
+        return
+    if valid_nip=='invalid':
+        messagebox.showerror("Error", "Wprowadź poprawny NIP", parent=lasttop)
+        return
+        
+    customer = con.get_customer(customer_id)
+
+    changes = "Zmiany:\n"
+
+    if customer.name != new_customer_name: 
+        changes = changes+f"Imię i nazwisko: {customer.name} 🡢 {new_customer_name}\n"
+
+    if customer.phone != new_customer_phone: 
+        changes = changes+f"Nr. tel: {customer.phone} 🡢 {new_customer_phone}\n"
+
+    if customer.email != new_customer_email:
+        changes = changes+f"Email: {customer.email} 🡢 {new_customer_email}\n"
+
+    if customer.pesel != valid_pesel: 
+        changes = changes+f"PESEL: {customer.pesel} 🡢 {valid_pesel}\n"
+
+    if customer.nip != valid_nip: 
+        changes = changes+f"NIP: {customer.nip} 🡢 {valid_nip}\n"
+
+
+    if changes == "Zmiany:\n": 
+        messagebox.showerror("Error", "Wprowadź zmiany", parent=lasttop)
+        return
+
+    lasttop.destroy()
+    top = Toplevel()
+
+    label = Label(top, text=changes, font=("Default", 12), justify='left')
+    label.grid(row=0, column=0, columnspan=2, padx=10, pady=10)
+
+    yes_button = Button(top, text="Potwierdź", command=lambda: [con.edit_customer(customer_id, new_customer_name, 
+    new_customer_phone, new_customer_email, valid_pesel, valid_nip), top.destroy()])
+    yes_button.grid(row=4, column=3, padx=15, pady=15, sticky="e")
+    no_button = Button(top, text="Anuluj", command=lambda: [top.destroy()])
+    no_button.grid(row=4, column=0, padx=15, pady=15, sticky="w")
+
+
+
