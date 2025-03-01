@@ -198,7 +198,6 @@ class main_window:
         self.customers_search_entry.bind("<KeyRelease>", lambda x: con.fake_commit())
 
 
-
     def create_new_customer(self, lasttop, callback = None):
         top = Toplevel(lasttop)
         top.title("Dodaj nowego klienta")
@@ -540,9 +539,9 @@ class main_window:
         brand_label.grid(row=0, column=0, padx=10, pady=10, sticky="w")
         brand_entry = ttk.Entry(tab)
         brand_entry.grid(row=0, column=1, padx=10, pady=10, columnspan=2, sticky="ew")
-        brand_button = Button(tab, text="Dodaj", command=lambda: [but.add_brand(brand_entry.get(), self.product_brand_entry, self.add_model_brand_entry, self.edit_product_brand_entry), brand_entry.delete(0, END)])
+        brand_button = Button(tab, text="Dodaj", command=lambda: [but.add_brand(brand_entry.get(), self.product_brand_entry, self.add_model_brand_entry), brand_entry.delete(0, END)])
         brand_button.grid(row=0, column=3, padx=10, pady=10, sticky="w")
-        drop_brand_button = Button(tab, text="Usuń", command=lambda: [but.delete_brand(brand_entry.get(), self.product_brand_entry, self.add_model_brand_entry, self.edit_product_brand_entry), brand_entry.delete(0, END)])
+        drop_brand_button = Button(tab, text="Usuń", command=lambda: [but.delete_brand(brand_entry.get(), self.product_brand_entry, self.add_model_brand_entry), brand_entry.delete(0, END)])
         drop_brand_button.grid(row=0, column=4, padx=10, pady=10, sticky="w")
 
 
@@ -669,7 +668,7 @@ class main_window:
 
         self.edit_product_model_var = StringVar()
         self.edit_product_model_entry = ttk.Combobox(top, textvariable = self.edit_product_model_var, state="readonly")
-        self.edit_product_model_entry.bind("<Button-1>", lambda x: fun.fill_models(self.edit_product_model_entry, product_brand_var.get()))
+        self.edit_product_model_entry.bind("<Button-1>", lambda x: fun.fill_models(self.edit_product_model_entry, self.edit_product_brand_var.get()))
         self.edit_product_model_entry.grid(row=0, column=3, padx=15, pady=15, sticky="w")
         self.edit_product_brand_entry.bind("<<ComboboxSelected>>", lambda x: self.edit_product_model_entry.set(""))
 
