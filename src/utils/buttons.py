@@ -225,7 +225,7 @@ def change_state(product_id, lasttop):
     
 
 
-def add_brand(brand, brand_cbox, new_brand_cbox, edit_brand_cbox):
+def add_brand(brand, brand_cbox, new_brand_cbox):
     brand = brand.strip()
     if brand == "":
         return
@@ -233,7 +233,6 @@ def add_brand(brand, brand_cbox, new_brand_cbox, edit_brand_cbox):
         con.add_brand(brand)
         brand_cbox["values"] = con.get_brands_list()
         new_brand_cbox["values"] = con.get_brands_list()
-        edit_brand_cbox["values"] = con.get_brands_list()
         messagebox.showinfo("Sukces", "Pomyślnie dodano markę")
     except:
         messagebox.showerror("Error", "Nie udało się dodać marki")
@@ -267,7 +266,7 @@ def delete_brand(brand, brand_cbox, new_brand_cbox):
     if brand == "":
         return
     models = con.get_brands_models(brand)
-    if models is not None or len(models)>0:
+    if models is not None and len(models)>0:
         print(models)
         if not ensure_delete_models(): return
     try:
