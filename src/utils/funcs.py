@@ -239,13 +239,14 @@ def get_product_specs_id(tree):
         model = tree.item(tree.focus(), "values")[1]
         year = tree.item(tree.focus(), "values")[2]
         colour = tree.item(tree.focus(), "values")[3]
+        delivery = tree.item(tree.focus(), "values")[5]
 
     except:
         return -1
 
     
-    return con.get_first_free_element(brand, model, colour, year).id
-
+    return con.get_first_free_element(brand, model, colour, year, delivery).id
+    
 
 def fill_models(models_cbox, brand):
     models_cbox["values"] = con.get_models_list(brand)
@@ -335,93 +336,6 @@ def validate_pesel(pesel: str) -> str:
         return "invalid"
     
     return normalized_pesel
-
-
-def confirm_edit_reservation(reservation, price_entry, advance_entry, form_entry, paid_entry, adnotation_entry, lasttop):
-    if price_entry == '' or price_entry is None:
-        messagebox.showerror("Error", "Podaj cenę", parent=lasttop)
-        return
-    
-    if advance_entry == '' or advance_entry is None:
-        messagebox.showerror("Error", "Podaj wartość zaliczki", parent=lasttop)
-        return
-
-    try:
-        advance_entry = advance_entry.replace(',', '.', 1)
-    except:
-        pass
-
-    try:
-        price_entry = price_entry.replace(',', '.', 1)
-    except:
-        pass
-
-    changes="Zmiany:\n"
-
-    try:
-        advance_entry = float(advance_entry)
-        advance_entry = round(advance_entry, 2)
-        
-        price_entry = float(price_entry)
-        price_entry = round(price_entry, 2)
-    except Exception as e:
-        messagebox.showerror("Error", f"Błędnie podane dane\n{e}", parent=lasttop)
-        return
-    
-
-
-    if reservation.Product.price != price_entry:
-        changes = changes+f"Cena: {short_price(reservation.Product.price)} 🡢 {short_price(price_entry)}\n"
-    
-    if reservation.Reservation.advance != advance_entry:
-        changes = changes+f"Zaliczka: {short_price(reservation.Reservation.advance)} 🡢 {short_price(advance_entry)}\n"
-
-    if reservation.Reservation.form:
-        form = 'zadatek'
-    else:
-        form = 'zaliczka'
-    
-    if form_entry == 'zadatek':
-        new_form = True
-    else:
-        new_form = False
-
-    if form != form_entry:
-        changes = changes+f"Forma: {form} 🡢 {form_entry}\n"
-
-    if reservation.Reservation.paid:
-        og_paid = "Zapłacono"
-    else:
-        og_paid = "Nie zapłacono"
-
-    if paid_entry:
-        new_paid = "Zapłacono"
-    else:
-        new_paid = "Nie zapłacono"
-
-    if og_paid != new_paid:
-        changes = changes+f"{og_paid} 🡢 {new_paid}\n"
-
-    if reservation.Reservation.adnotation != adnotation_entry:
-        changes = changes+f"Uwagi: {reservation.Reservation.adnotation} 🡢 {adnotation_entry}\n"
-
-    if changes == "Zmiany:\n":
-        messagebox.showerror("Error", "Wprowadź zmiany", parent=lasttop)
-        return
-
-    
-    top = Toplevel()
-    lasttop.destroy()
-    top.title("Potwierdź zmiany")
-
-    changes_label=Label(top, text=changes, font=("Default, 12"), justify='left')
-    changes_label.pack(pady=10, padx=10)
-
-    yes_button = Button(top, text="Potwierdź", command=lambda: [con.edit_reservation(reservation.Reservation.id, price_entry, 
-    advance_entry, new_form, paid_entry, adnotation_entry), top.destroy()])
-    yes_button.pack(padx=10, pady=10, side='right')
-    no_button = Button(top, text="Anuluj", command=lambda: top.destroy())
-    no_button.pack(padx=10, pady=10, side='left')
 
 
 def short_price(price):
