@@ -15,10 +15,10 @@ def add_product(brand, model, colour, year, price, order_id, expected_delivery):
         raise
 
 
-def add_customer(name, phone, email, pesel, nip):
+def add_customer(name, phone, email, pesel, nip, company_name, adress):
     
     try: 
-        new_customer=Customer(name=name, phone=phone, email=email, added_on=datetime.now(), pesel=pesel, nip=nip)
+        new_customer = Customer(name=name, phone=phone, email=email, added_on=datetime.now(), pesel=pesel, nip=nip, company_name=company_name, adress=adress)
 
         session.add(new_customer)
         session.commit()

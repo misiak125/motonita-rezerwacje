@@ -3,6 +3,13 @@ from tkinter import Toplevel, Label, messagebox, Button, ttk
 import re
 from datetime import datetime
 from math import trunc
+from reportlab.pdfgen import canvas 
+from reportlab.pdfbase import pdfmetrics 
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.units import inch, cm, mm
+from glob import glob
+import os.path
+from PIL import Image
 
 def animate_gif(label, frames, frame_counter):
     label.config(image=frames[frame_counter])
@@ -343,3 +350,36 @@ def short_price(price):
         return str(trunc(price))
     else:
         return f"{price:.2f}"
+
+
+def generate_pdf_confirmation(order_id):
+    reservarion = con.get_full_reservation(order_id)
+    document_title = 'potwierdzenie'
+    title = "Potwierdzenie rezerwacji"
+    directory = os.path.normpath('/home/koperku/Documents/rezerwacjoinator_potwierdzenia/')
+    file_name = re.sub(r'[^a-zA-Z0-9]', '', reservarion.Customer.name.lower())
+    file_num = 1
+    while os.path.exists(os.path.join(directory, file_name+str(file_num)+'.pdf')): num+=1
+    file_name+=str(file_num)+'.pdf'
+    header = Image.open(os.path.normpath('src/static/header.jpg'))
+    pdfmetrics.registerFont(TTFont('DejaVu', 'DejaVuSans.ttf'))
+    
+    #pdf = canvas.Canvas(os.path.join(directory, file_name))
+    pdf = canvas.Canvas(file_name)
+    pdf.setTitle(document_title) 
+    pdf.setFont("DejaVu", 11)
+
+    pdf.drawInlineImage(header, 0, (29.7-2.99758)*cm, width=21*cm, height=2.99758*cm)
+    contact = open(os.path.normpath('src/static/seller_contact.txt'), "r").read()
+    
+    lines = contact.splitlines()
+    ys = [615,602,589,576,563,550, 537, 524, 511, 498]
+    width = pdf._pagesize[0]
+    padding = 20 * mm
+    for y, line in zip(ys, lines):
+        pdf.drawRightString(width - padding, y+140, line)
+    pdf.line(25, 690, 555, 690) 
+
+
+    pdf.drawCentredString(290, 670, "Zamówienie nr. "+str(order_id)+"/"+str(reservarion.Reservation.date.year%100))
+    pdf.save()

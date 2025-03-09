@@ -61,7 +61,7 @@ def sum_up_product(product_brand, product_model, product_colour, product_price, 
             messagebox.showerror("Error", "Niewłaściwie podane dane")
 
 
-def sum_up_customer(new_customer_name, new_customer_phone, new_customer_email, new_customer_pesel, new_customer_nip, lasttop):
+def sum_up_customer(new_customer_name, new_customer_phone, new_customer_email, new_customer_pesel, new_customer_nip, new_customer_company, new_customer_adress, lasttop):
 
     new_customer_email=str(new_customer_email)
     new_customer_phone=str(new_customer_phone)
@@ -89,12 +89,17 @@ def sum_up_customer(new_customer_name, new_customer_phone, new_customer_email, n
     if valid_nip=='invalid':
         messagebox.showerror("Error", "Wprowadź poprawny NIP", parent=lasttop)
         return
+    if  (valid_nip != "" and new_customer_company == "") or (valid_nip == "" and new_customer_company != ""):
+        messagebox.showerror("Error", "Wprowadź NIP wraz z nazwą firmy", parent=lasttop)
+        return
+    '''
     if new_customer_email=="":
         ensure_no_email(lasttop, new_customer_name, new_customer_phone, new_customer_email, valid_pesel, valid_nip)
         return
-        
+    '''
+
     lasttop.destroy()
-    con.add_customer(new_customer_name, new_customer_phone, new_customer_email, valid_pesel, valid_nip)
+    con.add_customer(new_customer_name, new_customer_phone, new_customer_email, valid_pesel, valid_nip, new_customer_company, new_customer_adress)
 
 
 def ensure_no_email(lasttop, new_customer_name, new_customer_phone, new_customer_email, new_customer_pesel, new_customer_nip):

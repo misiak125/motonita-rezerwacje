@@ -44,7 +44,7 @@ class main_window:
         self.create_add_product_tab(tab4)
         self.create_add_option_tab(tab6)
 
-
+        
         fun.refresh_table(self.free_products_tree, self.free_prod_search_entry.get(), self.split_dates.get(), 
         self.customers_tree, self.customers_search_entry.get(), self.reservations_tree, self.reservation_search_entry.get(),
         self.show_finalized, self.all_products_tree, self.show_sold, self.show_reserved.get(), self.all_prod_search_entry.get())
@@ -234,18 +234,31 @@ class main_window:
         pesel_entry = ttk.Entry(top)
         pesel_entry.grid(row=3, column=1, padx=10, pady=10, sticky="ew")
 
+        company_name_label = Label(top, text="Nazwa firmy:")
+        company_name_label.grid(row=4, column=0, padx=10, pady=10, sticky="w")
+
+        company_name_entry = ttk.Entry(top)
+        company_name_entry.grid(row=4, column=1, padx=10, pady=10, sticky="ew")
+
         nip_label = Label(top, text="NIP:")
-        nip_label.grid(row=4, column=0, padx=10, pady=10, sticky="w")
+        nip_label.grid(row=5, column=0, padx=10, pady=10, sticky="w")
 
         nip_entry = ttk.Entry(top)
-        nip_entry.grid(row=4, column=1, padx=10, pady=10, sticky="ew")
+        nip_entry.grid(row=5, column=1, padx=10, pady=10, sticky="ew")
+
+        adress_label = Label(top, text="Adres:")
+        adress_label.grid(row=6, column=0, padx=10, pady=10, sticky="w")
+
+        adress_entry = Text(top, wrap=WORD, height=5)
+        adress_entry.grid(row=6, column=1, padx=10, pady=10, sticky="ew")
 
         add_button = Button(top, text="Dodaj", command=lambda:[but.sum_up_customer(name_entry.get().strip(), 
-            phone_entry.get().strip(), email_entry.get().strip(), pesel_entry.get().strip(), nip_entry.get().strip(), top)])
-        add_button.grid(row=5, column=1, padx=10, pady=10, sticky="e")
+            phone_entry.get().strip(), email_entry.get().strip(), pesel_entry.get().strip(), nip_entry.get().strip(), 
+            company_name_entry.get().strip(), adress_entry.get('1.0', 'end').strip(), top)])
+        add_button.grid(row=7, column=1, padx=10, pady=10, sticky="e")
 
         
-        top.geometry(f"400x{top.winfo_reqheight()+70}")
+        #top.geometry(f"400x{top.winfo_reqheight()+70}")
 
         lasttop.wait_window(top)
 

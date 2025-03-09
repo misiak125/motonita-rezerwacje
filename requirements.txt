@@ -3,3 +3,4 @@ tkinter
 pillow
 tkcalendar
 alembic
+reportlab

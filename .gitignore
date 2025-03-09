@@ -179,3 +179,12 @@ src/test.py
 /src/orders.db
 todo
 /src/alter_table.py
+
+
+#plik z informacją o sprzedawcy drukowaną na potwierdzeniu
+src/static/seller_details.txt
+/src/static/seller_details.txt
+src/static/seller_contact.txt
+/src/static/seller_contact.txt
+src/static/seller_acc_num.txt
+/src/static/seller_acc_num.txt
