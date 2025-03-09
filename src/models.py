@@ -27,6 +27,8 @@ class Customer(Base):
     added_on = Column(DateTime, nullable=False) 
     pesel = Column(String)
     nip = Column(String)
+    adress = Column(String)
+    company_name = Column(String)
 
 class Reservation(Base):
     __tablename__ = "reservations"
