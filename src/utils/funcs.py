@@ -371,15 +371,42 @@ def generate_pdf_confirmation(order_id):
 
     pdf.drawInlineImage(header, 0, (29.7-2.99758)*cm, width=21*cm, height=2.99758*cm)
     contact = open(os.path.normpath('src/static/seller_contact.txt'), "r").read()
+    details = open(os.path.normpath('src/static/seller_details.txt'), 'r').read()
     
     lines = contact.splitlines()
-    ys = [615,602,589,576,563,550, 537, 524, 511, 498]
+    ys = [144, 132, 120, 108, 96, 84, 72, 60, 48, 36, 24, 12, 0]
     width = pdf._pagesize[0]
     padding = 20 * mm
     for y, line in zip(ys, lines):
-        pdf.drawRightString(width - padding, y+140, line)
+        pdf.drawRightString(width - padding, y+610, line)
+    
     pdf.line(25, 690, 555, 690) 
 
-
     pdf.drawCentredString(290, 670, "Zamówienie nr. "+str(order_id)+"/"+str(reservarion.Reservation.date.year%100))
+
+
+    pdf.drawString(padding, 645, "SPRZEDAWCA:")
+    lines = details.splitlines()
+    for y, line in zip(ys, lines):
+        pdf.drawString(padding, y+485, line)
+        print(y+485, line)
+
+    buyer_details = ["imię i nazwisko: "+reservarion.Customer.name, "tel: "+reservarion.Customer.phone]
+    if reservarion.Customer.email != "" and reservarion.Customer.email is not None:
+        buyer_details.append("email: "+reservarion.Customer.email)
+    if reservarion.Customer.pesel != "" and reservarion.Customer.pesel is not None:
+        buyer_details.append("PESEL: "+reservarion.Customer.pesel)
+    if reservarion.Customer.adress != "" and reservarion.Customer.adress is not None:
+        buyer_details.append("Pełny adres: "+reservarion.Customer.adress)
+    if reservarion.Customer.company_name != "" and reservarion.Customer.company_name is not None:
+        buyer_details.append("Nazwa firmy: "+reservarion.Customer.company_name)
+    if reservarion.Customer.nip != "" and reservarion.Customer.nip is not None:
+        buyer_details.append("NIP: "+reservarion.Customer.nip)
+    pdf.drawString(padding, 567, "KUPUJĄCY:")
+    
+
+    for y, line in zip(ys, buyer_details):
+        pdf.drawString(padding, y+407, line)
+        print(y, line)
+
     pdf.save()

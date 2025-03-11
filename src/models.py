@@ -39,6 +39,7 @@ class Reservation(Base):
     product_id=Column(ForeignKey("products.id"))
     advance = Column(Float, nullable=False)
     adnotation = Column(String)
+    adnotation_pub = Column(String, default="")
     form = Column(Boolean) #0=zaliczka 1=zadatek
     paid = Column(Boolean)
     

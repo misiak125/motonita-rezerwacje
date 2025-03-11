@@ -48,7 +48,8 @@ class main_window:
         fun.refresh_table(self.free_products_tree, self.free_prod_search_entry.get(), self.split_dates.get(), 
         self.customers_tree, self.customers_search_entry.get(), self.reservations_tree, self.reservation_search_entry.get(),
         self.show_finalized, self.all_products_tree, self.show_sold, self.show_reserved.get(), self.all_prod_search_entry.get())
-      
+        ''''''
+
         notebook.pack(padx=10, pady=10, fill="both", expand=True)
         
 
@@ -457,6 +458,14 @@ class main_window:
 
             adnotation_label.grid(row=2, column=0, padx=10, pady=10, sticky="w")
             adnotation_entry.grid(row=2, column=1, padx=0, pady=10, sticky="nsew", columnspan=3)
+
+
+            adnotation_pub_label = Label(reservation_frame, text = "Uwagi dla klienta:")
+            adnotation_pub_entry = Text(reservation_frame, wrap=WORD, height=5)
+
+
+            adnotation_pub_label.grid(row=3, column=0, padx=10, pady=10, sticky="w")
+            adnotation_pub_entry.grid(row=3, column=1, padx=0, pady=10, sticky="nsew", columnspan=3)
             
             cancel_button = Button(top, text="Anuluj", command=lambda: top.destroy())
             cancel_button.grid(row=4, column=0, padx=10, pady=10, sticky="w")
