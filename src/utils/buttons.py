@@ -483,7 +483,7 @@ def sum_up_edit_product(product_id, product_brand, product_model, product_colour
     no_button.grid(row=4, column=0, padx=15, pady=15, sticky="w")
 
 
-def sum_up_edit_customer(customer_id, new_customer_name, new_customer_phone, new_customer_email, new_customer_pesel, new_customer_nip, lasttop):
+def sum_up_edit_customer(customer_id, new_customer_name, new_customer_phone, new_customer_email, new_customer_pesel, new_customer_nip, company_name, adress, lasttop):
 
     new_customer_email=str(new_customer_email)
     new_customer_phone=str(new_customer_phone)
@@ -511,6 +511,9 @@ def sum_up_edit_customer(customer_id, new_customer_name, new_customer_phone, new
     if valid_nip=='invalid':
         messagebox.showerror("Error", "Wprowadź poprawny NIP", parent=lasttop)
         return
+    if  (valid_nip != "" and company_name == "") or (valid_nip == "" and company_name != ""):
+        messagebox.showerror("Error", "Wprowadź NIP wraz z nazwą firmy", parent=lasttop)
+        return
         
     customer = con.get_customer(customer_id)
 
@@ -528,8 +531,14 @@ def sum_up_edit_customer(customer_id, new_customer_name, new_customer_phone, new
     if customer.pesel != valid_pesel: 
         changes = changes+f"PESEL: {customer.pesel} 🡢 {valid_pesel}\n"
 
+    if customer.company_name != company_name: 
+        changes = changes+f"Nazwa firmy: {customer.company_name} 🡢 {company_name}\n"
+
     if customer.nip != valid_nip: 
         changes = changes+f"NIP: {customer.nip} 🡢 {valid_nip}\n"
+
+    if customer.adress != adress: 
+        changes = changes+f"Adres: \n {customer.adress} \n 🡣 \n{adress}\n"
 
 
     if changes == "Zmiany:\n": 
@@ -543,7 +552,7 @@ def sum_up_edit_customer(customer_id, new_customer_name, new_customer_phone, new
     label.grid(row=0, column=0, columnspan=2, padx=10, pady=10)
 
     yes_button = Button(top, text="Potwierdź", command=lambda: [con.edit_customer(customer_id, new_customer_name, 
-    new_customer_phone, new_customer_email, valid_pesel, valid_nip), top.destroy()])
+    new_customer_phone, new_customer_email, valid_pesel, valid_nip, company_name, adress), top.destroy()])
     yes_button.grid(row=4, column=3, padx=15, pady=15, sticky="e")
     no_button = Button(top, text="Anuluj", command=lambda: [top.destroy()])
     no_button.grid(row=4, column=0, padx=15, pady=15, sticky="w")

@@ -170,14 +170,25 @@ class main_window:
 
 
     def create_customers_tab(self, tab):
-        self.customers_tree = ttk.Treeview(tab, columns=("id", "name", "phone", "email", "pesel", "nip", "added_on"), show="headings")
-        self.customers_tree["displaycolumns"]=("name", "phone", "email", "pesel", "nip")
+        self.customers_tree = ttk.Treeview(tab, columns=("id", "name", "phone", "email", "pesel", "adress", "company_name", "nip", "added_on"), show="headings")
+        self.customers_tree["displaycolumns"]=("name", "phone", "email", "pesel", "adress", "company_name", "nip")
         self.customers_tree.heading("id", text="ID")
         self.customers_tree.heading("name", text="Imię i Nazwisko")
         self.customers_tree.heading("phone", text="Nr.Tel.")
         self.customers_tree.heading("email", text="Email")
         self.customers_tree.heading("pesel", text="PESEL")
         self.customers_tree.heading("nip", text="NIP")
+        self.customers_tree.heading("adress", text="Adres")
+        self.customers_tree.heading("company_name", text="Nazwa firmy")
+
+        self.customers_tree.column("name", width="150")
+        self.customers_tree.column("phone", width="55")
+        self.customers_tree.column("email", width="170")
+        self.customers_tree.column("pesel", width="50")
+        self.customers_tree.column("nip", width="60")
+        self.customers_tree.column("adress", width="100")
+        self.customers_tree.column("company_name", width="120")
+
         self.customers_tree.bind("<Double-1>", lambda x: but.on_customer_click(self.root))
         self.customers_tree.pack(fill="both", expand=True, padx=10, pady=10)
 
@@ -335,31 +346,61 @@ class main_window:
             expected_delivery = reservarion.Product.expected_delivery.strftime('%d.%m.%Y')
         except:
             expected_delivery = ""
-        label = Label(top, font=("Default", 12),
-        text=f"Imię i Nazwisko: {reservarion.Customer.name}\n"
-        f"Numer tel.:  {reservarion.Customer.phone}\n"
-        f"Email:  {reservarion.Customer.email}\n"
-        f"PESEL:  {reservarion.Customer.pesel}\n"
-        f"NIP:  {reservarion.Customer.nip}\n"
-        f"Marka:  {reservarion.Product.brand}\n"
-        f"Model:  {reservarion.Product.model}\n"
-        f"Kolor:  {reservarion.Product.colour}\n"
-        f"Rocznik:  {reservarion.Product.year}\n"
-        f"Cena:  {fun.short_price(reservarion.Product.price)}\n"
-        f"Wartość zaliczki:  {fun.short_price(reservarion.Reservation.advance)}\n"
-        f"Przewidywana dostawa:  {expected_delivery}\n"
-        f"Forma: {sform}\n"
-        f"{spaid}\n"
-        f"Uwagi do rezerwacji:  {reservarion.Reservation.adnotation}\n"
-        f"Data rezerwacji:  {reservarion.Reservation.date.strftime('%d-%m-%Y %H:%M')}\n"
-        , justify="left", wraplength=600)
-        label.pack(padx=10, pady=10)
+        
+        main_frame = ttk.Frame(top)
+        main_frame.pack(padx=10, pady=10, fill='x')
+        
+        details = [
+            ("Imię i Nazwisko:", reservarion.Customer.name),
+            ("Numer tel:", reservarion.Customer.phone),
+            ("Email:", reservarion.Customer.email),
+            ("PESEL:", reservarion.Customer.pesel),
+            ("Adres:", reservarion.Customer.adress),
+            ("Nazwa firmy:", reservarion.Customer.company_name),
+            ("NIP:", reservarion.Customer.nip),
+            ("Marka:", reservarion.Product.brand),
+            ("Model:", reservarion.Product.model),
+            ("Kolor:", reservarion.Product.colour),
+            ("Rocznik:", reservarion.Product.year),
+            ("Cena:", fun.short_price(reservarion.Product.price)),
+            ("Wartość zaliczki:", fun.short_price(reservarion.Reservation.advance)),
+            ("Forma:", sform),
+            ("Rozlicenie:", spaid),
+            ("Przewidywana dostawa:", expected_delivery),
+            ("Uwagi do rezerwacji:", reservarion.Reservation.adnotation),
+            ("Uwagi dla klienta:", reservarion.Reservation.adnotation_pub),
+            ("Data rezerwacji:", reservarion.Reservation.date.strftime('%d.%m.%Y %H:%M'))
+        ]
 
+        for label_text, value_text in details:
+            if value_text == "" or value_text is None:
+                continue
+            detail_frame = ttk.Frame(main_frame)
+            detail_frame['borderwidth'] = 1
+            detail_frame['relief'] = 'solid'
+            detail_frame.pack(fill='x', pady=2)
+            
+            lbl = Label(detail_frame, 
+                    text=label_text,
+                    font=("Default", 12),
+                    anchor='w',
+                    width=25, 
+                    justify='left')
+            lbl.pack(side='left', padx=(10, 10))
+            
+            val = Label(detail_frame, 
+                    text=value_text,
+                    font=("Default", 12),
+                    anchor='w',
+                    wraplength=550, 
+                    justify='left')
+            val.pack(side='left', fill='x', expand=True, padx=(0, 10))
+        
         edit_button = Button(top, text="Edytuj", command=lambda: self.edit_reservation(res_id, top))
-        edit_button.pack(padx=10, pady=10, side='right')
+        edit_button.pack(padx=10, pady=(0, 10), side='right')
 
         change_state_button = Button(top, text="Zmień stan pojazdu", command=lambda: but.change_state(reservarion.Product.id, top))
-        change_state_button.pack(padx=10, pady=10, side='left')
+        change_state_button.pack(padx=10, pady=(0, 10), side='left')
 
 
     def create_reservation(self, to_reservation_id, is_reserved, lasttop):
@@ -471,7 +512,7 @@ class main_window:
             cancel_button.grid(row=4, column=0, padx=10, pady=10, sticky="w")
 
             make_button = Button(top, text="Zarezerwuj", command=lambda: [fun.confirm_reservation(to_reservation, fun.get_selected_element_id(res_customers_tree), 
-                reservation_advance_entry.get().strip(), new_price_entry.get().strip(), adnotation_entry.get('1.0', 'end').strip(),
+                reservation_advance_entry.get().strip(), new_price_entry.get().strip(), adnotation_entry.get('1.0', 'end').strip(), adnotation_pub_entry.get('1.0', 'end').strip(),
                 reservation_form.get(), reservation_paid.get(), top)])
             make_button.grid(row=4, column=1, padx=10, pady=10, sticky="e")
             
@@ -675,6 +716,7 @@ class main_window:
             return
 
         top = Toplevel(root)
+        top.title("Edytuj pojazd")
 
         product_brand_label = ttk.Label(top, text="Marka:*", justify="left")
         product_brand_label.grid(row=0, column=0, padx=15, pady=15, sticky="w")
@@ -775,7 +817,7 @@ class main_window:
             return
         
         top = Toplevel(lasttop)
-        top.title("Dodaj nowego klienta")
+        top.title("Edytuj klienta")
         top.columnconfigure(0, weight=0)
         top.columnconfigure(1, weight=1)
         top.rowconfigure(0, weight=1)
@@ -783,6 +825,9 @@ class main_window:
         top.rowconfigure(2, weight=1)
         top.rowconfigure(3, weight=1)
         top.rowconfigure(4, weight=1)
+        top.rowconfigure(5, weight=1)
+        top.rowconfigure(6, weight=1)
+        top.rowconfigure(7, weight=1)
         
         name_label = Label(top, text="Imię i Nazwisko:*")
         name_label.grid(row=0, column=0, padx=10, pady=10, sticky="w") 
@@ -809,11 +854,23 @@ class main_window:
         pesel_entry = ttk.Entry(top)
         pesel_entry.grid(row=3, column=1, padx=10, pady=10, sticky="ew")
 
+        company_name_label = Label(top, text="Nazwa firmy:")
+        company_name_label.grid(row=4, column=0, padx=10, pady=10, sticky="w")
+
+        company_name_entry = ttk.Entry(top)
+        company_name_entry.grid(row=4, column=1, padx=10, pady=10, sticky="ew")
+
         nip_label = Label(top, text="NIP:")
-        nip_label.grid(row=4, column=0, padx=10, pady=10, sticky="w")
+        nip_label.grid(row=5, column=0, padx=10, pady=10, sticky="w")
 
         nip_entry = ttk.Entry(top)
-        nip_entry.grid(row=4, column=1, padx=10, pady=10, sticky="ew")
+        nip_entry.grid(row=5, column=1, padx=10, pady=10, sticky="ew")
+
+        adress_label = Label(top, text="Adres:")
+        adress_label.grid(row=6, column=0, padx=10, pady=10, sticky="w")
+
+        adress_entry = Text(top, wrap=WORD, height=5)
+        adress_entry.grid(row=6, column=1, padx=10, pady=10, sticky="ew")
 
         customer = con.get_customer(customer_id)
 
@@ -822,14 +879,17 @@ class main_window:
         email_entry.insert(0, customer.email)
         pesel_entry.insert(0, customer.pesel)
         nip_entry.insert(0, customer.nip)
+        adress_entry.insert(END, customer.adress)
+        company_name_entry.insert(0, customer.company_name)
 
         add_button = Button(top, text="Potwierdź", command=lambda:[but.sum_up_edit_customer(customer_id, name_entry.get().strip(), 
-            phone_entry.get().strip(), email_entry.get().strip(), pesel_entry.get().strip(), nip_entry.get().strip(), top)])
-        add_button.grid(row=5, column=1, padx=10, pady=10, sticky="e")
+            phone_entry.get().strip(), email_entry.get().strip(), pesel_entry.get().strip(), nip_entry.get().strip(), 
+            company_name_entry.get().strip(), adress_entry.get('1.0', 'end').strip(), top)])
+        add_button.grid(row=7, column=1, padx=10, pady=10, sticky="e")
 
         no_button = Button(top, text="Anuluj", command=lambda: top.destroy())
-        no_button.grid(row=5, column=0, padx=10, pady=10, sticky="w")
-        top.geometry(f"400x{top.winfo_reqheight()+70}")
+        no_button.grid(row=7, column=0, padx=10, pady=10, sticky="w")
+        #top.geometry(f"400x{top.winfo_reqheight()+70}")
 
         lasttop.wait_window(top)
     

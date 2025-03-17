@@ -4,3 +4,4 @@ pillow
 tkcalendar
 alembic
 reportlab
+python-dateutil

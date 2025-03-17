@@ -27,12 +27,12 @@ def add_customer(name, phone, email, pesel, nip, company_name, adress):
         raise
 
 
-def make_reservation(customer_id, product_id, advance, adnotation, form, paid):
+def make_reservation(customer_id, product_id, advance, adnotation, adnotation_pub, form, paid):
     try:
         new_reservation=Reservation(date=datetime.now(), 
         customer_id=customer_id, product_id=product_id, advance = advance, adnotation = adnotation,
-        form=form, paid=paid)
-
+        adnotation_pub = adnotation_pub, form=form, paid=paid)
+        
         session.add(new_reservation)
         session.commit()
     except:
@@ -347,7 +347,7 @@ def edit_product(product_id, product_brand, product_model, product_colour,
 
     session.commit()
 
-def edit_customer(customer_id, name, phone, email, pesel, nip):
+def edit_customer(customer_id, name, phone, email, pesel, nip, company_name, adress):
     customer = session.query(Customer).where(Customer.id == customer_id).first()
 
     customer.name = name
@@ -355,5 +355,7 @@ def edit_customer(customer_id, name, phone, email, pesel, nip):
     customer.email = email
     customer.pesel = pesel
     customer.nip = nip
+    customer.company_name = company_name
+    customer.adress = adress
 
     session.commit()
