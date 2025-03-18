@@ -6,9 +6,8 @@ from math import trunc
 from reportlab.pdfgen import canvas 
 from reportlab.pdfbase import pdfmetrics 
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.lib.units import inch, cm, mm
+from reportlab.lib.units import cm, mm
 from reportlab.lib.utils import simpleSplit
-from glob import glob
 import os
 import platform
 import subprocess
