@@ -15,10 +15,10 @@ def add_product(brand, model, colour, year, price, order_id, expected_delivery):
         raise
 
 
-def add_customer(name, phone, email, pesel, nip):
+def add_customer(name, phone, email, pesel, nip, company_name, adress):
     
     try: 
-        new_customer=Customer(name=name, phone=phone, email=email, added_on=datetime.now(), pesel=pesel, nip=nip)
+        new_customer = Customer(name=name, phone=phone, email=email, added_on=datetime.now(), pesel=pesel, nip=nip, company_name=company_name, adress=adress)
 
         session.add(new_customer)
         session.commit()
@@ -27,12 +27,12 @@ def add_customer(name, phone, email, pesel, nip):
         raise
 
 
-def make_reservation(customer_id, product_id, advance, adnotation, form, paid):
+def make_reservation(customer_id, product_id, advance, adnotation, adnotation_pub, form, paid, term):
     try:
         new_reservation=Reservation(date=datetime.now(), 
         customer_id=customer_id, product_id=product_id, advance = advance, adnotation = adnotation,
-        form=form, paid=paid)
-
+        adnotation_pub = adnotation_pub, form=form, paid=paid, term = term)
+        
         session.add(new_reservation)
         session.commit()
     except:
@@ -347,7 +347,7 @@ def edit_product(product_id, product_brand, product_model, product_colour,
 
     session.commit()
 
-def edit_customer(customer_id, name, phone, email, pesel, nip):
+def edit_customer(customer_id, name, phone, email, pesel, nip, company_name, adress):
     customer = session.query(Customer).where(Customer.id == customer_id).first()
 
     customer.name = name
@@ -355,5 +355,10 @@ def edit_customer(customer_id, name, phone, email, pesel, nip):
     customer.email = email
     customer.pesel = pesel
     customer.nip = nip
+    customer.company_name = company_name
+    customer.adress = adress
 
     session.commit()
+
+def get_new_order_id():
+    return q_session.query(Reservation).order_by(desc(Reservation.id)).first().id + 1

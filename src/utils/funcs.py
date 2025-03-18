@@ -1,8 +1,18 @@
 import src.controllers as con
-from tkinter import Toplevel, Label, messagebox, Button, ttk
+from tkinter import Toplevel, Label, messagebox, Button, ttk, Frame
 import re
 from datetime import datetime
 from math import trunc
+from reportlab.pdfgen import canvas 
+from reportlab.pdfbase import pdfmetrics 
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.units import inch, cm, mm
+from reportlab.lib.utils import simpleSplit
+from glob import glob
+import os
+import platform
+import subprocess
+from PIL import Image
 
 def animate_gif(label, frames, frame_counter):
     label.config(image=frames[frame_counter])
@@ -10,7 +20,10 @@ def animate_gif(label, frames, frame_counter):
     label.after(100, animate_gif, label, frames, frame_counter)
 
 
-def confirm_reservation(to_reservation, reservation_customer_id, reservation_advance, new_price, adnotation, reservation_form, reservarion_paid, lasttop):
+def confirm_reservation(to_reservation, reservation_customer_id, reservation_advance, new_price, adnotation, adnotation_pub, reservation_form, reservarion_paid, term, lasttop):
+    if len(term) < 8:
+        messagebox.showerror("Error", "Wprowadź termin realizacji", parent=lasttop)
+        return
     if new_price is None or new_price == "":
         new_price = to_reservation.price
     if reservation_form == 'zaliczka/zadatek':
@@ -54,27 +67,69 @@ def confirm_reservation(to_reservation, reservation_customer_id, reservation_adv
         if reservarion_paid: spaid="Zapłacono"
         else: spaid="Nie zapłacono"
 
+        main_frame = ttk.Frame(top)
+
+        details = [
+            ("Nr.tel:", reservation_customer.phone),
+            ("Zaliczka:", reservation_advance),
+            ("Forma:", reservation_form),
+            ("Ustalona cena:", new_price),
+            ("Rozliczenie:", spaid),
+            ("Termin realizacji:", term),
+            ("Uwagi:", adnotation),
+            ("Uwagi dla klienta:", adnotation_pub),
+        ]
+
         final_res = Label(top, text = f"Zarezerwuj {to_reservation.brand} {to_reservation.model} {to_reservation.year} "\
-            f"{to_reservation.colour} dla {reservation_customer.name}. \nNr.tel: {reservation_customer.phone} "\
-            f"\nZaliczka: {reservation_advance}"\
-            f"\nUstalona cena: {new_price:}"\
-            f"\nUwagi: {adnotation}"\
-            f"\nForma: {reservation_form}"\
-            f"\n{spaid}", font=("Default", 14), justify="left", wraplength=700)
+            f"{to_reservation.colour} dla {reservation_customer.name}.", font=("Default", 14), wraplength=700)
+        
+        i=0
+        for label_text, value_text in details:
+            if value_text == "" or value_text is None:
+                continue
+            if i%2 == 1: 
+                col = "#5E5E5E"
+                fr = 1
+            else:
+                fr=1
+                col = "#FFFFFF"
+            i+=1
+            detail_frame = Frame(main_frame, highlightbackground=col, highlightthickness=fr)
+            #detail_frame['borderwidth'] = 1
+            #detail_frame['relief'] = 'solid'
+            detail_frame.pack(fill='x', pady=2)
+            
+            lbl = Label(detail_frame, 
+                    text=label_text,
+                    font=("Default", 12),
+                    anchor='w',
+                    width=25, 
+                    justify='left')
+            lbl.pack(side='left', padx=(10, 10))
+            
+            val = Label(detail_frame, 
+                    text=value_text,
+                    font=("Default", 12),
+                    anchor='w',
+                    wraplength=550, 
+                    justify='left')
+            val.pack(side='left', fill='x', expand=True, padx=(0, 10))
             
         if reservation_form == 'zaliczka': bool_form = False
         else: bool_form = True
         
         final_res.pack(pady=20, padx=10, anchor="center")
+        main_frame.pack(padx=10, pady=10, fill='x')
 
         frame1 = ttk.Frame(top)
         frame1.pack(fill="x", pady=10, padx=10)
 
         cancel_button = Button(frame1, text="Anuluj", command=top.destroy)
         cancel_button.pack(side="left", padx=10) 
-
+        new_id = con.get_new_order_id()
         confirm_button = Button(frame1, text="Potwierdź", command = lambda: [con.make_reservation(reservation_customer_id, 
-            to_reservation.id, reservation_advance, adnotation, bool_form, reservarion_paid), con.change_price(to_reservation.id, new_price) ,top.destroy()]) #dodaj happy informacje ze sie udalo, zamknij tez poprzednie okno
+            to_reservation.id, reservation_advance, adnotation, adnotation_pub, bool_form, reservarion_paid, term), 
+            con.change_price(to_reservation.id, new_price), top.destroy() ,generate_pdf_confirmation(new_id)]) #dodaj happy informacje ze sie udalo, zamknij tez poprzednie okno
         confirm_button.pack(side="right", padx=10)
 
 
@@ -120,9 +175,9 @@ reservarion_search, show_finalized, all_products_tree, show_sold, show_reserved,
         if customer.pesel == None: pesel = ""
         else: pesel = customer.pesel 
         if compare_list_to_element(customer_search.split(), [customer.id, customer.name, customer.phone, 
-        customer.email, pesel, nip]):
+        customer.email, pesel, customer.adress.replace('\n', ' '), customer.company_name, nip]):
             customers_tree.insert("", "end", values=(customer.id, customer.name, customer.phone, 
-            customer.email, pesel, nip, customer.added_on.strftime("%d-%m-%Y %H:%M")), tags=(tag,))
+            customer.email, pesel, customer.adress.replace('\n', ' '), customer.company_name,  nip, customer.added_on.strftime("%d-%m-%Y %H:%M")), tags=(tag,)) #
             i+=1
         
     customers_tree.tag_configure('odd', background='#BEBEBE')
@@ -343,3 +398,251 @@ def short_price(price):
         return str(trunc(price))
     else:
         return f"{price:.2f}"
+
+
+def generate_pdf_confirmation(order_id):
+    if order_id == -1:
+        return
+    reservarion = con.get_full_reservation(order_id)
+    document_title = 'potwierdzenie'
+    title = "Potwierdzenie rezerwacji"
+    directory = os.path.join(os.path.expanduser("~"), "Dokumenty")
+    if not os.path.isdir(directory):
+        directory = os.path.join(os.path.expanduser("~"), "Documents")
+    
+    directory = os.path.join(directory, "potwierdzenia_rez")
+    if not os.path.isdir(directory):
+        os.mkdir(directory)
+    file_name = re.sub(r'[^a-zA-Z0-9]', '', reservarion.Customer.name.lower())
+    file_num = 1
+    while os.path.exists(os.path.join(directory, file_name+str(file_num)+'.pdf')): file_num+=1
+    file_name+=str(file_num)+'.pdf'
+    header = Image.open(os.path.normpath('src/static/header2.jpg'))
+    #print(pdfmetrics.getRegisteredFontNames())
+    try:
+        pdfmetrics.registerFont(TTFont('Arial', 'arial.ttf')) 
+        pdfmetrics.registerFont(TTFont('Arial-Bold', 'arialbd.ttf'))
+    except:
+        pdfmetrics.registerFont(TTFont('Arial', 'Arial.ttf')) 
+        pdfmetrics.registerFont(TTFont('Arial-Bold', 'Arialbd.ttf'))
+    pdf = canvas.Canvas(os.path.join(directory, file_name))
+    #pdf = canvas.Canvas(file_name)
+    pdf.setTitle(document_title) 
+    font_size = 11
+    font = 'Arial'
+    pdf.setFont(font, font_size)
+    width = pdf._pagesize[0]
+    padding = 15 * mm
+    max_width = 180 * mm
+    interline = 13
+    binterline = interline*1.333
+    pdf.drawInlineImage(header, 0, (29.7-3.75)*cm, width=11*cm, height=3.5*cm)
+    contact = open(os.path.normpath('src/static/seller_contact.txt'), "r").read().strip()
+    details = open(os.path.normpath('src/static/seller_details.txt'), 'r').read().strip()
+    
+    lines = contact.splitlines()
+    lasty=804
+    for  line in lines:
+        pdf.drawRightString(width - padding - 5*mm, lasty, line)
+        lasty-=interline
+    
+    pdf.line(25, (29.7-4)*cm, 555, (29.7-4)*cm) 
+    lasty -= 3*interline
+    pdf.drawRightString(210*mm-padding, lasty, f"Podkowa Leśna, dn. {reservarion.Reservation.date.strftime('%d.%m.%Y')}r.")
+    lasty -= interline
+    pdf.setFont('Arial-Bold', font_size)
+    pdf.drawCentredString(290, lasty, "Zamówienie nr. "+str(order_id)+"/"+str(reservarion.Reservation.date.year%100))
+    pdf.setFont('Arial', font_size)
+    lasty -= binterline
+
+
+    pdf.drawString(padding, lasty, "SPRZEDAJĄCY:")
+    pdf.line(padding, lasty-3, padding+83, lasty-3)
+    lasty -= binterline
+    lines = details.splitlines()
+    for line in lines:
+        pdf.drawString(padding, lasty, line)
+        lasty -= interline
+
+    lasty -= interline
+
+    buyer_details = ["Imię i nazwisko: "+reservarion.Customer.name, "Tel: " + reservarion.Customer.phone]
+    if reservarion.Customer.email != "" and reservarion.Customer.email is not None:
+        buyer_details.append("Adres e-mail: "+reservarion.Customer.email)
+    if reservarion.Customer.company_name != "" and reservarion.Customer.company_name is not None:
+        buyer_details.append("Nazwa firmy: "+reservarion.Customer.company_name)
+    if reservarion.Customer.nip != "" and reservarion.Customer.nip is not None:
+        buyer_details.append("NIP: "+reservarion.Customer.nip)
+    if reservarion.Customer.pesel != "" and reservarion.Customer.pesel is not None:
+        buyer_details.append("PESEL: "+reservarion.Customer.pesel)
+    if reservarion.Customer.adress != "" and reservarion.Customer.adress is not None:
+        buyer_details.append("Pełny adres: ")
+        adress_list = reservarion.Customer.adress.splitlines()
+        for adress_line in adress_list:
+            buyer_details.append(adress_line)
+
+    pdf.drawString(padding, lasty, "KUPUJĄCY:")
+    pdf.line(padding, lasty-3, padding+62, lasty-3)
+    lasty -= binterline
+    
+    for  line in buyer_details:
+        pdf.drawString(padding, lasty, line)
+        lasty -= interline
+
+    lasty -= interline
+    pdf.drawString(padding, lasty, "Kupujący zamawia następujący pojazd:")
+    pdf.line(padding, lasty-3, padding+192, lasty-3)
+
+    lasty -= binterline
+    pdf.drawString(padding, lasty, "Marka i model: "+reservarion.Product.brand+' '+reservarion.Product.model)
+    lasty -= interline
+    pdf.drawString(padding, lasty, "Rok produkcji: "+str(reservarion.Product.year))
+    lasty -= interline
+    pdf.drawString(padding, lasty, "Kolor: "+reservarion.Product.colour)
+    lasty -= 2*interline
+    pdf.drawString(padding, lasty, "CENA POJAZDU: "+str(short_price(int(reservarion.Product.price))).replace('.', ',')+'zł')
+    lasty -= interline
+    pdf.drawString(padding, lasty, "Słownie: "+slownie(int(reservarion.Product.price), 'krótka')+' PLN')
+    lasty -= 2*interline
+    
+    zastrzezenie = f"SPRZEDAJĄCY zastrzega prawo do zmiany ceny pojazdu w przypadku jej zmiany w oficjalnym cenniku importera marki {reservarion.Product.brand} Polska."
+    lines = simpleSplit(zastrzezenie, font, font_size, max_width)
+    
+    for line in lines:
+        pdf.drawString(padding, lasty, line)
+        lasty-=interline
+    lasty -= interline
+    acc_num = open(os.path.normpath('src/static/seller_acc_num.txt')).read().strip()
+    if reservarion.Reservation.form: zadzal = 'zadatku'
+    else: zadzal = 'zaliczki'
+    zaliczka = f"KUPUJĄCY zobowiązuje się do wpłaty {zadzal} w wysokości {short_price(reservarion.Reservation.advance)}zł, (słownie: {slownie(int(reservarion.Reservation.advance), 'krótka')} PLN) na numer rachunku: {acc_num}."
+    lines = simpleSplit(zaliczka, font, font_size, max_width)
+    for line in lines:
+        pdf.drawString(padding, lasty, line)
+        lasty-=interline
+    lasty -= interline
+
+    adit_info = "Zamówienie zostanie przyjęte do realizacji w momencie zaksięgowania kwoty zadatku/zaliczki na rachunku SPRZEDAJĄCEGO."
+    lines = simpleSplit(adit_info, font, font_size, max_width)
+    for line in lines:
+        pdf.drawString(padding, lasty, line)
+        lasty-=interline
+    lasty -= interline
+
+
+    
+    lines = simpleSplit(f"Termin realizacji zamówienia: {reservarion.Reservation.term}", font, font_size, max_width)
+    for line in lines:
+        pdf.drawString(padding, lasty, line)
+        lasty-=interline
+    lasty -= interline
+
+    adres = open(os.path.normpath("src/static/seller_adress.txt")).read().strip()
+    pickup = f"Miejsce odbioru pojazdu: {adres}."
+    lines = simpleSplit(pickup, font, font_size, max_width)
+    for line in lines:
+        pdf.drawString(padding, lasty, line)
+        lasty-=interline
+
+    lasty -= interline
+    if reservarion.Reservation.adnotation_pub != "" and reservarion.Reservation.adnotation_pub is not None:
+        adnotations = f"Dodatkowe informacje: {reservarion.Reservation.adnotation_pub}"
+        lines = simpleSplit(adnotations, font, font_size, max_width)
+        for line in lines:
+            pdf.drawString(padding, lasty, line)
+            lasty-=interline
+
+
+    lasty -= 2 * interline
+
+    pdf.drawString(2.5*padding, lasty, "SPRZEDAJĄCY")
+    pdf.drawRightString(210*mm - 2.5*padding, lasty, "KUPUJĄCY")
+
+    pdf.save()
+
+    print_file(os.path.join(directory, file_name))
+
+
+def slownie(liczba:int, skala:str='długa', jeden:bool=True):
+    # Zamiana liczby na slowa z polska gramatyka
+    # source: www.algorytm.org
+	'''
+	Zamienia liczbę na zapis słowny w języku polskim.
+	Obsługuje liczby w zakresie do 10^66-1 dla długiej skali oraz 10^36-1 dla krótkiej skali.
+	Możliwe pominięcie słowa "jeden" przy potęgach tysiąca.
+	'''
+	if (skala == 'długa' and abs(liczba) >= 10**66) or (skala == 'krótka' and abs(liczba) >= 10**36):
+		raise ValueError('Zbyt duża liczba.')
+	
+	
+	jedności   = ('', 'jeden',      'dwa',         'trzy',        'cztery',       'pięć',         'sześć',         'siedem',         'osiem',         'dziewięć')
+	naście     = ('', 'jedenaście', 'dwanaście',   'trzynaście',  'czternaście',  'piętnaście',   'szesnaście',    'siedemnaście',   'osiemnaście',   'dziewiętnaście')
+	dziesiątki = ('', 'dziesięć',   'dwadzieścia', 'trzydzieści', 'czterdzieści', 'pięćdziesiąt', 'sześćdziesiąt', 'siedemdziesiąt', 'osiemdziesiąt', 'dziewięćdziesiąt')
+	setki      = ('', 'sto',        'dwieście',    'trzysta',     'czterysta',    'pięćset',      'sześćset',      'siedemset',      'osiemset',      'dziewięćset')
+	
+
+	
+	grupy = [ #kolejne potęgi tysiąca, z formami gramatycznymi
+		('', '', ''),
+		('tysiąc', 'tysiące', 'tysięcy'),
+	]
+	
+	przedrostki = ('mi',  'bi', 'try', 'kwadry', 'kwinty', 'seksty', 'septy', 'okty', 'nony', 'decy')
+	for p in przedrostki:
+		grupy.append((f'{p}lion',  f'{p}liony',  f'{p}lionów'))
+		if skala == 'długa':
+			grupy.append((f'{p}liard', f'{p}liardy', f'{p}liardów'))
+	
+	if liczba == 0:
+		return 'zero'
+	
+	słowa = []
+	znak = ''
+	if liczba < 0:
+		znak = 'minus'
+		liczba = -liczba
+	
+	g = 0
+	while liczba != 0:
+		#Liczba jest dzielona na kolejne potęgi tysiąca, od największej.
+		s = liczba % 1_000 // 100
+		d = liczba % 100 // 10
+		j = liczba % 10
+		liczba //= 1_000
+		
+		if s == d == j == 0: #brak elementów do nazwania
+			g += 1
+			continue
+		
+		if d == 1 and j > 0: #łączymy dziesiątki i jedności w -naście
+			 n = j
+			 d = j = 0
+		else:
+			 n = 0
+		
+		#wybór formy gramatycznej
+		if j == 1 and s + d + n == 0:
+			forma = 0
+		elif 2 <= j <= 4:
+			forma = 1
+		else:
+			forma = 2
+		
+		słowa = [setki[s], dziesiątki[d], naście[n], jedności[j] if jeden or g == 0 else '', grupy[g][forma]] + słowa
+		g += 1
+	
+	słowa.insert(0, znak)
+	return ' '.join(s for s in słowa if s)
+
+
+def print_file(file_path):
+    system_name = platform.system()
+
+    if system_name == "Windows":
+        os.startfile(file_path, "print")
+    elif system_name == "Darwin":
+        subprocess.run(["lpr", file_path])
+    elif system_name == "Linux":    
+        subprocess.run(["xdg-open", file_path])
+    else:
+        print("Unsupported OS")
