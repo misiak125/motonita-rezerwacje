@@ -331,6 +331,7 @@ def edit_reservation(reservarion_id, new_price, new_advance, new_form, new_paid,
 
     session.commit()
 
+
 def edit_product(product_id, product_brand, product_model, product_colour, 
     product_price, product_year, product_order_id, product_state, expected_delivery):
     
@@ -347,6 +348,7 @@ def edit_product(product_id, product_brand, product_model, product_colour,
 
     session.commit()
 
+
 def edit_customer(customer_id, name, phone, email, pesel, nip, company_name, adress):
     customer = session.query(Customer).where(Customer.id == customer_id).first()
 
@@ -359,6 +361,15 @@ def edit_customer(customer_id, name, phone, email, pesel, nip, company_name, adr
     customer.adress = adress
 
     session.commit()
+
+
+def change_date(id_given, new_date):
+    product = session.query(Product).where(Product.id == id_given).first()
+
+    product.expected_delivery = new_date
+
+    session.commit()
+
 
 def get_new_order_id():
     return q_session.query(Reservation).order_by(desc(Reservation.id)).first().id + 1

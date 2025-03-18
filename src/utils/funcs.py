@@ -645,3 +645,8 @@ def print_file(file_path):
         subprocess.run(["xdg-open", file_path])
     else:
         print("Unsupported OS")
+
+
+def change_dates(id_list, new_date):
+    for idd in id_list:
+        con.change_date(idd, new_date)

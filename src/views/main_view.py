@@ -58,7 +58,8 @@ class main_window:
         self.split_dates = BooleanVar()
         split_dates_button = Checkbutton(tab, variable=self.split_dates, text="Rozdziel przewidywane daty", 
         onvalue=True, offvalue=False, command=lambda: con.fake_commit())
-        split_dates_button.pack(padx=10, pady=5)
+        split_dates_button.pack(padx=10, pady=(10, 0))
+        split_dates_button.select()
 
         self.free_products_tree = ttk.Treeview(tab, columns=("brand", "model", "year", "colour", 
         "free_count", "date", "price"), show="headings")
@@ -83,15 +84,17 @@ class main_window:
         self.free_products_tree.bind("<Double-1>", lambda x: self.create_reservation( 
         fun.get_product_specs_id(self.free_products_tree), "NIE", self.root))
 
-
         create_reservation_button = Button(tab, text="Zarezerwuj", command=lambda: self.create_reservation( 
         fun.get_product_specs_id(self.free_products_tree), "NIE", self.root))
-        create_reservation_button.pack(padx=10, pady=10, side="right")
-
-        free_prod_search_label = Label(tab, text="Wyszukaj:", padx=10)
-        free_prod_search_label.pack(padx=0, pady=10, side="left")
+        create_reservation_button.pack(padx=10, pady=(0, 10), side="right")
+        '''
+        change_date_button = Button(tab, text="Zmień datę", command=lambda: but.change_group_date_by_spec(self.free_products_tree, self.root))
+        change_date_button.pack(padx=10, pady=(0, 10), side="right")
+        '''
+        free_prod_search_label = Label(tab, text="Wyszukaj:")
+        free_prod_search_label.pack(padx=(15, 10), pady=(0, 10), side="left")
         self.free_prod_search_entry = ttk.Entry(tab)
-        self.free_prod_search_entry.pack(padx=10, pady=20, fill="x")
+        self.free_prod_search_entry.pack(padx=10, pady=(10, 20), fill="x")
         self.free_prod_search_entry.bind("<KeyRelease>", lambda x: con.fake_commit())
 
 
@@ -103,16 +106,16 @@ class main_window:
                     variable = self.show_sold, onvalue = 1, offvalue = 0,
                     command=lambda: con.fake_commit())
 
-        Button1.grid(row=0, column=0, padx=20,  sticky="w")
+        Button1.grid(row=0, column=0, padx=20, pady=(10, 0),  sticky="w")
 
         self.show_reserved = StringVar()
         reserved_options = ["wszystkie", "zarezerwowane", "niezarezerwowane"]
         self.show_reserved.set("wszystkie")
         self.show_reserved.trace_add("write", lambda x, y, z: con.fake_commit())
         show_reserved_label = Label(filters_frame, text="Pokaż:", justify='left')
-        show_reserved_label.grid(row=0, column=1, padx=10, sticky="e")
+        show_reserved_label.grid(row=0, column=1, padx=10, pady=(10, 0), sticky="e")
         show_reserved_dropdown = OptionMenu(filters_frame, self.show_reserved, *reserved_options)
-        show_reserved_dropdown.grid(row=0, column=2, padx=0, sticky="ew")
+        show_reserved_dropdown.grid(row=0, column=2, padx=0, pady=(10, 0), sticky="ew")
 
         self.all_products_tree = ttk.Treeview(tab, columns=("id", "brand", "model", "year", 
         "colour", "price", "state", "added_on", "reservation", "expected_delivery", "order_id"), show="headings")
@@ -153,20 +156,23 @@ class main_window:
         delete_button = Button(tab, text="Usuń", 
         command=lambda: [but.delete_product(fun.get_selected_element_id(self.all_products_tree), 
         fun.get_is_reserved(self.all_products_tree), self.root)])
-        delete_button.pack(pady=10, padx=10, side="left")
+        delete_button.pack(pady=(0, 10), padx=10, side="left")
 
         change_state_button = Button(tab, text="Edytuj", command=lambda: [self.edit_product(fun.get_selected_element_id(self.all_products_tree), 
         self.root)])
-        change_state_button.pack(padx=10, pady=10, side="right")
-        
+        change_state_button.pack(padx=10, pady=(0, 10), side="right")
+
+        change_date_button = Button(tab, text="Zmień datę", command=lambda: but.change_group_date_by_id(self.all_products_tree, self.root))
+        change_date_button.pack(padx=10, pady=(0, 10), side="right")
+
         create_reservation_button = Button(tab, text="Zarezerwuj", command=lambda: self.create_reservation( 
         fun.get_selected_element_id(self.all_products_tree), fun.get_is_reserved(self.all_products_tree), self.root))
-        create_reservation_button.pack(padx=10, pady=10, side="right")
+        create_reservation_button.pack(padx=10, pady=(0, 10), side="right")
 
-        all_prod_search_label = Label(tab, text="Wyszukaj:", padx=10)
-        all_prod_search_label.pack(padx=0, pady=10, side="left")
+        all_prod_search_label = Label(tab, text="Wyszukaj:")
+        all_prod_search_label.pack(padx=(15, 10), pady=(0, 10), side="left")
         self.all_prod_search_entry = ttk.Entry(tab)
-        self.all_prod_search_entry.pack(padx=10, pady=20, fill="x")
+        self.all_prod_search_entry.pack(padx=10, pady=(5, 15), fill="x")
         self.all_prod_search_entry.bind("<KeyRelease>", lambda x: con.fake_commit())
 
 

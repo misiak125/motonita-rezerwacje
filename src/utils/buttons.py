@@ -1,10 +1,11 @@
 import re
-from .funcs import animate_gif, validate_nip, validate_pesel, short_price
-from tkinter import Toplevel, Label, ttk, messagebox, Button, StringVar
+from .funcs import animate_gif, validate_nip, validate_pesel, short_price, change_dates
+from tkinter import Toplevel, Label, ttk, messagebox, Button, StringVar, END
 from PIL import ImageTk, Image
 import src.controllers as con
 from src import resource_path
 import os
+from tkcalendar import DateEntry
 
 def on_customer_click(lasttop):
     top = Toplevel(lasttop)
@@ -558,4 +559,69 @@ def sum_up_edit_customer(customer_id, new_customer_name, new_customer_phone, new
     no_button.grid(row=4, column=0, padx=15, pady=15, sticky="w")
 
 
+'''
+def change_group_date_by_spec(tree, lasttop):
+    selection = tree.selection()
+    if len(selection) == 0:
+        messagebox.showerror("Error", "Wybierz elementy.")
+    old_date = tree.item(selection[0], 'values')[5]
+    for item in selection:
+        if tree.item(item, 'values')[5] != old_date:
+            messagebox.showerror("Error", "Wybierz elementy z tej samej dostawy.")
+            return
 
+    top = Toplevel(lasttop)
+    top.title("Zmień datę")
+
+    product_expected_delivery_entry = DateEntry(top, date_pattern='dd.mm.yyyy', showweeknumbers=False, selectmode='day',
+        font=("Default", 12),
+        weekendbackground = "#E5E5E5", 
+        weekendforeground = "#000000",
+        othermonthbackground = "#8F8F8F",
+        othermonthforeground = "#4A4A4A",
+        othermonthwebackground = "#8F8F8F",
+        othermonthweforeground = "#4A4A4A")
+    product_expected_delivery_entry.grid(row=0, column=0, padx=15, pady=15, sticky="ew", columnspan = 2)
+    product_expected_delivery_entry.delete(0, END)
+    product_expected_delivery_entry.insert(0, old_date)
+
+    products = con.get_all_products()
+
+    products_filtered = []
+    for product in products:
+        tuprod = ()
+'''
+
+def change_group_date_by_id(tree, lasttop):
+    selection = tree.selection()
+    if len(selection) == 0:
+        messagebox.showerror("Error", "Wybierz elementy.")
+        return
+    old_date = tree.item(selection[0], 'values')[9]
+    for item in selection:
+        if tree.item(item, 'values')[9] != old_date:
+            messagebox.showerror("Error", "Wybierz elementy z tej samej dostawy.")
+            return
+
+    top = Toplevel(lasttop)
+    top.title("Zmień datę")
+
+    product_expected_delivery_entry = DateEntry(top, date_pattern='dd.mm.yyyy', showweeknumbers=False, selectmode='day',
+        font=("Default", 12),
+        weekendbackground = "#E5E5E5", 
+        weekendforeground = "#000000",
+        othermonthbackground = "#8F8F8F",
+        othermonthforeground = "#4A4A4A",
+        othermonthwebackground = "#8F8F8F",
+        othermonthweforeground = "#4A4A4A")
+    product_expected_delivery_entry.grid(row=0, column=0, padx=15, pady=15, sticky="ew", columnspan = 2)
+    product_expected_delivery_entry.delete(0, END)
+    product_expected_delivery_entry.insert(0, old_date)
+
+    id_list = [tree.item(item, 'value')[0] for item in selection]
+
+    yes_button = Button(top, text="Potwierdź", command= lambda: [change_dates(id_list, product_expected_delivery_entry.get_date()), top.destroy()])
+    yes_button.grid(row=1, column=1, padx=10, pady=10)
+
+    no_button = Button(top, text="Anuluj", command= lambda: [top.destroy()])
+    no_button.grid(row=1, column=0, padx=10, pady=10)
