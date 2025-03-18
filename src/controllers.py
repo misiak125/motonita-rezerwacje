@@ -27,11 +27,11 @@ def add_customer(name, phone, email, pesel, nip, company_name, adress):
         raise
 
 
-def make_reservation(customer_id, product_id, advance, adnotation, adnotation_pub, form, paid):
+def make_reservation(customer_id, product_id, advance, adnotation, adnotation_pub, form, paid, term):
     try:
         new_reservation=Reservation(date=datetime.now(), 
         customer_id=customer_id, product_id=product_id, advance = advance, adnotation = adnotation,
-        adnotation_pub = adnotation_pub, form=form, paid=paid)
+        adnotation_pub = adnotation_pub, form=form, paid=paid, term = term)
         
         session.add(new_reservation)
         session.commit()
@@ -359,3 +359,6 @@ def edit_customer(customer_id, name, phone, email, pesel, nip, company_name, adr
     customer.adress = adress
 
     session.commit()
+
+def get_new_order_id():
+    return q_session.query(Reservation).order_by(desc(Reservation.id)).first().id + 1

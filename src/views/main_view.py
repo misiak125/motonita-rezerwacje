@@ -1,4 +1,4 @@
-from tkinter import ttk, messagebox, Toplevel, Label, Button, IntVar, Checkbutton, Text, WORD, StringVar, OptionMenu, END, BooleanVar
+from tkinter import ttk, messagebox, Toplevel, Label, Button, IntVar, Checkbutton, Text, WORD, StringVar, OptionMenu, END, BooleanVar, Frame
 from tkcalendar import DateEntry, Calendar
 import src.controllers as con
 import src.utils.funcs as fun
@@ -8,6 +8,7 @@ from datetime import datetime
 from PIL import Image, ImageTk
 from src import resource_path
 import os
+from dateutil.relativedelta import relativedelta
 
 
 class main_window:    
@@ -367,17 +368,25 @@ class main_window:
             ("Forma:", sform),
             ("Rozlicenie:", spaid),
             ("Przewidywana dostawa:", expected_delivery),
+            ("Data realizacji na umowie:", reservarion.Reservation.term),
             ("Uwagi do rezerwacji:", reservarion.Reservation.adnotation),
             ("Uwagi dla klienta:", reservarion.Reservation.adnotation_pub),
             ("Data rezerwacji:", reservarion.Reservation.date.strftime('%d.%m.%Y %H:%M'))
         ]
-
+        i=0
         for label_text, value_text in details:
             if value_text == "" or value_text is None:
                 continue
-            detail_frame = ttk.Frame(main_frame)
-            detail_frame['borderwidth'] = 1
-            detail_frame['relief'] = 'solid'
+            if i%2 == 1: 
+                col = "#5E5E5E"
+                fr = 1
+            else:
+                fr=1
+                col = "#FFFFFF"
+            i+=1
+            detail_frame = Frame(main_frame, highlightbackground=col, highlightthickness=fr)
+            #detail_frame['borderwidth'] = 1
+            #detail_frame['relief'] = 'solid'
             detail_frame.pack(fill='x', pady=2)
             
             lbl = Label(detail_frame, 
@@ -493,27 +502,47 @@ class main_window:
             paid_button = Checkbutton(reservation_frame, text="Zapłacono", variable=reservation_paid, offvalue=False, onvalue=True)
             paid_button.grid(row=1, column=2, padx=0, pady=10, columnspan=2)
 
+            term_label = Label(reservation_frame, text = "Termin realizacji:")
+            term_entry = ttk.Entry(reservation_frame)
+
+            term_label.grid(row=2, column=0, padx=10, pady=10, sticky="w")
+            term_entry.grid(row=2, column=1, padx=0, pady=10, columnspan=3, sticky="ew")
+
+            POLISH_MONTHS = [
+                "Styczeń", "Luty", "Marzec", "Kwiecień",
+                "Maj", "Czerwiec", "Lipiec", "Sierpień",
+                "Wrzesień", "Październik", "Listopad", "Grudzień"
+            ]   
+            
+            if to_reservation.expected_delivery is not None:
+                if to_reservation.expected_delivery.day > 15: double_term = True
+                else: double_term = False
+                month_index = to_reservation.expected_delivery.month - 1
+                if double_term:
+                    next_month_date = to_reservation.expected_delivery + relativedelta(months=+1)
+                    next_month_index = next_month_date.month - 1
+                    term_entry.insert(0, f"{POLISH_MONTHS[month_index]} {to_reservation.expected_delivery.year}r. / {POLISH_MONTHS[next_month_index]} {next_month_date.year}r.")
+                else:
+                    term_entry.insert(0, f"{POLISH_MONTHS[month_index]} {to_reservation.expected_delivery.year}r.")
+
             adnotation_label = Label(reservation_frame, text = "Uwagi:")
             adnotation_entry = Text(reservation_frame, wrap=WORD, height=5)
 
-
-            adnotation_label.grid(row=2, column=0, padx=10, pady=10, sticky="w")
-            adnotation_entry.grid(row=2, column=1, padx=0, pady=10, sticky="nsew", columnspan=3)
-
+            adnotation_label.grid(row=3, column=0, padx=10, pady=10, sticky="w")
+            adnotation_entry.grid(row=3, column=1, padx=0, pady=10, sticky="nsew", columnspan=3)
 
             adnotation_pub_label = Label(reservation_frame, text = "Uwagi dla klienta:")
             adnotation_pub_entry = Text(reservation_frame, wrap=WORD, height=5)
 
-
-            adnotation_pub_label.grid(row=3, column=0, padx=10, pady=10, sticky="w")
-            adnotation_pub_entry.grid(row=3, column=1, padx=0, pady=10, sticky="nsew", columnspan=3)
+            adnotation_pub_label.grid(row=4, column=0, padx=10, pady=10, sticky="w")
+            adnotation_pub_entry.grid(row=4, column=1, padx=0, pady=10, sticky="nsew", columnspan=3)
             
             cancel_button = Button(top, text="Anuluj", command=lambda: top.destroy())
             cancel_button.grid(row=4, column=0, padx=10, pady=10, sticky="w")
 
             make_button = Button(top, text="Zarezerwuj", command=lambda: [fun.confirm_reservation(to_reservation, fun.get_selected_element_id(res_customers_tree), 
                 reservation_advance_entry.get().strip(), new_price_entry.get().strip(), adnotation_entry.get('1.0', 'end').strip(), adnotation_pub_entry.get('1.0', 'end').strip(),
-                reservation_form.get(), reservation_paid.get(), top)])
+                reservation_form.get(), reservation_paid.get(), term_entry.get().strip(), top)])
             make_button.grid(row=4, column=1, padx=10, pady=10, sticky="e")
             
     

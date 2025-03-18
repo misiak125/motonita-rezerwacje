@@ -42,6 +42,7 @@ class Reservation(Base):
     adnotation_pub = Column(String, default="")
     form = Column(Boolean) #0=zaliczka 1=zadatek
     paid = Column(Boolean)
+    term = Column(String)
     
 class Brand(Base):
     __tablename__ = "brands"

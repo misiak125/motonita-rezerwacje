@@ -1,5 +1,5 @@
 import src.controllers as con
-from tkinter import Toplevel, Label, messagebox, Button, ttk
+from tkinter import Toplevel, Label, messagebox, Button, ttk, Frame
 import re
 from datetime import datetime
 from math import trunc
@@ -12,7 +12,6 @@ from glob import glob
 import os
 import platform
 import subprocess
-from dateutil.relativedelta import relativedelta
 from PIL import Image
 
 def animate_gif(label, frames, frame_counter):
@@ -21,7 +20,10 @@ def animate_gif(label, frames, frame_counter):
     label.after(100, animate_gif, label, frames, frame_counter)
 
 
-def confirm_reservation(to_reservation, reservation_customer_id, reservation_advance, new_price, adnotation, adnotation_pub, reservation_form, reservarion_paid, lasttop):
+def confirm_reservation(to_reservation, reservation_customer_id, reservation_advance, new_price, adnotation, adnotation_pub, reservation_form, reservarion_paid, term, lasttop):
+    if len(term) < 8:
+        messagebox.showerror("Error", "Wprowadź termin realizacji", parent=lasttop)
+        return
     if new_price is None or new_price == "":
         new_price = to_reservation.price
     if reservation_form == 'zaliczka/zadatek':
@@ -65,28 +67,69 @@ def confirm_reservation(to_reservation, reservation_customer_id, reservation_adv
         if reservarion_paid: spaid="Zapłacono"
         else: spaid="Nie zapłacono"
 
+        main_frame = ttk.Frame(top)
+
+        details = [
+            ("Nr.tel:", reservation_customer.phone),
+            ("Zaliczka:", reservation_advance),
+            ("Forma:", reservation_form),
+            ("Ustalona cena:", new_price),
+            ("Rozliczenie:", spaid),
+            ("Termin realizacji:", term),
+            ("Uwagi:", adnotation),
+            ("Uwagi dla klienta:", adnotation_pub),
+        ]
+
         final_res = Label(top, text = f"Zarezerwuj {to_reservation.brand} {to_reservation.model} {to_reservation.year} "\
-            f"{to_reservation.colour} dla {reservation_customer.name}. \nNr.tel: {reservation_customer.phone} "\
-            f"\nZaliczka: {reservation_advance}"\
-            f"\nForma: {reservation_form}"\
-            f"\nUstalona cena: {new_price:}"\
-            f"\n{spaid}"\
-            f"\nUwagi: {adnotation}"\
-            f"\nUwagi dla klienta: {adnotation_pub}", font=("Default", 14), justify="left", wraplength=700)
+            f"{to_reservation.colour} dla {reservation_customer.name}.", font=("Default", 14), wraplength=700)
+        
+        i=0
+        for label_text, value_text in details:
+            if value_text == "" or value_text is None:
+                continue
+            if i%2 == 1: 
+                col = "#5E5E5E"
+                fr = 1
+            else:
+                fr=1
+                col = "#FFFFFF"
+            i+=1
+            detail_frame = Frame(main_frame, highlightbackground=col, highlightthickness=fr)
+            #detail_frame['borderwidth'] = 1
+            #detail_frame['relief'] = 'solid'
+            detail_frame.pack(fill='x', pady=2)
+            
+            lbl = Label(detail_frame, 
+                    text=label_text,
+                    font=("Default", 12),
+                    anchor='w',
+                    width=25, 
+                    justify='left')
+            lbl.pack(side='left', padx=(10, 10))
+            
+            val = Label(detail_frame, 
+                    text=value_text,
+                    font=("Default", 12),
+                    anchor='w',
+                    wraplength=550, 
+                    justify='left')
+            val.pack(side='left', fill='x', expand=True, padx=(0, 10))
             
         if reservation_form == 'zaliczka': bool_form = False
         else: bool_form = True
         
         final_res.pack(pady=20, padx=10, anchor="center")
+        main_frame.pack(padx=10, pady=10, fill='x')
 
         frame1 = ttk.Frame(top)
         frame1.pack(fill="x", pady=10, padx=10)
 
         cancel_button = Button(frame1, text="Anuluj", command=top.destroy)
         cancel_button.pack(side="left", padx=10) 
-
+        new_id = con.get_new_order_id()
         confirm_button = Button(frame1, text="Potwierdź", command = lambda: [con.make_reservation(reservation_customer_id, 
-            to_reservation.id, reservation_advance, adnotation, adnotation_pub, bool_form, reservarion_paid), con.change_price(to_reservation.id, new_price) ,top.destroy()]) #dodaj happy informacje ze sie udalo, zamknij tez poprzednie okno
+            to_reservation.id, reservation_advance, adnotation, adnotation_pub, bool_form, reservarion_paid, term), 
+            con.change_price(to_reservation.id, new_price), top.destroy() ,generate_pdf_confirmation(new_id)]) #dodaj happy informacje ze sie udalo, zamknij tez poprzednie okno
         confirm_button.pack(side="right", padx=10)
 
 
@@ -358,6 +401,8 @@ def short_price(price):
 
 
 def generate_pdf_confirmation(order_id):
+    if order_id == -1:
+        return
     reservarion = con.get_full_reservation(order_id)
     document_title = 'potwierdzenie'
     title = "Potwierdzenie rezerwacji"
@@ -373,8 +418,13 @@ def generate_pdf_confirmation(order_id):
     while os.path.exists(os.path.join(directory, file_name+str(file_num)+'.pdf')): file_num+=1
     file_name+=str(file_num)+'.pdf'
     header = Image.open(os.path.normpath('src/static/header2.jpg'))
-    pdfmetrics.registerFont(TTFont('Arial', 'arial.ttf')) 
-    pdfmetrics.registerFont(TTFont('Arial-Bold', 'arialbd.ttf'))
+    #print(pdfmetrics.getRegisteredFontNames())
+    try:
+        pdfmetrics.registerFont(TTFont('Arial', 'arial.ttf')) 
+        pdfmetrics.registerFont(TTFont('Arial-Bold', 'arialbd.ttf'))
+    except:
+        pdfmetrics.registerFont(TTFont('Arial', 'Arial.ttf')) 
+        pdfmetrics.registerFont(TTFont('Arial-Bold', 'Arialbd.ttf'))
     pdf = canvas.Canvas(os.path.join(directory, file_name))
     #pdf = canvas.Canvas(file_name)
     pdf.setTitle(document_title) 
@@ -479,28 +529,13 @@ def generate_pdf_confirmation(order_id):
         lasty-=interline
     lasty -= interline
 
-    POLISH_MONTHS = [
-        "Styczeń", "Luty", "Marzec", "Kwiecień",
-        "Maj", "Czerwiec", "Lipiec", "Sierpień",
-        "Wrzesień", "Październik", "Listopad", "Grudzień"
-    ]   
+
     
-    if reservarion.Product.expected_delivery is not None:
-        if reservarion.Product.expected_delivery.day > 15: double_term = True
-        else: double_term = False
-        month_index = reservarion.Product.expected_delivery.month - 1
-        if double_term:
-            next_month_date = reservarion.Product.expected_delivery + relativedelta(months=+1)
-            next_month_index = next_month_date.month - 1
-            term = f"Termin realizacji zamówienia: {POLISH_MONTHS[month_index]} {reservarion.Product.expected_delivery.year}r. / {POLISH_MONTHS[next_month_index]} {next_month_date.year}r."
-        else:
-            term = f"Termin realizacji zamówienia: {POLISH_MONTHS[month_index]} {reservarion.Product.expected_delivery.year}r."
-        
-        lines = simpleSplit(term, font, font_size, max_width)
-        for line in lines:
-            pdf.drawString(padding, lasty, line)
-            lasty-=interline
-        lasty -= interline
+    lines = simpleSplit(f"Termin realizacji zamówienia: {reservarion.Reservation.term}", font, font_size, max_width)
+    for line in lines:
+        pdf.drawString(padding, lasty, line)
+        lasty-=interline
+    lasty -= interline
 
     adres = open(os.path.normpath("src/static/seller_adress.txt")).read().strip()
     pickup = f"Miejsce odbioru pojazdu: {adres}."
