@@ -482,10 +482,7 @@ def generate_pdf_confirmation(order_id):
     if reservarion.Customer.pesel != "" and reservarion.Customer.pesel is not None:
         buyer_details.append("PESEL: "+reservarion.Customer.pesel)
     if reservarion.Customer.adress != "" and reservarion.Customer.adress is not None:
-        buyer_details.append("Pełny adres: ")
-        adress_list = reservarion.Customer.adress.splitlines()
-        for adress_line in adress_list:
-            buyer_details.append(adress_line)
+        buyer_details.append("Pełny adres: " + reservarion.Customer.adress.replace("\n", ", "))
 
     pdf.drawString(padding, lasty, "KUPUJĄCY:")
     pdf.line(padding, lasty-3, padding+62, lasty-3)
@@ -643,7 +640,7 @@ def slownie(liczba:int, skala:str='długa', jeden:bool=True):
 
 def print_file(file_path):
     
-    file_path = file_path.replace("Users", "Użytkownicy")
+    #file_path = file_path.replace("Users", "Użytkownicy")
     try:
 
         system_name = platform.system()
@@ -670,7 +667,7 @@ def print_file(file_path):
     
     except:
         
-        file_path = file_path.replace("Users", "Użytkownicy")
+        file_path = file_path.replace("Users", "Użytkownicy", 1)
         system_name = platform.system()
 
         if system_name == "Windows":

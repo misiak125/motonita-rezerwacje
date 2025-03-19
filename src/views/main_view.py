@@ -297,7 +297,7 @@ class main_window:
         self.reservations_tree = ttk.Treeview(tab, columns=("id", "name",
         "date",  "brand", "model", "colour", "adnotations"), show="headings")
         
-        self.reservations_tree["displaycolumns"]=("name", 
+        self.reservations_tree["displaycolumns"]=("id", "name", 
         "date", "brand", "model", "colour", "adnotations")
 
         self.reservations_tree.heading("id", text="ID")
@@ -308,6 +308,7 @@ class main_window:
         self.reservations_tree.heading("colour", text="Kolor")
         self.reservations_tree.heading("adnotations", text="Uwagi")
 
+        self.reservations_tree.column("id", width=7)
         self.reservations_tree.column("name", width=100)
         self.reservations_tree.column("date", width=100)
         self.reservations_tree.column("brand", width=100)
