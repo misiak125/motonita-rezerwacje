@@ -12,6 +12,7 @@ import os
 import platform
 import subprocess
 from PIL import Image
+from src import resource_path
 
 def animate_gif(label, frames, frame_counter):
     label.config(image=frames[frame_counter])
@@ -422,7 +423,7 @@ def generate_pdf_confirmation(order_id):
     file_num = 1
     while os.path.exists(os.path.join(directory, file_name+str(file_num)+'.pdf')): file_num+=1
     file_name+=str(file_num)+'.pdf'
-    header = Image.open(os.path.normpath('src/static/header2.jpg'))
+    header = Image.open(resource_path(os.path.normpath('src/static/header2.jpg')))
     #print(pdfmetrics.getRegisteredFontNames())
     try:
         pdfmetrics.registerFont(TTFont('Arial', 'arial.ttf')) 
@@ -442,8 +443,8 @@ def generate_pdf_confirmation(order_id):
     interline = 13
     binterline = interline*1.333
     pdf.drawInlineImage(header, 0, (29.7-3.75)*cm, width=11*cm, height=3.5*cm)
-    contact = open(os.path.normpath('src/static/seller_contact.txt'), "r", encoding="utf-8").read().strip()
-    details = open(os.path.normpath('src/static/seller_details.txt'), 'r', encoding="utf-8").read().strip()
+    contact = open(resource_path(os.path.normpath('src/static/seller_contact.txt')), "r", encoding="utf-8").read().strip()
+    details = open(resource_path(os.path.normpath('src/static/seller_details.txt')), 'r', encoding="utf-8").read().strip()
     
     lines = contact.splitlines()
     lasty=804
@@ -517,7 +518,7 @@ def generate_pdf_confirmation(order_id):
         pdf.drawString(padding, lasty, line)
         lasty-=interline
     lasty -= interline
-    acc_num = open(os.path.normpath('src/static/seller_acc_num.txt'), "r", encoding="utf-8").read().strip()
+    acc_num = open(resource_path(os.path.normpath('src/static/seller_acc_num.txt')), "r", encoding="utf-8").read().strip()
     if reservarion.Reservation.form: zadzal = 'zadatku'
     else: zadzal = 'zaliczki'
     zaliczka = f"KUPUJĄCY zobowiązuje się do wpłaty {zadzal} w wysokości {short_price(reservarion.Reservation.advance)}zł, (słownie: {slownie(int(reservarion.Reservation.advance), 'krótka')} PLN) na numer rachunku: {acc_num}."
@@ -542,7 +543,7 @@ def generate_pdf_confirmation(order_id):
         lasty-=interline
     lasty -= interline
 
-    adres = open(os.path.normpath("src/static/seller_adress.txt"), "r", encoding="utf-8").read().strip()
+    adres = open(resource_path(os.path.normpath("src/static/seller_adress.txt")), "r", encoding="utf-8").read().strip()
     pickup = f"Miejsce odbioru pojazdu: {adres}."
     lines = simpleSplit(pickup, font, font_size, max_width)
     for line in lines:

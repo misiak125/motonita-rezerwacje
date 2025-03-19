@@ -11,7 +11,7 @@ def on_customer_click(lasttop):
     top = Toplevel(lasttop)
     frame_counter = 0
     top.title("GRATULACJE!")
-    cat_gif = Image.open(resource_path(os.path.join("static", "cat1.gif")))
+    cat_gif = Image.open(resource_path(os.path.join("src", "static", "cat1.gif")))
     frames = []
     for i in range(cat_gif.n_frames):
         cat_gif.seek(i)  

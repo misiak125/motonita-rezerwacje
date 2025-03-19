@@ -18,7 +18,7 @@ class main_window:
         self.root.geometry("1200x700")
 		
 
-        ico = Image.open(resource_path(os.path.join('static',resource_path(os.path.join('static', 'icon.png')))))
+        ico = Image.open(resource_path(os.path.join('static',resource_path(os.path.join('src', 'static', 'icon.png')))))
         photo = ImageTk.PhotoImage(ico)
         root.wm_iconphoto(False, photo)
 		
