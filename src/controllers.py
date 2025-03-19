@@ -372,4 +372,8 @@ def change_date(id_given, new_date):
 
 
 def get_new_order_id():
-    return q_session.query(Reservation).order_by(desc(Reservation.id)).first().id + 1
+    try:
+        new_id = q_session.query(Reservation).order_by(desc(Reservation.id)).first().id + 1
+        return new_id
+    except:
+        return 1
