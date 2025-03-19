@@ -441,7 +441,7 @@ class main_window:
 
             tytul_rezerwacji = Label(top, text=f"Zarezerwuj {to_reservation.brand} {to_reservation.model} "\
                 f"{to_reservation.year} {to_reservation.colour}", font=("Default", 14))
-            tytul_rezerwacji.grid(row=0, column=0, columnspan=2, pady=10, sticky="nsew") 
+            tytul_rezerwacji.grid(row=0, column=0, columnspan=2, pady=(10, 0), sticky="nsew") 
 
             customer_frame = ttk.Frame(top)
             customer_frame.grid(row=1, columnspan=2, column=0, padx=10, pady=10, sticky="nsew")
@@ -455,7 +455,7 @@ class main_window:
             res_customers_tree.heading("phone", text="Nr.Tel.")
             res_customers_tree.heading("email", text="Email")
 
-            res_customers_tree.grid(row=0, column=0, sticky="nsew", padx=0, pady=10) #row1??? columnspan=2, 
+            res_customers_tree.grid(row=0, column=0, sticky="nsew", padx=0, pady=0) #row1??? columnspan=2, 
 
             fun.refresh_res_customer(res_customers_tree)
 
@@ -468,16 +468,16 @@ class main_window:
 
 
             search_label = Label(customer_addons_frame, text="Wyszukaj:", padx=10)
-            search_label.grid(row=0, column=0, sticky="w")
+            search_label.grid(row=0, column=0, sticky="w", pady=(0, 0))
             search_entry = ttk.Entry(customer_addons_frame)
-            search_entry.grid(row=0, column=1, padx=10, pady=0, sticky="ew")
+            search_entry.grid(row=0, column=1, padx=10, pady=(0, 0), sticky="ew")
             search_entry.bind("<KeyRelease>", lambda x: fun.filter_tree(search_entry, con.get_all_customers(), res_customers_tree, "name"))
 
             new_customer_button = Button(customer_addons_frame, text="Nowy klient", command=lambda: self.create_new_customer(top, lambda: fun.refresh_res_customer(res_customers_tree)))
-            new_customer_button.grid(row=0, column=2, padx=10, pady=0, sticky="e")
+            new_customer_button.grid(row=0, column=2, padx=10, pady=(0, 0), sticky="e")
 
             reservation_frame = ttk.Frame(top)
-            reservation_frame.grid(row=3, columnspan=2, column=0, padx=10, pady=10, sticky="nsew")
+            reservation_frame.grid(row=3, columnspan=2, column=0, padx=10, pady=0, sticky="nsew")
             reservation_frame.grid_rowconfigure(0, weight=0)
             reservation_frame.grid_rowconfigure(1, weight=0)
             reservation_frame.grid_rowconfigure(2, weight=1)
@@ -495,8 +495,8 @@ class main_window:
             new_price_label = Label(reservation_frame, text = "Ustalona cena:")
             new_price_entry = ttk.Entry(reservation_frame)
 
-            new_price_label.grid(row=1, column=0, padx=10, pady=10, sticky="w")
-            new_price_entry.grid(row=1, column=1, padx=0, pady=10, sticky="ew")
+            new_price_label.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="w")
+            new_price_entry.grid(row=1, column=1, padx=0, pady=(0, 10), sticky="ew")
             new_price_entry.insert(0, fun.short_price(to_reservation.price))
 
             reservation_form = StringVar()
@@ -506,13 +506,13 @@ class main_window:
 
             reservation_paid = BooleanVar()
             paid_button = Checkbutton(reservation_frame, text="Zapłacono", variable=reservation_paid, offvalue=False, onvalue=True)
-            paid_button.grid(row=1, column=2, padx=0, pady=10, columnspan=2)
+            paid_button.grid(row=1, column=2, padx=0, pady=(0, 10), columnspan=2)
 
             term_label = Label(reservation_frame, text = "Termin realizacji:")
             term_entry = ttk.Entry(reservation_frame)
 
-            term_label.grid(row=2, column=0, padx=10, pady=10, sticky="w")
-            term_entry.grid(row=2, column=1, padx=0, pady=10, columnspan=3, sticky="ew")
+            term_label.grid(row=2, column=0, padx=10, pady=(0, 10), sticky="w")
+            term_entry.grid(row=2, column=1, padx=0, pady=(0, 10), columnspan=3, sticky="ew")
 
             POLISH_MONTHS = [
                 "Styczeń", "Luty", "Marzec", "Kwiecień",
@@ -534,22 +534,22 @@ class main_window:
             adnotation_label = Label(reservation_frame, text = "Uwagi:")
             adnotation_entry = Text(reservation_frame, wrap=WORD, height=5)
 
-            adnotation_label.grid(row=3, column=0, padx=10, pady=10, sticky="w")
-            adnotation_entry.grid(row=3, column=1, padx=0, pady=10, sticky="nsew", columnspan=3)
+            adnotation_label.grid(row=3, column=0, padx=10, pady=(0, 10), sticky="w")
+            adnotation_entry.grid(row=3, column=1, padx=0, pady=(0, 10), sticky="nsew", columnspan=3)
 
             adnotation_pub_label = Label(reservation_frame, text = "Uwagi dla klienta:")
             adnotation_pub_entry = Text(reservation_frame, wrap=WORD, height=5)
 
-            adnotation_pub_label.grid(row=4, column=0, padx=10, pady=10, sticky="w")
-            adnotation_pub_entry.grid(row=4, column=1, padx=0, pady=10, sticky="nsew", columnspan=3)
+            adnotation_pub_label.grid(row=4, column=0, padx=10, pady=(0, 10), sticky="w")
+            adnotation_pub_entry.grid(row=4, column=1, padx=0, pady=(0, 10), sticky="nsew", columnspan=3)
             
             cancel_button = Button(top, text="Anuluj", command=lambda: top.destroy())
-            cancel_button.grid(row=4, column=0, padx=10, pady=10, sticky="w")
+            cancel_button.grid(row=4, column=0, padx=10, pady=(0, 10), sticky="w")
 
             make_button = Button(top, text="Zarezerwuj", command=lambda: [fun.confirm_reservation(to_reservation, fun.get_selected_element_id(res_customers_tree), 
                 reservation_advance_entry.get().strip(), new_price_entry.get().strip(), adnotation_entry.get('1.0', 'end').strip(), adnotation_pub_entry.get('1.0', 'end').strip(),
                 reservation_form.get(), reservation_paid.get(), term_entry.get().strip(), top)])
-            make_button.grid(row=4, column=1, padx=10, pady=10, sticky="e")
+            make_button.grid(row=4, column=1, padx=10, pady=(0, 10), sticky="e")
             
     
     def create_add_product_tab(self, tab):
