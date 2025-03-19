@@ -293,7 +293,7 @@ def filter_tree(entry, db_result, tree, match, event=None):
 def get_product_specs_id(tree):
     if len(tree.selection()) > 1 :
         return -1
-        
+
     try:
         brand = tree.item(tree.focus(), "values")[0]
         model = tree.item(tree.focus(), "values")[1]
@@ -442,8 +442,8 @@ def generate_pdf_confirmation(order_id):
     interline = 13
     binterline = interline*1.333
     pdf.drawInlineImage(header, 0, (29.7-3.75)*cm, width=11*cm, height=3.5*cm)
-    contact = open(os.path.normpath('src/static/seller_contact.txt'), "r").read().strip()
-    details = open(os.path.normpath('src/static/seller_details.txt'), 'r').read().strip()
+    contact = open(os.path.normpath('src/static/seller_contact.txt'), "r", encoding="utf-8").read().strip()
+    details = open(os.path.normpath('src/static/seller_details.txt'), 'r', encoding="utf-8").read().strip()
     
     lines = contact.splitlines()
     lasty=804
@@ -517,7 +517,7 @@ def generate_pdf_confirmation(order_id):
         pdf.drawString(padding, lasty, line)
         lasty-=interline
     lasty -= interline
-    acc_num = open(os.path.normpath('src/static/seller_acc_num.txt')).read().strip()
+    acc_num = open(os.path.normpath('src/static/seller_acc_num.txt'), "r", encoding="utf-8").read().strip()
     if reservarion.Reservation.form: zadzal = 'zadatku'
     else: zadzal = 'zaliczki'
     zaliczka = f"KUPUJĄCY zobowiązuje się do wpłaty {zadzal} w wysokości {short_price(reservarion.Reservation.advance)}zł, (słownie: {slownie(int(reservarion.Reservation.advance), 'krótka')} PLN) na numer rachunku: {acc_num}."
@@ -542,7 +542,7 @@ def generate_pdf_confirmation(order_id):
         lasty-=interline
     lasty -= interline
 
-    adres = open(os.path.normpath("src/static/seller_adress.txt")).read().strip()
+    adres = open(os.path.normpath("src/static/seller_adress.txt"), "r", encoding="utf-8").read().strip()
     pickup = f"Miejsce odbioru pojazdu: {adres}."
     lines = simpleSplit(pickup, font, font_size, max_width)
     for line in lines:
@@ -641,16 +641,30 @@ def slownie(liczba:int, skala:str='długa', jeden:bool=True):
 
 
 def print_file(file_path):
-    system_name = platform.system()
+    try:
+        system_name = platform.system()
 
-    if system_name == "Windows":
-        os.startfile(file_path, "print")
-    elif system_name == "Darwin":
-        subprocess.run(["lpr", file_path])
-    elif system_name == "Linux":    
-        subprocess.run(["xdg-open", file_path])
-    else:
-        print("Unsupported OS")
+        if system_name == "Windows":
+            os.startfile(file_path, "print")
+        elif system_name == "Darwin":
+            subprocess.run(["lpr", file_path])
+        elif system_name == "Linux":    
+            subprocess.run(["xdg-open", file_path])
+        else:
+            print("Unsupported OS")
+    except:
+        file_path = file_path.replace("Users", "Użytkownicy")
+
+        system_name = platform.system()
+
+        if system_name == "Windows":
+            os.startfile(file_path, "print")
+        elif system_name == "Darwin":
+            subprocess.run(["lpr", file_path])
+        elif system_name == "Linux":    
+            subprocess.run(["xdg-open", file_path])
+        else:
+            print("Unsupported OS")
 
 
 def change_dates(id_list, new_date):
