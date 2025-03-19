@@ -641,24 +641,50 @@ def slownie(liczba:int, skala:str='długa', jeden:bool=True):
 
 
 def print_file(file_path):
+    
+    file_path = file_path.replace("Users", "Użytkownicy")
     try:
+
         system_name = platform.system()
 
         if system_name == "Windows":
-            os.startfile(file_path, "print")
+            try:
+                os.startfile(file_path, "print")
+            except:
+                acrobat_paths = [
+                    r"C:\Program Files\Adobe\Acrobat DC\Acrobat\Acrobat.exe",
+                    r"C:\Program Files (x86)\Adobe\Acrobat Reader DC\Reader\AcroRd32.exe"
+                ]
+                
+                for acrobat_path in acrobat_paths:
+                    if os.path.exists(acrobat_path):
+                        subprocess.run([acrobat_path, "/t", file_path])
+                        return
         elif system_name == "Darwin":
             subprocess.run(["lpr", file_path])
         elif system_name == "Linux":    
             subprocess.run(["xdg-open", file_path])
         else:
             print("Unsupported OS")
+    
     except:
+        
         file_path = file_path.replace("Users", "Użytkownicy")
-
         system_name = platform.system()
 
         if system_name == "Windows":
-            os.startfile(file_path, "print")
+            try:
+                os.startfile(file_path, "print")
+            except:
+                acrobat_paths = [
+                    r"C:\Program Files\Adobe\Acrobat DC\Acrobat\Acrobat.exe",
+                    r"C:\Program Files (x86)\Adobe\Acrobat Reader DC\Reader\AcroRd32.exe"
+                ]
+                
+                for acrobat_path in acrobat_paths:
+                    if os.path.exists(acrobat_path):
+                        subprocess.run([acrobat_path, "/t", file_path])
+                        return
         elif system_name == "Darwin":
             subprocess.run(["lpr", file_path])
         elif system_name == "Linux":    
