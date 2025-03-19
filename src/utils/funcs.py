@@ -91,7 +91,7 @@ def confirm_reservation(to_reservation, reservation_customer_id, reservation_adv
                 fr = 1
             else:
                 fr=1
-                col = "#FFFFFF"
+                col = "#4FC3F7"
             i+=1
             detail_frame = Frame(main_frame, highlightbackground=col, highlightthickness=fr)
             #detail_frame['borderwidth'] = 1
@@ -250,6 +250,9 @@ reservarion_search, show_finalized, all_products_tree, show_sold, show_reserved,
     
    
 def get_selected_element_id(tree):
+    if len(tree.selection()) > 1:
+        return -1
+
     try:
         ret = tree.item(tree.focus(), "values")[0]
     except:
@@ -288,6 +291,9 @@ def filter_tree(entry, db_result, tree, match, event=None):
 
 
 def get_product_specs_id(tree):
+    if len(tree.selection()) > 1 :
+        return -1
+        
     try:
         brand = tree.item(tree.focus(), "values")[0]
         model = tree.item(tree.focus(), "values")[1]

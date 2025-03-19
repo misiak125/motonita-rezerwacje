@@ -388,7 +388,7 @@ class main_window:
                 fr = 1
             else:
                 fr=1
-                col = "#FFFFFF"
+                col = "#4FC3F7"
             i+=1
             detail_frame = Frame(main_frame, highlightbackground=col, highlightthickness=fr)
             #detail_frame['borderwidth'] = 1
