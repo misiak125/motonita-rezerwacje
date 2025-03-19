@@ -21,7 +21,7 @@ def get_app_data_dir():
     
     os.makedirs(app_dir, exist_ok=True)
     return app_dir
-'''
+
 def resource_path(relative_path):
     base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
     return os.path.join(base_path, relative_path)
@@ -30,7 +30,7 @@ def resource_path(relative_path):
     if hasattr(sys, '_MEIPASS'):
         return os.path.join(sys._MEIPASS, relative_path)
     return os.path.join(os.path.abspath("."), relative_path)
-
+'''
 def get_db_path():
     return os.path.join(get_app_data_dir(), "orders.db")
     
