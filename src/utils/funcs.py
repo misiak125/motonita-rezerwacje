@@ -422,7 +422,7 @@ def generate_pdf_confirmation(order_id):
     file_name = re.sub(r'[^a-zA-Z0-9]', '', reservarion.Customer.name.lower())
     file_num = 1
     while os.path.exists(os.path.join(directory, file_name+str(file_num)+'.pdf')): file_num+=1
-    file_name+=str(file_num)+'.pdf'
+    file_name=file_name+str(file_num)+'.pdf'
     header = Image.open(resource_path(os.path.normpath('static/header2.jpg')))
     #print(pdfmetrics.getRegisteredFontNames())
     try:
@@ -640,55 +640,37 @@ def slownie(liczba:int, skala:str='długa', jeden:bool=True):
 
 def print_file(file_path):
     
-    #file_path = file_path.replace("Users", "Użytkownicy")
-    try:
+    if not os.path.exists(file_path): 
+        file_path = file_path.replace('Użytkownicy', 'Users', 1)
+        file_path = file_path.replace('Dokumenty', 'Documents', 1)
 
-        system_name = platform.system()
-
-        if system_name == "Windows":
-            try:
-                os.startfile(file_path, "print")
-            except:
-                acrobat_paths = [
-                    r"C:\Program Files\Adobe\Acrobat DC\Acrobat\Acrobat.exe",
-                    r"C:\Program Files (x86)\Adobe\Acrobat Reader DC\Reader\AcroRd32.exe"
-                ]
-                
-                for acrobat_path in acrobat_paths:
-                    if os.path.exists(acrobat_path):
-                        subprocess.run([acrobat_path, "/t", file_path])
-                        return
-        elif system_name == "Darwin":
-            subprocess.run(["lpr", file_path])
-        elif system_name == "Linux":    
-            subprocess.run(["xdg-open", file_path])
-        else:
-            print("Unsupported OS")
+    if not os.path.exists(file_path): 
+        file_path = file_path.replace('Users', 'Użytkownicy', 1)
+        file_path = file_path.replace('Documents', 'Dokumenty', 1)
     
-    except:
-        
-        file_path = file_path.replace("Users", "Użytkownicy", 1)
-        system_name = platform.system()
+    system_name = platform.system()
 
-        if system_name == "Windows":
-            try:
-                os.startfile(file_path, "print")
-            except:
-                acrobat_paths = [
-                    r"C:\Program Files\Adobe\Acrobat DC\Acrobat\Acrobat.exe",
-                    r"C:\Program Files (x86)\Adobe\Acrobat Reader DC\Reader\AcroRd32.exe"
-                ]
-                
-                for acrobat_path in acrobat_paths:
-                    if os.path.exists(acrobat_path):
-                        subprocess.run([acrobat_path, "/t", file_path])
-                        return
-        elif system_name == "Darwin":
-            subprocess.run(["lpr", file_path])
-        elif system_name == "Linux":    
-            subprocess.run(["xdg-open", file_path])
-        else:
-            print("Unsupported OS")
+    if system_name == "Windows":
+        try:
+            os.startfile(file_path, "print")
+        except:
+            acrobat_paths = [
+                r"C:\Program Files\Adobe\Acrobat DC\Acrobat\Acrobat.exe",
+                r"C:\Program Files (x86)\Adobe\Acrobat Reader DC\Reader\AcroRd32.exe"
+            ]
+            
+            for acrobat_path in acrobat_paths:
+                if os.path.exists(acrobat_path):
+                    subprocess.run([acrobat_path, "/t", file_path])
+                    return
+    elif system_name == "Darwin":
+        subprocess.run(["lpr", file_path])
+    elif system_name == "Linux":    
+        subprocess.run(["xdg-open", file_path])
+    else:
+        print("Unsupported OS")
+    
+    
 
 
 def change_dates(id_list, new_date):

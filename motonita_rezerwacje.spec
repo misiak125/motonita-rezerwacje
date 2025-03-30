@@ -3,6 +3,7 @@
 from PyInstaller.utils.hooks import collect_data_files
 
 tkinter_data = collect_data_files('tkinter')
+babel_data = collect_data_files('babel')
 
 a = Analysis(
     ['main.py'],
@@ -12,10 +13,12 @@ a = Analysis(
         ('src/static/*', 'static')
         (r'C:\Python311\tcl\*', 'tcl'),
         (r'C:\Python311\Lib\lib-tk\*', 'lib-tk'),
-        ('src/static/splash.png', '.')
-    ] + tkinter_data,
+        ('src/static/splash.png', 'splash.png'),
+        ('incon.ico', 'icon.ico')
+    ] + tkinter_data + babel_data,
     hiddenimports=[
-        'babel.numbers'
+        'babel.numbers',
+        'babel.dates'
         'sqlalchemy.dialects.sqlite',
         'sqlalchemy.ext.baked',
         'sqlalchemy.ext.declarative',
@@ -31,6 +34,8 @@ a = Analysis(
         'tkinter.filedialog',
         'tkinter.font',
         'tkcalendar',
+        "tkinter.ttk", 
+        "tkinter.font"
     ],
     hookspath=[],
     hooksconfig={},
@@ -57,7 +62,8 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='icon.ico'
+    icon='icon.ico',
+    splash = 'src/static/splash.png'
 )
 coll = COLLECT(
     exe,
