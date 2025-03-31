@@ -313,7 +313,7 @@ def ensure_delete_models():
     return response
 
 
-def confirm_edit_reservation(reservation, price_entry, advance_entry, form_entry, paid_entry, adnotation_entry, lasttop):
+def confirm_edit_reservation(reservation, price_entry, advance_entry, form_entry, paid_entry, adnotation_entry, adnotation_entry_pub, term, lasttop):
     if price_entry == '' or price_entry is None:
         messagebox.showerror("Error", "Podaj cenę", parent=lasttop)
         return
@@ -337,14 +337,12 @@ def confirm_edit_reservation(reservation, price_entry, advance_entry, form_entry
     try:
         advance_entry = float(advance_entry)
         advance_entry = round(advance_entry, 2)
-        
         price_entry = float(price_entry)
         price_entry = round(price_entry, 2)
     except Exception as e:
-        messagebox.showerror("Error", f"Błędnie podane dane\n{e}", parent=lasttop)
+        messagebox.showerror("Error", "Błędnie podane dane", parent=lasttop)
         return
     
-
 
     if reservation.Product.price != price_entry:
         changes = changes+f"Cena: {short_price(reservation.Product.price)} 🡢 {short_price(price_entry)}\n"
@@ -378,8 +376,14 @@ def confirm_edit_reservation(reservation, price_entry, advance_entry, form_entry
     if og_paid != new_paid:
         changes = changes+f"{og_paid} 🡢 {new_paid}\n"
 
+    if reservation.Reservation.term != term:
+        changes = changes+f"Uwagi: {reservation.Reservation.term} 🡢 {term}\n"
+
     if reservation.Reservation.adnotation != adnotation_entry:
         changes = changes+f"Uwagi: {reservation.Reservation.adnotation} 🡢 {adnotation_entry}\n"
+
+    if reservation.Reservation.adnotation_pub != adnotation_entry_pub:
+        changes = changes+f"Uwagi: {reservation.Reservation.adnotation_pub} 🡢 {adnotation_entry_pub}\n"
 
     if changes == "Zmiany:\n":
         messagebox.showerror("Error", "Wprowadź zmiany", parent=lasttop)
@@ -394,7 +398,7 @@ def confirm_edit_reservation(reservation, price_entry, advance_entry, form_entry
     changes_label.pack(pady=10, padx=10)
 
     yes_button = Button(top, text="Potwierdź", command=lambda: [con.edit_reservation(reservation.Reservation.id, price_entry, 
-    advance_entry, new_form, paid_entry, adnotation_entry), top.destroy()])
+    advance_entry, new_form, paid_entry, adnotation_entry, adnotation_entry_pub, term), top.destroy()])
     yes_button.pack(padx=10, pady=10, side='right')
     no_button = Button(top, text="Anuluj", command=lambda: top.destroy())
     no_button.pack(padx=10, pady=10, side='left')

@@ -699,7 +699,9 @@ class main_window:
         reservation_frame.grid(row=1, columnspan=2, column=0, padx=10, pady=10, sticky="nsew")
         reservation_frame.grid_rowconfigure(0, weight=0)
         reservation_frame.grid_rowconfigure(1, weight=0)
-        reservation_frame.grid_rowconfigure(2, weight=1)
+        reservation_frame.grid_rowconfigure(2, weight=0)
+        reservation_frame.grid_rowconfigure(3, weight=1)
+        reservation_frame.grid_rowconfigure(4, weight=1)
         reservation_frame.grid_columnconfigure(0, weight=0)
         reservation_frame.grid_columnconfigure(1, weight=1)
         reservation_frame.grid_columnconfigure(2, weight=0)
@@ -735,19 +737,34 @@ class main_window:
             #paid_button.select()
             reservation_paid.set(True)
 
+        term_label = Label(reservation_frame, text = "Termin realizacji:")  
+        term_entry = ttk.Entry(reservation_frame)
+
+        term_label.grid(row=2, column=0, padx=10, pady=(10, 10), sticky="w")
+        term_entry.grid(row=2, column=1, padx=0, pady=(10, 10), columnspan=3, sticky="ew")
+        term_entry.insert(0, reservation.Reservation.term)
+
         adnotation_label = Label(reservation_frame, text = "Uwagi:")
         adnotation_entry = Text(reservation_frame, wrap=WORD, height=5)
         adnotation_entry.insert(END, reservation.Reservation.adnotation)
 
-        adnotation_label.grid(row=2, column=0, padx=10, pady=10, sticky="w")
-        adnotation_entry.grid(row=2, column=1, padx=0, pady=10, sticky="nsew", columnspan=3)
-        
+        adnotation_label.grid(row=3, column=0, padx=10, pady=10, sticky="w")
+        adnotation_entry.grid(row=3, column=1, padx=0, pady=10, sticky="nsew", columnspan=3)
+
+        adnotation_pub_label = Label(reservation_frame, text = "Uwagi dla klienta:")
+        adnotation_pub_entry = Text(reservation_frame, wrap=WORD, height=5)
+        adnotation_pub_entry.insert(END, reservation.Reservation.adnotation_pub)
+
+        adnotation_pub_label.grid(row=4, column=0, padx=10, pady=(0, 10), sticky="w")
+        adnotation_pub_entry.grid(row=4, column=1, padx=0, pady=(0, 10), sticky="nsew", columnspan=3)
+                
         cancel_button = Button(top, text="Anuluj", command=lambda: top.destroy())
         cancel_button.grid(row=4, column=0, padx=10, pady=10, sticky="w")
 
         make_button = Button(top, text="Akceptuj", command=lambda: [but.confirm_edit_reservation(reservation, new_price_entry.get().strip(),
             reservation_advance_entry.get().strip(),
-            reservation_form.get(), reservation_paid.get(), adnotation_entry.get('1.0', 'end').strip(), top)])
+            reservation_form.get(), reservation_paid.get(), adnotation_entry.get('1.0', 'end').strip(),
+            adnotation_entry_pub.get('1.0', 'end').strip(), term.entry.get().strip(), top)])
         make_button.grid(row=4, column=1, padx=10, pady=10, sticky="e")
 
 

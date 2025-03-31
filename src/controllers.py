@@ -321,13 +321,16 @@ def drop_brands_models(models):
     session.commit()
 
 
-def edit_reservation(reservarion_id, new_price, new_advance, new_form, new_paid, new_adnotation):
+def edit_reservation(reservarion_id, new_price, new_advance, new_form, new_paid, new_adnotation, new_adnotation_pub, new_term):
     reservation = session.query(Reservation, Product).join(Product).where(Reservation.id==reservarion_id).first()
     reservation.Product.price = new_price
     reservation.Reservation.adnotation = new_adnotation
+    reservation.Reservation.adnotation_pub = new_adnotation_pub
     reservation.Reservation.advance = new_advance
     reservation.Reservation.form = new_form
     reservation.Reservation.paid = new_paid
+    reservation.Reservation.term = new_term
+
 
     session.commit()
 
