@@ -217,7 +217,7 @@ class main_window:
         self.customers_search_entry.bind("<KeyRelease>", lambda x: con.fake_commit())
 
 
-    def create_new_customer(self, lasttop, callback = None):
+    def create_new_customer(self, lasttop, callback = None, select = lambda: []):
         top = Toplevel(lasttop)
         top.title("Dodaj nowego klienta")
         top.columnconfigure(0, weight=0)
@@ -273,7 +273,8 @@ class main_window:
 
         add_button = Button(top, text="Dodaj", command=lambda:[but.sum_up_customer(name_entry.get().strip(), 
             phone_entry.get().strip(), email_entry.get().strip(), pesel_entry.get().strip(), nip_entry.get().strip(), 
-            company_name_entry.get().strip(), adress_entry.get('1.0', 'end').strip(), top)])
+            company_name_entry.get().strip(), adress_entry.get('1.0', 'end').strip(), top),
+            select()])
         add_button.grid(row=7, column=1, padx=10, pady=10, sticky="e")
 
         
@@ -474,14 +475,18 @@ class main_window:
             search_entry.grid(row=0, column=1, padx=10, pady=(0, 0), sticky="ew")
             search_entry.bind("<KeyRelease>", lambda x: fun.filter_tree(search_entry, con.get_all_customers(), res_customers_tree, "name"))
 
-            new_customer_button = Button(customer_addons_frame, text="Nowy klient", command=lambda: self.create_new_customer(top, lambda: fun.refresh_res_customer(res_customers_tree)))
+            new_customer_button = Button(customer_addons_frame, text="Nowy klient", 
+            command=lambda: self.create_new_customer(top, None, 
+            lambda: [search_entry.delete(0, END), res_customers_tree.selection_set(fun.refresh_res_customer(res_customers_tree))]))
             new_customer_button.grid(row=0, column=2, padx=10, pady=(0, 0), sticky="e")
 
             reservation_frame = ttk.Frame(top)
             reservation_frame.grid(row=3, columnspan=2, column=0, padx=10, pady=0, sticky="nsew")
             reservation_frame.grid_rowconfigure(0, weight=0)
             reservation_frame.grid_rowconfigure(1, weight=0)
-            reservation_frame.grid_rowconfigure(2, weight=1)
+            reservation_frame.grid_rowconfigure(2, weight=0)
+            reservation_frame.grid_rowconfigure(3, weight=1)
+            reservation_frame.grid_rowconfigure(4, weight=1)
             reservation_frame.grid_columnconfigure(0, weight=0)
             reservation_frame.grid_columnconfigure(1, weight=1)
             reservation_frame.grid_columnconfigure(2, weight=0)

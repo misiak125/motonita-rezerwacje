@@ -251,11 +251,11 @@ reservarion_search, show_finalized, all_products_tree, show_sold, show_reserved,
     
    
 def get_selected_element_id(tree):
-    if len(tree.selection()) > 1:
+    if len(tree.selection()) != 1:
         return -1
 
     try:
-        ret = tree.item(tree.focus(), "values")[0]
+        ret = tree.item(tree.selection()[0], "values")[0]
     except:
         ret = -1
     return ret
@@ -275,9 +275,17 @@ def refresh_res_customer(tree):
 
     customers = con.get_all_customers()
 
-    for customer in customers:
-        tree.insert("", "end", values=(customer.id, 
+    item = None
+
+    for i, customer in enumerate(customers):
+        if i==0:
+            item = tree.insert("", "end", values=(customer.id, 
             customer.name, customer.phone, customer.email))
+        else:
+            tree.insert("", "end", values=(customer.id, 
+            customer.name, customer.phone, customer.email))
+    
+    return item
 
 
 def filter_tree(entry, db_result, tree, match, event=None):
