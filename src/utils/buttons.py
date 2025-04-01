@@ -1,5 +1,5 @@
 import re
-from .funcs import animate_gif, validate_nip, validate_pesel, short_price, change_dates
+from .funcs import animate_gif, validate_nip, validate_pesel, short_price, change_dates, generate_pdf_confirmation
 from tkinter import Toplevel, Label, ttk, messagebox, Button, StringVar, END
 from PIL import ImageTk, Image
 import src.controllers as con
@@ -377,13 +377,13 @@ def confirm_edit_reservation(reservation, price_entry, advance_entry, form_entry
         changes = changes+f"{og_paid} 🡢 {new_paid}\n"
 
     if reservation.Reservation.term != term:
-        changes = changes+f"Uwagi: {reservation.Reservation.term} 🡢 {term}\n"
+        changes = changes+f"Termin realizacji: {reservation.Reservation.term} 🡢 {term}\n"
 
     if reservation.Reservation.adnotation != adnotation_entry:
         changes = changes+f"Uwagi: {reservation.Reservation.adnotation} 🡢 {adnotation_entry}\n"
 
     if reservation.Reservation.adnotation_pub != adnotation_entry_pub:
-        changes = changes+f"Uwagi: {reservation.Reservation.adnotation_pub} 🡢 {adnotation_entry_pub}\n"
+        changes = changes+f"Uwagi dla klienta: {reservation.Reservation.adnotation_pub} 🡢 {adnotation_entry_pub}\n"
 
     if changes == "Zmiany:\n":
         messagebox.showerror("Error", "Wprowadź zmiany", parent=lasttop)
@@ -398,7 +398,7 @@ def confirm_edit_reservation(reservation, price_entry, advance_entry, form_entry
     changes_label.pack(pady=10, padx=10)
 
     yes_button = Button(top, text="Potwierdź", command=lambda: [con.edit_reservation(reservation.Reservation.id, price_entry, 
-    advance_entry, new_form, paid_entry, adnotation_entry, adnotation_entry_pub, term), top.destroy()])
+    advance_entry, new_form, paid_entry, adnotation_entry, adnotation_entry_pub, term), generate_pdf_confirmation(reservation.Reservation.id), top.destroy()])
     yes_button.pack(padx=10, pady=10, side='right')
     no_button = Button(top, text="Anuluj", command=lambda: top.destroy())
     no_button.pack(padx=10, pady=10, side='left')

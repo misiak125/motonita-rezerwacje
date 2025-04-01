@@ -764,7 +764,7 @@ class main_window:
         make_button = Button(top, text="Akceptuj", command=lambda: [but.confirm_edit_reservation(reservation, new_price_entry.get().strip(),
             reservation_advance_entry.get().strip(),
             reservation_form.get(), reservation_paid.get(), adnotation_entry.get('1.0', 'end').strip(),
-            adnotation_entry_pub.get('1.0', 'end').strip(), term.entry.get().strip(), top)])
+            adnotation_pub_entry.get('1.0', 'end').strip(), term_entry.get().strip(), top)])
         make_button.grid(row=4, column=1, padx=10, pady=10, sticky="e")
 
 
