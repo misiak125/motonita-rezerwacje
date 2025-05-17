@@ -15,7 +15,7 @@ class main_window:
     def __init__(self, root):
         self.root = root
         self.root.title("Zamówienia Motorland")
-        self.root.geometry("1200x700")
+        self.root.geometry("1500x900")
 		
 
         ico = Image.open(resource_path(os.path.join('static', 'icon.png')))
@@ -418,6 +418,9 @@ class main_window:
 
         change_state_button = Button(top, text="Zmień stan pojazdu", command=lambda: but.change_state(reservarion.Product.id, top))
         change_state_button.pack(padx=10, pady=(0, 10), side='left')
+
+        generate_confirmation_button = Button(top, text="Generuj potwierdzenie", command=lambda: fun.generate_pdf_confirmation(res_id))
+        generate_confirmation_button.pack(padx=0, pady=(0, 10), side='left')
 
 
     def create_reservation(self, to_reservation_id, is_reserved, lasttop):

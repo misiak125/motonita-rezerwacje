@@ -21,7 +21,7 @@ def animate_gif(label, frames, frame_counter):
 
 
 def confirm_reservation(to_reservation, reservation_customer_id, reservation_advance, new_price, adnotation, adnotation_pub, reservation_form, reservarion_paid, term, lasttop):
-    if len(term) < 8:
+    if len(term) < 1:
         messagebox.showerror("Error", "Wprowadź termin realizacji", parent=lasttop)
         return
     if new_price is None or new_price == "":
@@ -659,18 +659,15 @@ def print_file(file_path):
     system_name = platform.system()
 
     if system_name == "Windows":
-        try:
-            os.startfile(file_path, "print")
-        except:
-            acrobat_paths = [
-                r"C:\Program Files\Adobe\Acrobat DC\Acrobat\Acrobat.exe",
-                r"C:\Program Files (x86)\Adobe\Acrobat Reader DC\Reader\AcroRd32.exe"
-            ]
-            
-            for acrobat_path in acrobat_paths:
-                if os.path.exists(acrobat_path):
-                    subprocess.run([acrobat_path, "/t", file_path])
-                    return
+        acrobat_paths = [
+            r"C:\Program Files\Adobe\Acrobat DC\Acrobat\Acrobat.exe",
+            r"C:\Program Files (x86)\Adobe\Acrobat Reader DC\Reader\AcroRd32.exe"
+        ]
+        
+        for acrobat_path in acrobat_paths:
+            if os.path.exists(acrobat_path):
+                subprocess.run([acrobat_path, "/t", file_path])
+                return
     elif system_name == "Darwin":
         subprocess.run(["lpr", file_path])
     elif system_name == "Linux":    
