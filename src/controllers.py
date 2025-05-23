@@ -27,11 +27,11 @@ def add_customer(name, phone, email, pesel, nip, company_name, adress):
         raise
 
 
-def make_reservation(customer_id, product_id, advance, adnotation, adnotation_pub, form, paid, term):
+def make_reservation(customer_id, product_id, advance, adnotation, adnotation_pub, form, paid, term, delivery, payment_method):
     try:
         new_reservation=Reservation(date=datetime.now(), 
         customer_id=customer_id, product_id=product_id, advance = advance, adnotation = adnotation,
-        adnotation_pub = adnotation_pub, form=form, paid=paid, term = term)
+        adnotation_pub = adnotation_pub, form=form, paid=paid, term = term, delivery = delivery, payment_method = payment_method)
         
         session.add(new_reservation)
         session.commit()
@@ -321,7 +321,7 @@ def drop_brands_models(models):
     session.commit()
 
 
-def edit_reservation(reservarion_id, new_price, new_advance, new_form, new_paid, new_adnotation, new_adnotation_pub, new_term):
+def edit_reservation(reservarion_id, new_price, new_advance, new_form, new_paid, new_adnotation, new_adnotation_pub, new_delivery, new_payment_method, new_term):
     reservation = session.query(Reservation, Product).join(Product).where(Reservation.id==reservarion_id).first()
     reservation.Product.price = new_price
     reservation.Reservation.adnotation = new_adnotation
@@ -330,13 +330,15 @@ def edit_reservation(reservarion_id, new_price, new_advance, new_form, new_paid,
     reservation.Reservation.form = new_form
     reservation.Reservation.paid = new_paid
     reservation.Reservation.term = new_term
+    reservation.Reservation.delivery = new_delivery
+    reservation.Reservation.payment_method = new_payment_method
 
 
     session.commit()
 
 
 def edit_product(product_id, product_brand, product_model, product_colour, 
-    product_price, product_year, product_order_id, product_state, expected_delivery):
+    product_price, product_year, product_order_id, product_state, expected_delivery, old_price):
     
     product = session.query(Product).where(Product.id == product_id).first()
 
@@ -344,6 +346,7 @@ def edit_product(product_id, product_brand, product_model, product_colour,
     product.model = product_model
     product.colour = product_colour
     product.price = product_price
+    product.old_price = old_price
     product.year = product_year
     product.order_id = product_order_id
     product.state = product_state
