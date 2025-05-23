@@ -8,6 +8,7 @@ from datetime import datetime
 from PIL import Image, ImageTk
 from src import resource_path
 import os
+import json
 from dateutil.relativedelta import relativedelta
 
 
@@ -51,9 +52,12 @@ class main_window:
         self.show_finalized, self.all_products_tree, self.show_sold, self.show_reserved.get(), self.all_prod_search_entry.get())
         ''''''
 
+        
+
         notebook.pack(padx=10, pady=10, fill="both", expand=True)
         
 
+    
     def create_free_products_tab(self, tab):
         self.split_dates = BooleanVar()
         split_dates_button = Checkbutton(tab, variable=self.split_dates, text="Rozdziel przewidywane daty", 
@@ -96,6 +100,10 @@ class main_window:
         self.free_prod_search_entry = ttk.Entry(tab)
         self.free_prod_search_entry.pack(padx=10, pady=(10, 20), fill="x")
         self.free_prod_search_entry.bind("<KeyRelease>", lambda x: con.fake_commit())
+
+        bug_button = Button(tab, text="bug", command=lambda: faulty(3))
+        bug_button.pack()
+
 
 
     def create_all_products_tab(self, tab):
@@ -348,6 +356,9 @@ class main_window:
         if reservarion.Reservation.paid: spaid="Zapłacono"
         else: spaid="Nie zapłacono"
 
+        if reservarion.Reservation.delivery: sdel = "Tak"
+        else: sdel = "Nie"
+
         if reservarion.Reservation.form: sform="Zadatek"
         else: sform="Zaliczka"
 
@@ -372,11 +383,13 @@ class main_window:
             ("Kolor:", reservarion.Product.colour),
             ("Rocznik:", reservarion.Product.year),
             ("Cena:", fun.short_price(reservarion.Product.price)),
+            ("Metoda płatności:", reservarion.Reservation.payment_method),
             ("Wartość zaliczki:", fun.short_price(reservarion.Reservation.advance)),
             ("Forma:", sform),
             ("Rozlicenie:", spaid),
             ("Przewidywana dostawa:", expected_delivery),
             ("Data realizacji na umowie:", reservarion.Reservation.term),
+            ("Dostawa:", sdel),
             ("Uwagi do rezerwacji:", reservarion.Reservation.adnotation),
             ("Uwagi dla klienta:", reservarion.Reservation.adnotation_pub),
             ("Data rezerwacji:", reservarion.Reservation.date.strftime('%d.%m.%Y %H:%M'))
@@ -513,15 +526,29 @@ class main_window:
             form_box=OptionMenu(reservation_frame, reservation_form, *['zaliczka', 'zadatek'])
             form_box.grid(row=0, column=2, padx=0, pady=10, columnspan=2)
 
-            reservation_paid = BooleanVar()
-            paid_button = Checkbutton(reservation_frame, text="Zapłacono", variable=reservation_paid, offvalue=False, onvalue=True)
-            paid_button.grid(row=1, column=2, padx=0, pady=(0, 10), columnspan=2)
+            payment_method = StringVar()
+            payment_method.set('płatność')
+            banks_json=json.load(open(resource_path("static/acc_numbers.json"), "r", encoding="utf-8"))
+            banks = ['gotówka', 'karta']+list(banks_json.keys())
+            payment_method_box=OptionMenu(reservation_frame, payment_method, *banks)
+            payment_method_box.grid(row=1, column=2, padx=0, pady=(0, 10), columnspan=2)
 
+            checkbuttons_frame = ttk.Frame(reservation_frame)
+            checkbuttons_frame.grid(row=2, column=2, padx=0, pady=(0, 10), columnspan=2)
+
+            reservation_paid = BooleanVar()
+            paid_button = Checkbutton(checkbuttons_frame, text="Zapłacono", variable=reservation_paid, offvalue=False, onvalue=True)
+            paid_button.grid(row=0, column=0, padx=10, pady=0, columnspan=1)
+            
+            delivery = BooleanVar()
+            delivery_button = Checkbutton(checkbuttons_frame, text="Dostawa", variable=delivery, offvalue=False, onvalue=True)
+            delivery_button.grid(row=0, column=1, padx=10, pady=0, columnspan=1)
+            
             term_label = Label(reservation_frame, text = "Termin realizacji:")
             term_entry = ttk.Entry(reservation_frame)
 
             term_label.grid(row=2, column=0, padx=10, pady=(0, 10), sticky="w")
-            term_entry.grid(row=2, column=1, padx=0, pady=(0, 10), columnspan=3, sticky="ew")
+            term_entry.grid(row=2, column=1, padx=0, pady=(0, 10), columnspan=2, sticky="ew")
 
             POLISH_MONTHS = [
                 "Styczeń", "Luty", "Marzec", "Kwiecień",
@@ -557,7 +584,7 @@ class main_window:
 
             make_button = Button(top, text="Zarezerwuj", command=lambda: [fun.confirm_reservation(to_reservation, fun.get_selected_element_id(res_customers_tree), 
                 reservation_advance_entry.get().strip(), new_price_entry.get().strip(), adnotation_entry.get('1.0', 'end').strip(), adnotation_pub_entry.get('1.0', 'end').strip(),
-                reservation_form.get(), reservation_paid.get(), term_entry.get().strip(), top)])
+                reservation_form.get(), reservation_paid.get(), term_entry.get().strip(), delivery.get(), payment_method.get(), top)])
             make_button.grid(row=4, column=1, padx=10, pady=(0, 10), sticky="e")
             
     
@@ -733,18 +760,32 @@ class main_window:
         form_box=OptionMenu(reservation_frame, reservation_form, *['zaliczka', 'zadatek'])
         form_box.grid(row=0, column=2, padx=0, pady=10, columnspan=2)
 
-        reservation_paid = BooleanVar()
-        paid_button = Checkbutton(reservation_frame, text="Zapłacono", variable=reservation_paid, offvalue=False, onvalue=True)
-        paid_button.grid(row=1, column=2, padx=0, pady=10, columnspan=2)
-        if reservation.Reservation.paid == True:
-            #paid_button.select()
-            reservation_paid.set(True)
+        payment_method = StringVar()
+        payment_method.set('płatność')
+        banks_json=json.load(open(resource_path("static/acc_numbers.json"), "r", encoding="utf-8"))
+        banks = ['gotówka', 'karta']+list(banks_json.keys())
+        payment_method_box=OptionMenu(reservation_frame, payment_method, *banks)
+        payment_method_box.grid(row=1, column=2, padx=0, pady=(0, 10), columnspan=2)
+
+        payment_method.set(reservation.Reservation.payment_method)
+
+        checkbuttons_frame = Frame(reservation_frame)
+        checkbuttons_frame.grid(row=2, column=2, padx=0, pady=(0, 10), columnspan=2)
+
+        delivery = BooleanVar(value=reservation.Reservation.delivery)
+        delivery_button = Checkbutton(checkbuttons_frame, text="Dostawa", variable=delivery, offvalue=False, onvalue=True)
+        delivery_button.grid(row=0, column=1, padx=10, pady=0, columnspan=1)
+        
+        reservation_paid = BooleanVar(value=reservation.Reservation.paid)
+        paid_button = Checkbutton(checkbuttons_frame, text="Zapłacono", variable=reservation_paid, offvalue=False, onvalue=True)
+        paid_button.grid(row=0, column=0, padx=10, pady=0, columnspan=1)
+
 
         term_label = Label(reservation_frame, text = "Termin realizacji:")  
         term_entry = ttk.Entry(reservation_frame)
 
         term_label.grid(row=2, column=0, padx=10, pady=(10, 10), sticky="w")
-        term_entry.grid(row=2, column=1, padx=0, pady=(10, 10), columnspan=3, sticky="ew")
+        term_entry.grid(row=2, column=1, padx=0, pady=(10, 10), columnspan=2, sticky="ew")
         term_entry.insert(0, reservation.Reservation.term)
 
         adnotation_label = Label(reservation_frame, text = "Uwagi:")
@@ -767,7 +808,7 @@ class main_window:
         make_button = Button(top, text="Akceptuj", command=lambda: [but.confirm_edit_reservation(reservation, new_price_entry.get().strip(),
             reservation_advance_entry.get().strip(),
             reservation_form.get(), reservation_paid.get(), adnotation_entry.get('1.0', 'end').strip(),
-            adnotation_pub_entry.get('1.0', 'end').strip(), term_entry.get().strip(), top)])
+            adnotation_pub_entry.get('1.0', 'end').strip(), term_entry.get().strip(), delivery.get(), payment_method.get(), top)])
         make_button.grid(row=4, column=1, padx=10, pady=10, sticky="e")
 
 

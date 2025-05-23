@@ -313,7 +313,7 @@ def ensure_delete_models():
     return response
 
 
-def confirm_edit_reservation(reservation, price_entry, advance_entry, form_entry, paid_entry, adnotation_entry, adnotation_entry_pub, term, lasttop):
+def confirm_edit_reservation(reservation, price_entry, advance_entry, form_entry, paid_entry, adnotation_entry, adnotation_entry_pub, term, delivery, payment_method, lasttop):
     if price_entry == '' or price_entry is None:
         messagebox.showerror("Error", "Podaj cenę", parent=lasttop)
         return
@@ -343,7 +343,6 @@ def confirm_edit_reservation(reservation, price_entry, advance_entry, form_entry
         messagebox.showerror("Error", "Błędnie podane dane", parent=lasttop)
         return
     
-
     if reservation.Product.price != price_entry:
         changes = changes+f"Cena: {short_price(reservation.Product.price)} 🡢 {short_price(price_entry)}\n"
     
@@ -373,8 +372,24 @@ def confirm_edit_reservation(reservation, price_entry, advance_entry, form_entry
     else:
         new_paid = "Nie zapłacono"
 
+    if reservation.Reservation.delivery:
+        og_delivery = "Tak"
+    else:
+        og_delivery = "Nie"
+
+    if delivery:
+        new_delivery = "Tak"
+    else:
+        new_delivery = "Nie"
+
+    if og_delivery != new_delivery:
+        changes = changes+f"Dostawa: {og_delivery} 🡢 {new_delivery}\n"
+
     if og_paid != new_paid:
-        changes = changes+f"{og_paid} 🡢 {new_paid}\n"
+        changes = changes+f"Rozliczenie: {og_paid} 🡢 {new_paid}\n"
+
+    if reservation.Reservation.payment_method != payment_method:
+        changes = changes+f"Forma płatności: {reservation.Reservation.payment_method} 🡢 {payment_method}\n"
 
     if reservation.Reservation.term != term:
         changes = changes+f"Termin realizacji: {reservation.Reservation.term} 🡢 {term}\n"
@@ -398,7 +413,7 @@ def confirm_edit_reservation(reservation, price_entry, advance_entry, form_entry
     changes_label.pack(pady=10, padx=10)
 
     yes_button = Button(top, text="Potwierdź", command=lambda: [con.edit_reservation(reservation.Reservation.id, price_entry, 
-    advance_entry, new_form, paid_entry, adnotation_entry, adnotation_entry_pub, term), generate_pdf_confirmation(reservation.Reservation.id), top.destroy()])
+    advance_entry, new_form, paid_entry, adnotation_entry, adnotation_entry_pub, delivery, payment_method, term), top.destroy()])
     yes_button.pack(padx=10, pady=10, side='right')
     no_button = Button(top, text="Anuluj", command=lambda: top.destroy())
     no_button.pack(padx=10, pady=10, side='left')
@@ -449,6 +464,7 @@ def sum_up_edit_product(product_id, product_brand, product_model, product_colour
 
     if product_price != product.price: 
         changes = changes+f"Cena: {short_price(product.price)} 🡢 {short_price(product_price)}\n"
+        old_price = product_price
 
     if product_year != product.year: 
         changes = changes+f"Roczni: {(product.year)} 🡢 {(product_year)}\n"
@@ -482,7 +498,7 @@ def sum_up_edit_product(product_id, product_brand, product_model, product_colour
     changes_label = Label(top, text=changes, font=("Default", 12), justify='left')
     changes_label.grid(row=0, column=0, columnspan=2, pady=10, padx=10)
     yes_button = Button(top, text="Potwierdź", command=lambda: [con.edit_product(product_id, product_brand, 
-    product_model, product_colour, product_price, product_year, product_order_id, product_state, expected_delivery), top.destroy()])
+    product_model, product_colour, product_price, product_year, product_order_id, product_state, expected_delivery, old_price), top.destroy()])
     yes_button.grid(row=4, column=3, padx=15, pady=15, sticky="e")
     no_button = Button(top, text="Anuluj", command=lambda: [top.destroy()])
     no_button.grid(row=4, column=0, padx=15, pady=15, sticky="w")

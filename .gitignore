@@ -181,8 +181,4 @@ todo
 
 
 #plik z informacją o sprzedawcy drukowaną na potwierdzeniu
-src/static/seller_details.txt
-src/static/seller_contact.txt
-src/static/seller_acc_num.txt
-src/static/seller_adress.txt
 test.py

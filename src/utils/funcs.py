@@ -13,6 +13,7 @@ import platform
 import subprocess
 from PIL import Image
 from src import resource_path
+import json
 
 def animate_gif(label, frames, frame_counter):
     label.config(image=frames[frame_counter])
@@ -20,7 +21,7 @@ def animate_gif(label, frames, frame_counter):
     label.after(100, animate_gif, label, frames, frame_counter)
 
 
-def confirm_reservation(to_reservation, reservation_customer_id, reservation_advance, new_price, adnotation, adnotation_pub, reservation_form, reservarion_paid, term, lasttop):
+def confirm_reservation(to_reservation, reservation_customer_id, reservation_advance, new_price, adnotation, adnotation_pub, reservation_form, reservation_paid, term, delivery, payment_method, lasttop):
     if len(term) < 1:
         messagebox.showerror("Error", "Wprowadź termin realizacji", parent=lasttop)
         return
@@ -28,6 +29,10 @@ def confirm_reservation(to_reservation, reservation_customer_id, reservation_adv
         new_price = to_reservation.price
     if reservation_form == 'zaliczka/zadatek':
         messagebox.showerror("Error", "Wybierz zaliczka/zadatek", parent=lasttop)
+        return
+
+    if payment_method == 'płatność':
+        messagebox.showerror("Error", "Wybierz metodę płatności", parent=lasttop)
         return
 
     if reservation_customer_id == -1:
@@ -64,8 +69,10 @@ def confirm_reservation(to_reservation, reservation_customer_id, reservation_adv
 
         reservation_customer = con.get_customer(reservation_customer_id)
 
-        if reservarion_paid: spaid="Zapłacono"
+        if reservation_paid: spaid="Zapłacono"
         else: spaid="Nie zapłacono"
+        if delivery: sdel = "Tak"
+        else: sdel = "Nie"
 
         main_frame = ttk.Frame(top)
 
@@ -74,8 +81,10 @@ def confirm_reservation(to_reservation, reservation_customer_id, reservation_adv
             ("Zaliczka:", reservation_advance),
             ("Forma:", reservation_form),
             ("Ustalona cena:", new_price),
+            ("Metoda płatności:", payment_method),
             ("Rozliczenie:", spaid),
             ("Termin realizacji:", term),
+            ("Dostawa:", sdel),
             ("Uwagi:", adnotation),
             ("Uwagi dla klienta:", adnotation_pub),
         ]
@@ -128,13 +137,14 @@ def confirm_reservation(to_reservation, reservation_customer_id, reservation_adv
         cancel_button.pack(side="left", padx=10) 
         new_id = con.get_new_order_id()
         confirm_button = Button(frame1, text="Potwierdź", command = lambda: [con.make_reservation(reservation_customer_id, 
-            to_reservation.id, reservation_advance, adnotation, adnotation_pub, bool_form, reservarion_paid, term), 
+            to_reservation.id, reservation_advance, adnotation, adnotation_pub, bool_form, reservation_paid, term,
+            delivery, payment_method), 
             con.change_price(to_reservation.id, new_price), top.destroy() ,generate_pdf_confirmation(new_id)]) #dodaj happy informacje ze sie udalo, zamknij tez poprzednie okno
         confirm_button.pack(side="right", padx=10)
 
 
 def refresh_table(free_products_tree, free_products_search, split_dates, customers_tree, customer_search, reservations_tree, 
-reservarion_search, show_finalized, all_products_tree, show_sold, show_reserved, all_prod_search):
+reservation_search, show_finalized, all_products_tree, show_sold, show_reserved, all_prod_search):
     #print("refreshing")
     for item in free_products_tree.get_children():
         free_products_tree.delete(item)
@@ -200,7 +210,7 @@ reservarion_search, show_finalized, all_products_tree, show_sold, show_reserved,
             adnotation_text = res.Reservation.adnotation[0:30]+"..."
         else:
             adnotation_text = res.Reservation.adnotation[0:30]
-        if compare_list_to_element(reservarion_search.split(), [res.Reservation.id, res.Customer.name,
+        if compare_list_to_element(reservation_search.split(), [res.Reservation.id, res.Customer.name,
         res.Reservation.date.strftime("%d-%m-%Y %H:%M"),
         res.Product.brand, res.Product.model, res.Product.colour, res.Reservation.adnotation]):
 
@@ -417,7 +427,7 @@ def short_price(price):
 def generate_pdf_confirmation(order_id):
     if order_id == -1:
         return
-    reservarion = con.get_full_reservation(order_id)
+    reservation = con.get_full_reservation(order_id)
     document_title = 'potwierdzenie'
     title = "Potwierdzenie rezerwacji"
     directory = os.path.join(os.path.expanduser("~"), "Dokumenty")
@@ -427,7 +437,7 @@ def generate_pdf_confirmation(order_id):
     directory = os.path.join(directory, "potwierdzenia_rez")
     if not os.path.isdir(directory):
         os.mkdir(directory)
-    file_name = re.sub(r'[^a-zA-Z0-9]', '', reservarion.Customer.name.lower())
+    file_name = re.sub(r'[^a-zA-Z0-9]', '', reservation.Customer.name.lower())
     file_num = 1
     while os.path.exists(os.path.join(directory, file_name+str(file_num)+'.pdf')): file_num+=1
     file_name=file_name+str(file_num)+'.pdf'
@@ -462,10 +472,10 @@ def generate_pdf_confirmation(order_id):
     
     pdf.line(25, (29.7-4)*cm, 555, (29.7-4)*cm) 
     lasty -= 3*interline
-    pdf.drawRightString(210*mm-padding, lasty, f"Podkowa Leśna, dn. {reservarion.Reservation.date.strftime('%d.%m.%Y')}r.")
+    pdf.drawRightString(210*mm-padding, lasty, f"Podkowa Leśna, dn. {reservation.Reservation.date.strftime('%d.%m.%Y')}r.")
     lasty -= interline
     pdf.setFont('Arial-Bold', font_size)
-    pdf.drawCentredString(290, lasty, "Zamówienie nr. "+str(order_id)+"/"+str(reservarion.Reservation.date.year%100))
+    pdf.drawCentredString(290, lasty, "Zamówienie nr. "+str(order_id)+"/"+str(reservation.Reservation.date.year%100))
     pdf.setFont('Arial', font_size)
     lasty -= binterline
 
@@ -480,17 +490,17 @@ def generate_pdf_confirmation(order_id):
 
     lasty -= interline
 
-    buyer_details = ["Imię i nazwisko: "+reservarion.Customer.name, "Tel: " + reservarion.Customer.phone]
-    if reservarion.Customer.email != "" and reservarion.Customer.email is not None:
-        buyer_details.append("Adres e-mail: "+reservarion.Customer.email)
-    if reservarion.Customer.company_name != "" and reservarion.Customer.company_name is not None:
-        buyer_details.append("Nazwa firmy: "+reservarion.Customer.company_name)
-    if reservarion.Customer.nip != "" and reservarion.Customer.nip is not None:
-        buyer_details.append("NIP: "+reservarion.Customer.nip)
-    if reservarion.Customer.pesel != "" and reservarion.Customer.pesel is not None:
-        buyer_details.append("PESEL: "+reservarion.Customer.pesel)
-    if reservarion.Customer.adress != "" and reservarion.Customer.adress is not None:
-        buyer_details.append("Pełny adres: " + reservarion.Customer.adress.replace("\n", ", "))
+    buyer_details = ["Imię i nazwisko: "+reservation.Customer.name, "Tel: " + reservation.Customer.phone]
+    if reservation.Customer.email != "" and reservation.Customer.email is not None:
+        buyer_details.append("Adres e-mail: "+reservation.Customer.email)
+    if reservation.Customer.company_name != "" and reservation.Customer.company_name is not None:
+        buyer_details.append("Nazwa firmy: "+reservation.Customer.company_name)
+    if reservation.Customer.nip != "" and reservation.Customer.nip is not None:
+        buyer_details.append("NIP: "+reservation.Customer.nip)
+    if reservation.Customer.pesel != "" and reservation.Customer.pesel is not None:
+        buyer_details.append("PESEL: "+reservation.Customer.pesel)
+    if reservation.Customer.adress != "" and reservation.Customer.adress is not None:
+        buyer_details.append("Pełny adres: " + reservation.Customer.adress.replace("\n", ", "))
 
     pdf.drawString(padding, lasty, "KUPUJĄCY:")
     pdf.line(padding, lasty-3, padding+62, lasty-3)
@@ -505,59 +515,92 @@ def generate_pdf_confirmation(order_id):
     pdf.line(padding, lasty-3, padding+192, lasty-3)
 
     lasty -= binterline
-    pdf.drawString(padding, lasty, "Marka i model: "+reservarion.Product.brand+' '+reservarion.Product.model)
+    pdf.drawString(padding, lasty, "Marka i model: "+reservation.Product.brand+' '+reservation.Product.model)
     lasty -= interline
-    pdf.drawString(padding, lasty, "Rok produkcji: "+str(reservarion.Product.year))
+    pdf.drawString(padding, lasty, "Rok produkcji: "+str(reservation.Product.year))
     lasty -= interline
-    pdf.drawString(padding, lasty, "Kolor: "+reservarion.Product.colour)
+    pdf.drawString(padding, lasty, "Kolor: "+reservation.Product.colour)
     lasty -= 2*interline
-    pdf.drawString(padding, lasty, "CENA POJAZDU: "+str(short_price(int(reservarion.Product.price))).replace('.', ',')+'zł')
+    pdf.drawString(padding, lasty, "CENA POJAZDU: "+str(short_price(int(reservation.Product.price))).replace('.', ',')+'zł')
     lasty -= interline
-    pdf.drawString(padding, lasty, "Słownie: "+slownie(int(reservarion.Product.price), 'krótka')+' PLN')
+    pdf.drawString(padding, lasty, "Słownie: "+slownie(int(reservation.Product.price), 'krótka')+' PLN')
     lasty -= 2*interline
     
-    zastrzezenie = f"SPRZEDAJĄCY zastrzega prawo do zmiany ceny pojazdu w przypadku jej zmiany w oficjalnym cenniku importera marki {reservarion.Product.brand} Polska."
+    zastrzezenie = f"SPRZEDAJĄCY zastrzega prawo do zmiany ceny pojazdu w przypadku jej zmiany w oficjalnym cenniku importera marki {reservation.Product.brand} Polska."
     lines = simpleSplit(zastrzezenie, font, font_size, max_width)
     
     for line in lines:
         pdf.drawString(padding, lasty, line)
         lasty-=interline
     lasty -= interline
-    acc_num = open(resource_path(os.path.normpath('static/seller_acc_num.txt')), "r", encoding="utf-8").read().strip()
-    if reservarion.Reservation.form: zadzal = 'zadatku'
-    else: zadzal = 'zaliczki'
-    zaliczka = f"KUPUJĄCY zobowiązuje się do wpłaty {zadzal} w wysokości {short_price(reservarion.Reservation.advance)}zł, (słownie: {slownie(int(reservarion.Reservation.advance), 'krótka')} PLN) na numer rachunku: {acc_num}."
-    lines = simpleSplit(zaliczka, font, font_size, max_width)
-    for line in lines:
-        pdf.drawString(padding, lasty, line)
-        lasty-=interline
-    lasty -= interline
 
-    adit_info = "Zamówienie zostanie przyjęte do realizacji w momencie zaksięgowania kwoty zadatku/zaliczki na rachunku SPRZEDAJĄCEGO."
-    lines = simpleSplit(adit_info, font, font_size, max_width)
-    for line in lines:
-        pdf.drawString(padding, lasty, line)
-        lasty-=interline
-    lasty -= interline
+    if reservation.Reservation.advance in [0, reservation.Product.price]: pay_full = True
+    else: pay_full = False 
+    
+
+
+    if reservation.Reservation.payment_method not in ["gotówka", "karta"]:
+        accounts = json.load(open(resource_path("static/acc_numbers.json"), "r", encoding="utf-8"))
+        acc_num = accounts[reservation.Reservation.payment_method]
+        if not pay_full:
+            pay = reservation.Reservation.advance
+            if reservation.Reservation.form: zadzal = 'zadatku'
+            else: zadzal = 'zaliczki'
+        else:
+            pay = reservation.Product.price
+            zadzal = "pełnej kwoty wartości pojazdu"
+        zaliczka = f"KUPUJĄCY zobowiązuje się do wpłaty {zadzal} w wysokości {short_price(pay)}zł (słownie: {slownie(int(pay), 'krótka')} PLN) na numer rachunku: {acc_num}."
+        lines = simpleSplit(zaliczka, font, font_size, max_width)
+        for line in lines:
+            pdf.drawString(padding, lasty, line)
+            lasty-=interline
+        lasty -= interline
+        zadzal = zadzal.replace("pełnej kwoty ", "")
+        adit_info = f"Zamówienie zostanie przyjęte do realizacji w momencie zaksięgowania kwoty {zadzal} na rachunku SPRZEDAJĄCEGO."
+        lines = simpleSplit(adit_info, font, font_size, max_width)
+        for line in lines:
+            pdf.drawString(padding, lasty, line)
+            lasty-=interline
+        lasty -= interline
+    else:
+        if not pay_full:
+            pay = reservation.Reservation.advance
+            if reservation.Reservation.form: zadzal = 'zadatek'
+            else: zadzal = 'zaliczkę'
+        else:
+            pay = reservation.Product.price
+            zadzal = "pełną kwotę wartości pojazdu"
+
+        if reservation.Reservation.payment_method == "gotówka": how = 'gotówką'
+        else: how = 'kartą/BLIK'
+
+        zaliczka = f"KUPUJĄCY wpłacił {zadzal} w wysokości {short_price(pay)}zł (słownie: {slownie(int(pay), 'krótka')} PLN) {how}."
+        lines = simpleSplit(zaliczka, font, font_size, max_width)
+        for line in lines:
+            pdf.drawString(padding, lasty, line)
+            lasty-=interline
+        lasty -= interline
+
 
 
     
-    lines = simpleSplit(f"Termin realizacji zamówienia: {reservarion.Reservation.term}", font, font_size, max_width)
+    lines = simpleSplit(f"Termin realizacji zamówienia: {reservation.Reservation.term}", font, font_size, max_width)
     for line in lines:
         pdf.drawString(padding, lasty, line)
         lasty-=interline
     lasty -= interline
-
-    adres = open(resource_path(os.path.normpath("static/seller_adress.txt")), "r", encoding="utf-8").read().strip()
-    pickup = f"Miejsce odbioru pojazdu: {adres}."
-    lines = simpleSplit(pickup, font, font_size, max_width)
-    for line in lines:
-        pdf.drawString(padding, lasty, line)
-        lasty-=interline
-
-    lasty -= interline
-    if reservarion.Reservation.adnotation_pub != "" and reservarion.Reservation.adnotation_pub is not None:
-        adnotations = f"Dodatkowe informacje: {reservarion.Reservation.adnotation_pub}"
+        
+    if not reservation.Reservation.delivery:
+        adres = open(resource_path(os.path.normpath("static/seller_adress.txt")), "r", encoding="utf-8").read().strip()
+        pickup = f"Miejsce odbioru pojazdu: {adres}."
+        lines = simpleSplit(pickup, font, font_size, max_width)
+        for line in lines:
+            pdf.drawString(padding, lasty, line)
+            lasty-=interline
+        lasty -= interline
+    
+    if reservation.Reservation.adnotation_pub != "" and reservation.Reservation.adnotation_pub is not None:
+        adnotations = f"Dodatkowe informacje: {reservation.Reservation.adnotation_pub}"
         lines = simpleSplit(adnotations, font, font_size, max_width)
         for line in lines:
             pdf.drawString(padding, lasty, line)
