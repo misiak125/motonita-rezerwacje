@@ -709,10 +709,8 @@ def print_file(file_path):
         
         for acrobat_path in acrobat_paths:
             if os.path.exists(acrobat_path):
-                subprocess.run([acrobat_path, "/t", file_path])
-                return
-    elif system_name == "Darwin":
-        subprocess.run(["lpr", file_path])
+                subprocess.run([acrobat_path, file_path])
+                break
     elif system_name == "Linux":    
         subprocess.run(["xdg-open", file_path])
     else:
