@@ -101,9 +101,6 @@ class main_window:
         self.free_prod_search_entry.pack(padx=10, pady=(10, 20), fill="x")
         self.free_prod_search_entry.bind("<KeyRelease>", lambda x: con.fake_commit())
 
-        bug_button = Button(tab, text="bug", command=lambda: faulty(3))
-        bug_button.pack()
-
 
 
     def create_all_products_tab(self, tab):
