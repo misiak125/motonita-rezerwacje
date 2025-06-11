@@ -465,7 +465,9 @@ def sum_up_edit_product(product_id, product_brand, product_model, product_colour
     if product_price != product.price: 
         changes = changes+f"Cena: {short_price(product.price)} 🡢 {short_price(product_price)}\n"
         old_price = product_price
-
+    else:
+        old_price = product.old_price
+        
     if product_year != product.year: 
         changes = changes+f"Roczni: {(product.year)} 🡢 {(product_year)}\n"
 
