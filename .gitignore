@@ -185,5 +185,6 @@ src/static/seller_details.txt
 src/static/seller_contact.txt
 src/static/seller_adress.txt
 src/static/acc_numbers.json
+
 src/error_log.txt
 test.py

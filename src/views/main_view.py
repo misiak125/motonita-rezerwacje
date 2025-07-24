@@ -301,10 +301,10 @@ class main_window:
         Button1.pack()
         
         self.reservations_tree = ttk.Treeview(tab, columns=("id", "name",
-        "date",  "brand", "model", "colour", "adnotations"), show="headings")
+        "date",  "brand", "model", "colour", "paid", "adnotations"), show="headings")
         
         self.reservations_tree["displaycolumns"]=("id", "name", 
-        "date", "brand", "model", "colour", "adnotations")
+        "date", "brand", "model", "colour", "paid", "adnotations")
 
         self.reservations_tree.heading("id", text="ID")
         self.reservations_tree.heading("name", text="Imię i Nazwisko")
@@ -312,6 +312,7 @@ class main_window:
         self.reservations_tree.heading("brand", text="Marka")
         self.reservations_tree.heading("model", text="Model")
         self.reservations_tree.heading("colour", text="Kolor")
+        self.reservations_tree.heading("paid", text="Zapłacono")
         self.reservations_tree.heading("adnotations", text="Uwagi")
 
         self.reservations_tree.column("id", width=7)
@@ -320,6 +321,7 @@ class main_window:
         self.reservations_tree.column("brand", width=100)
         self.reservations_tree.column("model", width=100)
         self.reservations_tree.column("colour", width=100)
+        self.reservations_tree.column("paid", width=20)
         self.reservations_tree.column("adnotations")
 
         self.reservations_tree.bind("<Double-1>", lambda x: self.show_reservation_details(fun.get_selected_element_id(self.reservations_tree), self.root))

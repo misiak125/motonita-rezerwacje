@@ -202,6 +202,12 @@ reservation_search, show_finalized, all_products_tree, show_sold, show_reserved,
     
     i=0
     for res in reservations:
+        if res.Reservation.paid is True:
+            paid_txt = "TAK"
+            paid_col = "#03C04A"
+        else:
+            paid_txt = "NIE"
+            paid_col = "#FF2800"
         if i%2==0:
             tag='even'
         else:
@@ -216,7 +222,7 @@ reservation_search, show_finalized, all_products_tree, show_sold, show_reserved,
 
             reservations_tree.insert("", "end", values=(res.Reservation.id, res.Customer.name,
             res.Reservation.date.strftime("%d-%m-%Y %H:%M"),
-            res.Product.brand, res.Product.model, res.Product.colour, adnotation_text), tags=(tag,))
+            res.Product.brand, res.Product.model, res.Product.colour, paid_txt, adnotation_text), tags=(tag,))
 
     reservations_tree.tag_configure('odd', background='#BEBEBE')
 
