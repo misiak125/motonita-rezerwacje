@@ -11,7 +11,7 @@ from reportlab.lib.utils import simpleSplit
 import os
 import platform
 import subprocess
-from PIL import Image
+from PIL import Image, ImageTk
 from src import resource_path
 import json
 
@@ -202,27 +202,23 @@ reservation_search, show_finalized, all_products_tree, show_sold, show_reserved,
     
     i=0
     for res in reservations:
-        if res.Reservation.paid is True:
-            paid_txt = "TAK"
-            paid_col = "#03C04A"
-        else:
-            paid_txt = "NIE"
-            paid_col = "#FF2800"
         if i%2==0:
             tag='even'
         else:
             tag='odd'
-        if len(res.Reservation.adnotation) > 30:
-            adnotation_text = res.Reservation.adnotation[0:30]+"..."
+        max_adnotation_len = 36
+        if len(res.Reservation.adnotation) > max_adnotation_len:
+            adnotation_text = res.Reservation.adnotation[0:max_adnotation_len]+"..."
         else:
-            adnotation_text = res.Reservation.adnotation[0:30]
+            adnotation_text = res.Reservation.adnotation[0:max_adnotation_len]
         if compare_list_to_element(reservation_search.split(), [res.Reservation.id, res.Customer.name,
         res.Reservation.date.strftime("%d-%m-%Y %H:%M"),
         res.Product.brand, res.Product.model, res.Product.colour, res.Reservation.adnotation]):
 
-            reservations_tree.insert("", "end", values=(res.Reservation.id, res.Customer.name,
+            reservations_tree.insert("", "end", image=reservations_tree.icons[res.Reservation.paid], values=(res.Reservation.id, res.Customer.name,
             res.Reservation.date.strftime("%d-%m-%Y %H:%M"),
-            res.Product.brand, res.Product.model, res.Product.colour, paid_txt, adnotation_text), tags=(tag,))
+            res.Product.brand, res.Product.model, res.Product.colour, adnotation_text), tags=(tag,))
+            i+=1
 
     reservations_tree.tag_configure('odd', background='#BEBEBE')
 
@@ -722,9 +718,12 @@ def print_file(file_path):
     else:
         print("Unsupported OS")
     
-    
-
 
 def change_dates(id_list, new_date):
     for idd in id_list:
         con.change_date(idd, new_date)
+
+
+def create_colored_icon(color, size=(25,25)):
+    image = Image.new("RGB", size, color)
+    return ImageTk.PhotoImage(image)

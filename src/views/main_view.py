@@ -301,30 +301,34 @@ class main_window:
         Button1.pack()
         
         self.reservations_tree = ttk.Treeview(tab, columns=("id", "name",
-        "date",  "brand", "model", "colour", "paid", "adnotations"), show="headings")
+        "date",  "brand", "model", "colour", "adnotations"), show="tree headings")
         
         self.reservations_tree["displaycolumns"]=("id", "name", 
-        "date", "brand", "model", "colour", "paid", "adnotations")
+        "date", "brand", "model", "colour", "adnotations")
 
+        self.reservations_tree.heading("#0", text="$")
         self.reservations_tree.heading("id", text="ID")
         self.reservations_tree.heading("name", text="Imię i Nazwisko")
         self.reservations_tree.heading("date", text="Data")
         self.reservations_tree.heading("brand", text="Marka")
         self.reservations_tree.heading("model", text="Model")
         self.reservations_tree.heading("colour", text="Kolor")
-        self.reservations_tree.heading("paid", text="Zapłacono")
         self.reservations_tree.heading("adnotations", text="Uwagi")
 
-        self.reservations_tree.column("id", width=7)
+        self.reservations_tree.column("#0", width=62, stretch=False, anchor='w')
+        self.reservations_tree.column("id", width=62, stretch=False, anchor='center')
         self.reservations_tree.column("name", width=100)
         self.reservations_tree.column("date", width=100)
         self.reservations_tree.column("brand", width=100)
         self.reservations_tree.column("model", width=100)
         self.reservations_tree.column("colour", width=100)
-        self.reservations_tree.column("paid", width=20)
         self.reservations_tree.column("adnotations")
 
         self.reservations_tree.bind("<Double-1>", lambda x: self.show_reservation_details(fun.get_selected_element_id(self.reservations_tree), self.root))
+
+        green_icon = fun.create_colored_icon("#03C04A")
+        red_icon = fun.create_colored_icon("#FF2800")
+        self.reservations_tree.icons = {True: green_icon, False: red_icon}
 
         self.reservations_tree.pack(fill="both", expand=True, padx=10, pady=10)
 
