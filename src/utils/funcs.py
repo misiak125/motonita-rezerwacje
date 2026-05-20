@@ -1,5 +1,5 @@
 import src.controllers as con
-from tkinter import Toplevel, Label, messagebox, Button, ttk, Frame
+from tkinter import Toplevel, Label, messagebox, Button, ttk, Frame, Menu
 import re
 from datetime import datetime
 from math import trunc
@@ -68,15 +68,23 @@ def confirm_reservation(to_reservation, reservation_customer_id, reservation_adv
         top.title("Potwierdź rezerwację")
 
         reservation_customer = con.get_customer(reservation_customer_id)
+        last_res = con.get_last_reservation() #SERVER
 
         if reservation_paid: spaid="Zapłacono"
         else: spaid="Nie zapłacono"
         if delivery: sdel = "Tak"
         else: sdel = "Nie"
 
+        new_string_id_arr = last_res.string_order_id.split('/')
+        if str(datetime.now().year ) == '20' + new_string_id_arr[1]:
+            new_string_id = str(int(new_string_id_arr[0])+1) + '/' + new_string_id_arr[1]
+        else: 
+            new_string_id = '1/' + str(int(datetime.now().year)%100)
+        
         main_frame = ttk.Frame(top)
-
+        last_res.string_order_id
         details = [
+            ("Nr.zamówienia", new_string_id),
             ("Nr.tel:", reservation_customer.phone),
             ("Zaliczka:", reservation_advance),
             ("Forma:", reservation_form),
@@ -136,15 +144,15 @@ def confirm_reservation(to_reservation, reservation_customer_id, reservation_adv
         cancel_button = Button(frame1, text="Anuluj", command=top.destroy)
         cancel_button.pack(side="left", padx=10) 
         new_id = con.get_new_order_id()
-        confirm_button = Button(frame1, text="Potwierdź", command = lambda: [con.make_reservation(reservation_customer_id, 
+        confirm_button = Button(frame1, text="Potwierdź", command = lambda: [con.make_reservation(reservation_customer_id, new_string_id,
             to_reservation.id, reservation_advance, adnotation, adnotation_pub, bool_form, reservation_paid, term,
             delivery, payment_method), 
-            con.change_price(to_reservation.id, new_price), top.destroy() ,generate_pdf_confirmation(new_id)]) #dodaj happy informacje ze sie udalo, zamknij tez poprzednie okno
+            con.change_price(to_reservation.id, new_price), top.destroy() ,generate_pdf_confirmation(new_id)]) #SERVER zmiana ceny niech sie dzieje na serwerze dodaj happy informacje ze sie udalo, zamknij tez poprzednie okno
         confirm_button.pack(side="right", padx=10)
 
 
 def refresh_table(free_products_tree, free_products_search, split_dates, customers_tree, customer_search, reservations_tree, 
-reservation_search, show_finalized, all_products_tree, show_sold, show_reserved, all_prod_search):
+reservation_search, show_finalized, all_products_tree, show_sold, show_reserved, all_prod_search, show_year_all, show_year_free):
     #print("refreshing")
     for item in free_products_tree.get_children():
         free_products_tree.delete(item)
@@ -162,7 +170,8 @@ reservation_search, show_finalized, all_products_tree, show_sold, show_reserved,
         else:
             delivery = product.expected_deliveryy.strftime('%d.%m.%Y')
         if compare_list_to_element(free_products_search.split(), [product.Product.brand, product.Product.model,
-            product.Product.year, product.Product.colour, product.max, delivery]):
+            product.Product.year, product.Product.colour, product.max, delivery]) and \
+            (show_year_free == "wszystkie" or product.Product.year == int(show_year_free)):
             free_products_tree.insert("", "end", values=(product.Product.brand, product.Product.model,
             product.Product.year, product.Product.colour, product.count, delivery, short_price(product.max)), tags=(tag,))
             i+=1
@@ -215,7 +224,7 @@ reservation_search, show_finalized, all_products_tree, show_sold, show_reserved,
         res.Reservation.date.strftime("%d-%m-%Y %H:%M"),
         res.Product.brand, res.Product.model, res.Product.colour, res.Reservation.adnotation]):
 
-            reservations_tree.insert("", "end", image=reservations_tree.icons[res.Reservation.paid], values=(res.Reservation.id, res.Customer.name,
+            reservations_tree.insert("", "end", image=reservations_tree.icons[res.Reservation.paid], values=(res.Reservation.id, res.Reservation.string_order_id, res.Customer.name,
             res.Reservation.date.strftime("%d-%m-%Y %H:%M"),
             res.Product.brand, res.Product.model, res.Product.colour, adnotation_text), tags=(tag,))
             i+=1
@@ -238,6 +247,7 @@ reservation_search, show_finalized, all_products_tree, show_sold, show_reserved,
 
     i=0
     all_prod_search_list = all_prod_search.strip().lower().split()
+    
     for product in products:
         if product.Reservation is None:
             czy_rezerwowany = "NIE"
@@ -249,7 +259,8 @@ reservation_search, show_finalized, all_products_tree, show_sold, show_reserved,
         else:
             delivery = product.Product.expected_delivery.strftime('%d.%m.%Y')
         if compare_list_to_element(all_prod_search_list, [product.Product.brand, product.Product.model, 
-        product.Product.year, product.Product.colour, product.Product.order_id, delivery, product.Product.state]) and czy_rezerwowany in reserved_dict[show_reserved]:
+        product.Product.year, product.Product.colour, product.Product.order_id, delivery, product.Product.state]) \
+         and czy_rezerwowany in reserved_dict[show_reserved] and (show_year_all == "wszystkie" or product.Product.year == int(show_year_all)):
             if i%2==0:
                 tag='even'
             else:
@@ -326,7 +337,7 @@ def get_product_specs_id(tree):
         return -1
 
     
-    return con.get_first_free_element(brand, model, colour, year, delivery).id
+    return con.get_first_free_element(brand, model, colour, year, delivery).id  #SERVER
     
 
 def fill_models(models_cbox, brand):
@@ -477,7 +488,7 @@ def generate_pdf_confirmation(order_id):
     pdf.drawRightString(210*mm-padding, lasty, f"Podkowa Leśna, dn. {reservation.Reservation.date.strftime('%d.%m.%Y')}r.")
     lasty -= interline
     pdf.setFont('Arial-Bold', font_size)
-    pdf.drawCentredString(290, lasty, "Zamówienie nr. "+str(order_id)+"/"+str(reservation.Reservation.date.year%100))
+    pdf.drawCentredString(290, lasty, "Zamówienie nr. " + str(reservation.Reservation.string_order_id))
     pdf.setFont('Arial', font_size)
     lasty -= binterline
 
@@ -721,9 +732,20 @@ def print_file(file_path):
 
 def change_dates(id_list, new_date):
     for idd in id_list:
-        con.change_date(idd, new_date)
+        con.change_date(idd, new_date) #SERVER
 
 
 def create_colored_icon(color, size=(25,25)):
     image = Image.new("RGB", size, color)
     return ImageTk.PhotoImage(image)
+
+
+def copy_text(event, widget, root):
+    root.clipboard_clear()
+    root.clipboard_append(widget.cget("text"))
+
+
+def show_copy_menu(event, label, root):
+    menu = Menu(root, tearoff=0)
+    menu.add_command(label="Kopiuj", command=lambda: copy_text(event, label, root))
+    menu.tk_popup(event.x_root, event.y_root)

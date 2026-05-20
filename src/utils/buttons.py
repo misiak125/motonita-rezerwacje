@@ -5,7 +5,8 @@ from PIL import ImageTk, Image
 import src.controllers as con
 from src import resource_path
 import os
-from tkcalendar import DateEntry
+import tkcalendar as cal
+import babel.numbers
 
 def on_customer_click(lasttop):
     top = Toplevel(lasttop)
@@ -271,9 +272,8 @@ def delete_brand(brand, brand_cbox, new_brand_cbox):
     brand = brand.strip()
     if brand == "":
         return
-    models = con.get_brands_models(brand)
+    models = con.get_brands_models(brand) #SERVER
     if models is not None and len(models)>0:
-        print(models)
         if not ensure_delete_models(): return
     try:
         con.drop_brands_models(models)
@@ -628,7 +628,7 @@ def change_group_date_by_id(tree, lasttop):
     top = Toplevel(lasttop)
     top.title("Zmień datę")
 
-    product_expected_delivery_entry = DateEntry(top, date_pattern='dd.mm.yyyy', showweeknumbers=False, selectmode='day',
+    product_expected_delivery_entry = cal.DateEntry(top, date_pattern='dd.mm.yyyy', showweeknumbers=False, selectmode='day',
         font=("Default", 12),
         weekendbackground = "#E5E5E5", 
         weekendforeground = "#000000",

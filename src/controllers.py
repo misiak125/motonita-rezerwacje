@@ -1,7 +1,7 @@
 from . import session, q_session, Session
 from .models import Product, Customer, Reservation, Colour, Brand, Model
 from datetime import datetime
-from sqlalchemy import Select, func, asc, desc, update, delete
+from sqlalchemy import Select, func, asc, desc, update, delete, select
 
 def add_product(brand, model, colour, year, price, order_id, expected_delivery):
     try:
@@ -27,11 +27,12 @@ def add_customer(name, phone, email, pesel, nip, company_name, adress):
         raise
 
 
-def make_reservation(customer_id, product_id, advance, adnotation, adnotation_pub, form, paid, term, delivery, payment_method):
+def make_reservation(customer_id, string_id, product_id, advance, adnotation, adnotation_pub, form, paid, term, delivery, payment_method):
     try:
         new_reservation=Reservation(date=datetime.now(), 
         customer_id=customer_id, product_id=product_id, advance = advance, adnotation = adnotation,
-        adnotation_pub = adnotation_pub, form=form, paid=paid, term = term, delivery = delivery, payment_method = payment_method)
+        adnotation_pub = adnotation_pub, form=form, paid=paid, term = term, delivery = delivery, 
+        payment_method = payment_method, string_order_id = string_id)
         
         session.add(new_reservation)
         session.commit()
@@ -383,3 +384,9 @@ def get_new_order_id():
         return new_id
     except:
         return 1
+
+def get_last_reservation():
+    stmt = select(Reservation).order_by(Reservation.id.desc()).limit(1)
+    result = session.execute(stmt)
+    result = result.scalar_one_or_none()
+    return result

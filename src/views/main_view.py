@@ -1,5 +1,6 @@
 from tkinter import ttk, messagebox, Toplevel, Label, Button, IntVar, Checkbutton, Text, WORD, StringVar, OptionMenu, END, BooleanVar, Frame
-from tkcalendar import DateEntry, Calendar
+import tkcalendar as cal
+import babel.numbers
 import src.controllers as con
 import src.utils.funcs as fun
 import src.utils.buttons as but
@@ -49,7 +50,8 @@ class main_window:
         
         fun.refresh_table(self.free_products_tree, self.free_prod_search_entry.get(), self.split_dates.get(), 
         self.customers_tree, self.customers_search_entry.get(), self.reservations_tree, self.reservation_search_entry.get(),
-        self.show_finalized, self.all_products_tree, self.show_sold, self.show_reserved.get(), self.all_prod_search_entry.get())
+        self.show_finalized, self.all_products_tree, self.show_sold, self.show_reserved.get(), self.all_prod_search_entry.get(), 
+        self.show_year.get(), self.show_year_free.get())
         ''''''
 
         
@@ -59,11 +61,23 @@ class main_window:
 
     
     def create_free_products_tab(self, tab):
+        filters_frame = ttk.Frame(tab)
+        filters_frame.pack(fill='x')
+        
         self.split_dates = BooleanVar()
-        split_dates_button = Checkbutton(tab, variable=self.split_dates, text="Rozdziel przewidywane daty", 
+        split_dates_button = Checkbutton(filters_frame, variable=self.split_dates, text="Rozdziel przewidywane daty", 
         onvalue=True, offvalue=False, command=lambda: con.fake_commit())
-        split_dates_button.pack(padx=10, pady=(10, 0))
+        split_dates_button.grid(padx=10, pady=(10, 0), row = 0, column=2)
         split_dates_button.select()
+
+        self.show_year_free = StringVar()
+        year_options = [str(year) for year in range(2023, datetime.now().year+2) ] + ['wszystkie']
+        self.show_year_free.set("wszystkie")
+        self.show_year_free.trace_add("write", lambda x, y, z: con.fake_commit())
+        show_year_label = Label(filters_frame, text="Rok:", justify='left')
+        show_year_label.grid(padx=10, pady=(10, 0), row = 0, column = 0)
+        show_year_dropdown = OptionMenu(filters_frame, self.show_year_free, *year_options)
+        show_year_dropdown.grid(padx=10, pady=(10, 0), row = 0, column = 1)
 
         self.free_products_tree = ttk.Treeview(tab, columns=("brand", "model", "year", "colour", 
         "free_count", "date", "price"), show="headings")
@@ -121,6 +135,15 @@ class main_window:
         show_reserved_label.grid(row=0, column=1, padx=10, pady=(10, 0), sticky="e")
         show_reserved_dropdown = OptionMenu(filters_frame, self.show_reserved, *reserved_options)
         show_reserved_dropdown.grid(row=0, column=2, padx=0, pady=(10, 0), sticky="ew")
+
+        self.show_year = StringVar()
+        year_options = [str(year) for year in range(2023, datetime.now().year+2) ] + ['wszystkie']
+        self.show_year.set("wszystkie")
+        self.show_year.trace_add("write", lambda x, y, z: con.fake_commit())
+        show_year_label = Label(filters_frame, text="Rok:", justify='left')
+        show_year_label.grid(row=0, column=3, padx=10, pady=(10, 0), sticky="e")
+        show_year_dropdown = OptionMenu(filters_frame, self.show_year, *year_options)
+        show_year_dropdown.grid(row=0, column=4, padx=0, pady=(10, 0), sticky="ew")
 
         self.all_products_tree = ttk.Treeview(tab, columns=("id", "brand", "model", "year", 
         "colour", "price", "state", "added_on", "reservation", "expected_delivery", "order_id"), show="headings")
@@ -300,14 +323,15 @@ class main_window:
 
         Button1.pack()
         
-        self.reservations_tree = ttk.Treeview(tab, columns=("id", "name",
+        self.reservations_tree = ttk.Treeview(tab, columns=("id", "string_order_id", "name",
         "date",  "brand", "model", "colour", "adnotations"), show="tree headings")
         
-        self.reservations_tree["displaycolumns"]=("id", "name", 
+        self.reservations_tree["displaycolumns"]=("string_order_id", "name", 
         "date", "brand", "model", "colour", "adnotations")
 
         self.reservations_tree.heading("#0", text="$")
         self.reservations_tree.heading("id", text="ID")
+        self.reservations_tree.heading("string_order_id", text="ID")
         self.reservations_tree.heading("name", text="Imię i Nazwisko")
         self.reservations_tree.heading("date", text="Data")
         self.reservations_tree.heading("brand", text="Marka")
@@ -317,6 +341,7 @@ class main_window:
 
         self.reservations_tree.column("#0", width=62, stretch=False, anchor='w')
         self.reservations_tree.column("id", width=62, stretch=False, anchor='center')
+        self.reservations_tree.column("string_order_id", width=70, stretch=False, anchor='center')
         self.reservations_tree.column("name", width=100)
         self.reservations_tree.column("date", width=100)
         self.reservations_tree.column("brand", width=100)
@@ -398,6 +423,8 @@ class main_window:
             ("Data rezerwacji:", reservarion.Reservation.date.strftime('%d.%m.%Y %H:%M'))
         ]
         i=0
+        
+
         for label_text, value_text in details:
             if value_text == "" or value_text is None:
                 continue
@@ -425,10 +452,12 @@ class main_window:
                     text=value_text,
                     font=("Default", 12),
                     anchor='w',
-                    wraplength=550, 
+                    wraplength=550,
                     justify='left')
             val.pack(side='left', fill='x', expand=True, padx=(0, 10))
+            val.bind("<Button-3>", lambda x: fun.show_copy_menu(x, x.widget, top))
         
+
         edit_button = Button(top, text="Edytuj", command=lambda: self.edit_reservation(res_id, top))
         edit_button.pack(padx=10, pady=(0, 10), side='right')
 
@@ -492,7 +521,7 @@ class main_window:
             search_label.grid(row=0, column=0, sticky="w", pady=(0, 0))
             search_entry = ttk.Entry(customer_addons_frame)
             search_entry.grid(row=0, column=1, padx=10, pady=(0, 0), sticky="ew")
-            search_entry.bind("<KeyRelease>", lambda x: fun.filter_tree(search_entry, con.get_all_customers(), res_customers_tree, "name"))
+            search_entry.bind("<KeyRelease>", lambda x: fun.filter_tree(search_entry, con.get_all_customers(), res_customers_tree, "name")) #SERVER albo inna optymalizacja
 
             new_customer_button = Button(customer_addons_frame, text="Nowy klient", 
             command=lambda: self.create_new_customer(top, None, 
@@ -652,7 +681,7 @@ class main_window:
         product_expected_delivery_label.grid(row=3, column=0, padx=15, pady=15, sticky="w")
 
 
-        self.product_expected_delivery_entry = DateEntry(tab, date_pattern='dd.mm.yyyy', showweeknumbers=False, selectmode='day',
+        self.product_expected_delivery_entry = cal.DateEntry(tab, date_pattern='dd.mm.yyyy', showweeknumbers=False, selectmode='day',
             font=("Default", 12),
             weekendbackground = "#E5E5E5", 
             weekendforeground = "#000000",
@@ -828,7 +857,7 @@ class main_window:
 
         self.edit_product_brand_var = StringVar()
         self.edit_product_brand_entry = ttk.Combobox(top, textvariable = self.edit_product_brand_var, state="readonly")
-        self.edit_product_brand_entry["values"] = con.get_brands_list()
+        self.edit_product_brand_entry["values"] = con.get_brands_list() 
         self.edit_product_brand_entry.grid(row=0, column=1, padx=15, pady=15, sticky="w")
 
 
@@ -882,7 +911,7 @@ class main_window:
         product_expected_delivery_label.grid(row=3, column=0, padx=15, pady=15, sticky="w")
 
 
-        product_expected_delivery_entry = DateEntry(top, date_pattern='dd.mm.yyyy', showweeknumbers=False, selectmode='day',
+        product_expected_delivery_entry = cal.DateEntry(top, date_pattern='dd.mm.yyyy', showweeknumbers=False, selectmode='day',
             font=("Default", 12),
             weekendbackground = "#E5E5E5", 
             weekendforeground = "#000000",

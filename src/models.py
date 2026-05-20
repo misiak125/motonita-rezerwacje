@@ -45,6 +45,7 @@ class Reservation(Base):
     delivery = Column(Boolean)
     term = Column(String)
     payment_method = Column(String)
+    string_order_id = Column(String)
     
 class Brand(Base):
     __tablename__ = "brands"
